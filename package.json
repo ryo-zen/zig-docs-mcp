@@ -1,0 +1,21 @@
+{
+  "name": "zig-mcp-server",
+  "version": "1.0.0",
+  "description": "Zig Documentation MCP Server",
+  "main": "zig-mcp-server.js",
+  "type": "module",
+  "scripts": {
+    "start": "node 'zig-mcp-server.js'",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "zig",
+    "mcp",
+    "documentation"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.16.0"
+  }
+}

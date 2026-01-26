@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "zig-docs": {
+      "type": "stdio",
+      "command": "node",
+      "args": [
+        "zig-mcp-server.js"
+      ],
+      "env": {}
+    }
+  }
+}

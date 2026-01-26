@@ -1,0 +1,700 @@
+#!/usr/bin/env node
+
+/**
+ * Zig Documentation MCP Server - Hierarchical Version
+ * 
+ * This MCP server provides access to the complete Zig 0.14.1 documentation.
+ * Uses dynamic file discovery with hierarchical folder structure.
+ */
+
+import { Server } from '@modelcontextprotocol/sdk/server/index.js';
+import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
+import {
+  ListResourcesRequestSchema,
+  ReadResourceRequestSchema,
+  ListToolsRequestSchema,
+  CallToolRequestSchema,
+  ErrorCode,
+  McpError,
+} from '@modelcontextprotocol/sdk/types.js';
+import fs from 'fs';
+import path from 'path';
+
+class ZigDocumentationServer {
+  constructor() {
+    this.server = new Server({
+      name: 'zig-documentation-server',
+      version: '0.4.0',
+    }, {
+      capabilities: {
+        resources: {},
+        tools: {},
+      },
+    });
+
+    // In-memory cache for documentation files
+    this.docCache = new Map();
+    this.resourceList = [];
+
+    this.setupResourceHandlers();
+    this.setupToolHandlers();
+  }
+
+  async readMarkdownFile(filename) {
+    try {
+      // Check cache first
+      if (this.docCache.has(filename)) {
+        return this.docCache.get(filename);
+      }
+
+      // If not in cache, read from disk (fallback)
+      const filePath = path.join(process.cwd(), filename);
+      const content = await fs.promises.readFile(filePath, 'utf8');
+
+      // Cache it for next time
+      this.docCache.set(filename, content);
+
+      return content;
+    } catch (error) {
+      throw new McpError(
+        ErrorCode.InternalError,
+        `Failed to read file ${filename}: ${error.message}`
+      );
+    }
+  }
+
+  // Load all documentation files into memory cache at startup
+  async loadDocsIntoCache() {
+    const langDocsDir = path.join(process.cwd(), 'zig_docs');
+    const stdDocsDir = path.join(process.cwd(), 'zig_docs_std');
+
+    console.error('Loading documentation into cache...');
+
+    if (fs.existsSync(langDocsDir)) {
+      await this.cacheDirectory(langDocsDir, 'zig://doc');
+    }
+
+    if (fs.existsSync(stdDocsDir)) {
+      await this.cacheDirectory(stdDocsDir, 'zig://std');
+    }
+
+    console.error(`Cached ${this.docCache.size} documentation files`);
+  }
+
+  // Recursively cache all markdown files in a directory
+  async cacheDirectory(dir, baseUri) {
+    const items = await fs.promises.readdir(dir, { withFileTypes: true });
+
+    for (const item of items) {
+      const fullPath = path.join(dir, item.name);
+
+      if (item.isDirectory()) {
+        const subUri = `${baseUri}/${item.name}`;
+        await this.cacheDirectory(fullPath, subUri);
+      } else if (item.isFile() && item.name.endsWith('.md')) {
+        try {
+          // Read file content
+          const content = await fs.promises.readFile(fullPath, 'utf8');
+
+          // Store in cache with relative path as key
+          const relativePath = path.relative(process.cwd(), fullPath);
+          this.docCache.set(relativePath, content);
+
+          // Build resource list
+          const fileName = item.name.replace('.md', '');
+          const uri = `${baseUri}/${fileName}`;
+
+          this.resourceList.push({
+            uri,
+            name: this.formatResourceName(uri),
+            description: this.generateDescription(uri),
+            mimeType: 'text/markdown',
+            _filePath: relativePath
+          });
+        } catch (error) {
+          console.error(`Error caching ${fullPath}:`, error);
+        }
+      }
+    }
+  }
+
+
+  formatResourceName(uri) {
+    const parts = uri.split('/');
+    const last = parts[parts.length - 1];
+    
+    // Format different types of names - keep consistent with search results
+    if (uri.includes('/Types/')) {
+      const typeGroup = parts[parts.length - 2]; // e.g., ArrayHashMap
+      return `Types.${typeGroup}.${last}`;
+    } else if (uri.includes('/Namespaces/')) {
+      const namespace = parts[parts.length - 2];
+      return `Namespaces.${namespace}.${last}`;
+    } else if (uri.startsWith('zig://doc/')) {
+      return last.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+    } else if (uri === 'zig://std/index') {
+      return 'index';
+    }
+    
+    return last;
+  }
+
+  generateDescription(uri) {
+    if (uri.includes('/Types/')) {
+      return `Zig standard library type documentation`;
+    } else if (uri.includes('/Namespaces/')) {
+      return `Zig standard library namespace documentation`;
+    } else if (uri.startsWith('zig://doc/')) {
+      return `Zig language documentation`;
+    }
+    
+    return 'Zig documentation';
+  }
+
+  setupResourceHandlers() {
+    this.server.setRequestHandler(ListResourcesRequestSchema, async () => {
+      // Return cached resource list
+      return { resources: this.resourceList };
+    });
+
+    this.server.setRequestHandler(ReadResourceRequestSchema, async (request) => {
+      const { uri } = request.params;
+
+      try {
+        const filePath = this.uriToFilePath(uri);
+        const content = await this.readMarkdownFile(filePath);
+
+        return {
+          contents: [{
+            uri,
+            mimeType: 'text/markdown',
+            text: content,
+          }],
+        };
+      } catch (error) {
+        throw new McpError(
+          ErrorCode.InvalidRequest,
+          `Failed to read resource ${uri}: ${error.message}`
+        );
+      }
+    });
+  }
+
+  uriToFilePath(uri) {
+    if (uri.startsWith('zig://doc/')) {
+      const topic = uri.replace('zig://doc/', '');
+      return `zig_docs/${topic.replace(/-/g, '_')}.md`;
+    } else if (uri.startsWith('zig://std/')) {
+      const parts = uri.replace('zig://std/', '').split('/');
+      
+      if (parts.length === 1) {
+        // Top-level file like index.md
+        return `zig_docs_std/${parts[0]}.md`;
+      } else {
+        // Hierarchical path
+        return `zig_docs_std/${parts.join('/')}.md`;
+      }
+    }
+    
+    throw new Error(`Unknown URI format: ${uri}`);
+  }
+
+  filePathToUri(filePath) {
+    const relativePath = path.relative(process.cwd(), filePath);
+    
+    if (relativePath.startsWith('zig_docs/')) {
+      const topic = relativePath.replace('zig_docs/', '').replace('.md', '').replace(/_/g, '-');
+      return `zig://doc/${topic}`;
+    } else if (relativePath.startsWith('zig_docs_std/')) {
+      const stdPath = relativePath.replace('zig_docs_std/', '').replace('.md', '');
+      return `zig://std/${stdPath}`;
+    }
+    
+    throw new Error(`Cannot convert file path to URI: ${relativePath}`);
+  }
+
+  setupToolHandlers() {
+    this.server.setRequestHandler(ListToolsRequestSchema, async () => {
+      return {
+        tools: [
+          {
+            name: 'search_zig_docs',
+            description: 'Search for specific topics across all Zig documentation',
+            inputSchema: {
+              type: 'object',
+              properties: {
+                query: {
+                  type: 'string',
+                  description: 'Search query for Zig documentation topics',
+                },
+              },
+              required: ['query'],
+            },
+          },
+          {
+            name: 'get_builtin_info',
+            description: 'Get detailed information about a specific Zig builtin function',
+            inputSchema: {
+              type: 'object',
+              properties: {
+                builtin_name: {
+                  type: 'string',
+                  description: 'Name of the builtin function (with or without @ prefix)',
+                },
+              },
+              required: ['builtin_name'],
+            },
+          },
+          {
+            name: 'explain_concept',
+            description: 'Get a detailed explanation of a Zig language concept',
+            inputSchema: {
+              type: 'object',
+              properties: {
+                concept: {
+                  type: 'string',
+                  description: 'Zig concept to explain (e.g., "comptime", "defer", "optionals")',
+                },
+              },
+              required: ['concept'],
+            },
+          },
+          {
+            name: 'get_syntax_examples',
+            description: 'Get syntax examples for Zig language constructs',
+            inputSchema: {
+              type: 'object',
+              properties: {
+                construct: {
+                  type: 'string',
+                  description: 'Language construct to get examples for (e.g., "for loops", "if statements", "struct")',
+                },
+              },
+              required: ['construct'],
+            },
+          },
+        ],
+      };
+    });
+
+    this.server.setRequestHandler(CallToolRequestSchema, async (request) => {
+      const { name, arguments: args } = request.params;
+
+      switch (name) {
+        case 'search_zig_docs':
+          return {
+            content: [
+              {
+                type: 'text',
+                text: this.searchDocumentation(args.query),
+              },
+            ],
+          };
+
+        case 'get_builtin_info':
+          return {
+            content: [
+              {
+                type: 'text',
+                text: await this.getBuiltinInfo(args.builtin_name),
+              },
+            ],
+          };
+
+        case 'explain_concept':
+          return {
+            content: [
+              {
+                type: 'text',
+                text: await this.explainConcept(args.concept),
+              },
+            ],
+          };
+
+        case 'get_syntax_examples':
+          return {
+            content: [
+              {
+                type: 'text',
+                text: await this.getSyntaxExamples(args.construct),
+              },
+            ],
+          };
+
+        default:
+          throw new McpError(
+            ErrorCode.InvalidRequest,
+            `Unknown tool: ${name}`
+          );
+      }
+    });
+  }
+
+  searchDocumentation(query) {
+    const results = [];
+
+    try {
+      // Search in cached documentation
+      for (const resource of this.resourceList) {
+        const content = this.docCache.get(resource._filePath);
+        if (!content) continue;
+
+        const uri = resource.uri;
+        const resourceName = resource.name;
+
+        // Extract file name from path
+        const fileName = path.basename(resource._filePath, '.md');
+
+        // Determine category
+        const category = uri.startsWith('zig://doc/') ? 'Language' : 'Std Library';
+
+        // Calculate match score
+        const score = this.calculateMatchScore(query, fileName, resourceName, content);
+
+        if (score > 0) {
+          results.push({
+            score: score,
+            text: `**${category}: ${resourceName}** (score: ${score.toFixed(2)})\n  URI: ${uri}`
+          });
+        }
+      }
+
+      if (results.length === 0) {
+        return `No documentation found for "${query}". Try searching for language features, types, or concepts.`;
+      }
+
+      // Sort results by score (highest first)
+      results.sort((a, b) => b.score - a.score);
+
+      // Format results
+      return results.slice(0, 10).map(r => r.text).join('\n\n');
+
+    } catch (error) {
+      return `Search error: ${error.message}`;
+    }
+  }
+
+
+  // Calculate match score based on various criteria
+  calculateMatchScore(query, fileName, resourceName, content) {
+    let score = 0;
+    const lowerQuery = query.toLowerCase();
+    const lowerFileName = fileName.toLowerCase();
+    const lowerResourceName = resourceName.toLowerCase();
+    const lowerContent = content.toLowerCase();
+    
+    // Exact match in file name (highest priority)
+    if (lowerFileName === lowerQuery) {
+      score += 100;
+    }
+    
+    // Exact match in resource name
+    if (lowerResourceName === lowerQuery) {
+      score += 90;
+    }
+    
+    // File name contains query
+    if (lowerFileName.includes(lowerQuery)) {
+      score += 50;
+    }
+    
+    // Resource name contains query
+    if (lowerResourceName.includes(lowerQuery)) {
+      score += 45;
+    }
+    
+    // Split camelCase/PascalCase and check for matches
+    const queryWords = this.splitWords(query);
+    const fileWords = this.splitWords(fileName);
+    const resourceWords = this.splitWords(resourceName);
+    
+    // Check if all query words are in file name
+    if (queryWords.every(qw => fileWords.some(fw => fw.toLowerCase().includes(qw.toLowerCase())))) {
+      score += 40;
+    }
+    
+    // Check if all query words are in resource name
+    if (queryWords.every(qw => resourceWords.some(rw => rw.toLowerCase().includes(qw.toLowerCase())))) {
+      score += 35;
+    }
+    
+    // Content contains query
+    if (lowerContent.includes(lowerQuery)) {
+      score += 20;
+    }
+    
+    // Check for word matches in content
+    if (queryWords.every(qw => lowerContent.includes(qw.toLowerCase()))) {
+      score += 15;
+    }
+    
+    // Fuzzy matching with edit distance
+    const editDistance = this.levenshteinDistance(lowerQuery, lowerFileName);
+    if (editDistance <= 3) {
+      score += (30 - editDistance * 10);
+    }
+    
+    return score;
+  }
+
+  // Split camelCase/PascalCase into words
+  splitWords(str) {
+    return str
+      .replace(/([a-z])([A-Z])/g, '$1 $2')
+      .replace(/([A-Z])([A-Z][a-z])/g, '$1 $2')
+      .split(/[\s_-]+/)
+      .filter(w => w.length > 0);
+  }
+
+  // Calculate Levenshtein distance between two strings
+  levenshteinDistance(a, b) {
+    const matrix = [];
+    
+    for (let i = 0; i <= b.length; i++) {
+      matrix[i] = [i];
+    }
+    
+    for (let j = 0; j <= a.length; j++) {
+      matrix[0][j] = j;
+    }
+    
+    for (let i = 1; i <= b.length; i++) {
+      for (let j = 1; j <= a.length; j++) {
+        if (b.charAt(i - 1) === a.charAt(j - 1)) {
+          matrix[i][j] = matrix[i - 1][j - 1];
+        } else {
+          matrix[i][j] = Math.min(
+            matrix[i - 1][j - 1] + 1,
+            matrix[i][j - 1] + 1,
+            matrix[i - 1][j] + 1
+          );
+        }
+      }
+    }
+    
+    return matrix[b.length][a.length];
+  }
+
+  async getBuiltinInfo(builtinName) {
+    try {
+      const normalizedName = builtinName.startsWith('@') ? builtinName : `@${builtinName}`;
+      const builtinFilePath = 'zig_docs/builtin_functions.md';
+      const content = await this.readMarkdownFile(builtinFilePath);
+
+      const lines = content.split('\n');
+      const builtinSection = [];
+      let inSection = false;
+      let foundSection = false;
+
+      for (let i = 0; i < lines.length; i++) {
+        const line = lines[i];
+
+        if (line.startsWith('### @') && line.includes(normalizedName.substring(1))) {
+          inSection = true;
+          foundSection = true;
+          builtinSection.push(line);
+          continue;
+        }
+
+        if (inSection) {
+          if (line.startsWith('### @') && !line.includes(normalizedName.substring(1))) {
+            break;
+          }
+          builtinSection.push(line);
+        }
+      }
+
+      if (!foundSection) {
+        return `Builtin function "${normalizedName}" not found. Try checking the spelling or use search_zig_docs to find similar functions.`;
+      }
+
+      const result = builtinSection.join('\n').trim();
+      return result || `Information for "${normalizedName}" found but content appears to be empty.`;
+
+    } catch (error) {
+      return `Error retrieving builtin info: ${error.message}`;
+    }
+  }
+
+  async explainConcept(concept) {
+    try {
+      const conceptMap = {
+        'comptime': 'comptime.md',
+        'defer': 'defer.md',
+        'optionals': 'optionals.md',
+        'errors': 'errors.md',
+        'pointers': 'pointers.md',
+        'slices': 'slices.md',
+        'arrays': 'arrays.md',
+        'struct': 'struct.md',
+        'union': 'union.md',
+        'enum': 'enum.md',
+        'for': 'for.md',
+        'while': 'while.md',
+        'if': 'if.md',
+        'switch': 'switch.md',
+        'blocks': 'blocks.md',
+        'functions': 'functions.md',
+        'memory': 'memory.md',
+        'casting': 'casting.md',
+        'vectors': 'vectors.md',
+        'atomics': 'atomics.md',
+        'async': 'async_functions.md',
+        'assembly': 'assembly.md',
+        'c': 'c.md',
+        'build': 'zig_build_system.md',
+        'test': 'zig_test.md',
+        'variables': 'variables.md',
+        'values': 'values.md',
+        'operators': 'operators.md',
+        'comments': 'comments.md'
+      };
+
+      const lowercaseConcept = concept.toLowerCase();
+      const filename = conceptMap[lowercaseConcept];
+
+      if (!filename) {
+        const partialMatch = Object.keys(conceptMap).find(key =>
+          key.includes(lowercaseConcept) || lowercaseConcept.includes(key)
+        );
+
+        if (partialMatch) {
+          const suggestedFilename = conceptMap[partialMatch];
+          const filePath = `zig_docs/${suggestedFilename}`;
+          const content = await this.readMarkdownFile(filePath);
+          return `Found related concept "${partialMatch}":\n\n${content}`;
+        }
+
+        const availableConcepts = Object.keys(conceptMap).join(', ');
+        return `Concept "${concept}" not found. Available concepts: ${availableConcepts}`;
+      }
+
+      const filePath = `zig_docs/${filename}`;
+      const content = await this.readMarkdownFile(filePath);
+
+      return content;
+
+    } catch (error) {
+      return `Error explaining concept: ${error.message}`;
+    }
+  }
+
+  async getSyntaxExamples(construct) {
+    try {
+      const constructMap = {
+        'for': 'for.md',
+        'for loops': 'for.md',
+        'for loop': 'for.md',
+        'while': 'while.md',
+        'while loops': 'while.md',
+        'while loop': 'while.md',
+        'if': 'if.md',
+        'if statements': 'if.md',
+        'if statement': 'if.md',
+        'switch': 'switch.md',
+        'switch statements': 'switch.md',
+        'switch statement': 'switch.md',
+        'struct': 'struct.md',
+        'structs': 'struct.md',
+        'union': 'union.md',
+        'unions': 'union.md',
+        'enum': 'enum.md',
+        'enums': 'enum.md',
+        'functions': 'functions.md',
+        'function': 'functions.md',
+        'arrays': 'arrays.md',
+        'array': 'arrays.md',
+        'slices': 'slices.md',
+        'slice': 'slices.md',
+        'pointers': 'pointers.md',
+        'pointer': 'pointers.md',
+        'optionals': 'optionals.md',
+        'optional': 'optionals.md',
+        'errors': 'errors.md',
+        'error': 'errors.md',
+        'defer': 'defer.md',
+        'comptime': 'comptime.md',
+        'blocks': 'blocks.md',
+        'block': 'blocks.md'
+      };
+
+      const lowercaseConstruct = construct.toLowerCase();
+      const filename = constructMap[lowercaseConstruct];
+
+      if (!filename) {
+        const partialMatch = Object.keys(constructMap).find(key =>
+          key.includes(lowercaseConstruct) || lowercaseConstruct.includes(key)
+        );
+
+        if (partialMatch) {
+          const suggestedFilename = constructMap[partialMatch];
+          const filePath = `zig_docs/${suggestedFilename}`;
+          const content = await this.readMarkdownFile(filePath);
+
+          const examples = this.extractCodeExamples(content);
+          return `Found syntax examples for "${partialMatch}":\n\n${examples}`;
+        }
+
+        const availableConstructs = [...new Set(Object.keys(constructMap))].join(', ');
+        return `Construct "${construct}" not found. Available constructs: ${availableConstructs}`;
+      }
+
+      const filePath = `zig_docs/${filename}`;
+      const content = await this.readMarkdownFile(filePath);
+
+      const examples = this.extractCodeExamples(content);
+      return examples;
+
+    } catch (error) {
+      return `Error getting syntax examples: ${error.message}`;
+    }
+  }
+
+  extractCodeExamples(content) {
+    const lines = content.split('\n');
+    const examples = [];
+    let inCodeBlock = false;
+    let currentExample = [];
+    let exampleCount = 0;
+    
+    for (const line of lines) {
+      if (line.trim().startsWith('```zig') || line.trim().startsWith('```')) {
+        if (!inCodeBlock) {
+          inCodeBlock = true;
+          currentExample = [];
+          if (line.trim() === '```zig') {
+            currentExample.push(line);
+          }
+        } else {
+          inCodeBlock = false;
+          currentExample.push(line);
+          examples.push(currentExample.join('\n'));
+          exampleCount++;
+          if (exampleCount >= 5) break;
+        }
+      } else if (inCodeBlock) {
+        currentExample.push(line);
+      }
+    }
+    
+    if (examples.length === 0) {
+      return 'No code examples found in the documentation for this construct.';
+    }
+    
+    return examples.join('\n\n---\n\n');
+  }
+
+  async run() {
+    // Load all documentation into cache before starting
+    await this.loadDocsIntoCache();
+
+    const transport = new StdioServerTransport();
+    await this.server.connect(transport);
+    console.error('Zig Documentation MCP server running on stdio');
+  }
+}
+
+const server = new ZigDocumentationServer();
+server.run().catch(console.error);
+
+export { ZigDocumentationServer };
