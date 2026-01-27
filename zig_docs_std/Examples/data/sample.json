@@ -1,0 +1,18 @@
+{
+  "user": {
+    "id": 42,
+    "name": "Alice",
+    "roles": ["admin", "editor"],
+    "meta": {
+      "active": true,
+      "last_login": "2025-12-31T23:59:59Z"
+    }
+  },
+  "transactions": [
+    {"txid": "a1b2c3", "amount": 123.45, "currency": "ZEI"},
+    {"txid": "d4e5f6", "amount": 67.89, "currency": "ZEI"}
+  ],
+  "features": null,
+  "version": 1.2,
+  "tags": []
+}

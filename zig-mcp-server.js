@@ -24,7 +24,7 @@ class ZigDocumentationServer {
   constructor() {
     this.server = new Server({
       name: 'zig-documentation-server',
-      version: '0.4.0',
+      version: '0.5.0',
     }, {
       capabilities: {
         resources: {},
@@ -67,6 +67,7 @@ class ZigDocumentationServer {
   async loadDocsIntoCache() {
     const langDocsDir = path.join(process.cwd(), 'zig_docs');
     const stdDocsDir = path.join(process.cwd(), 'zig_docs_std');
+    const examplesDir = path.join(process.cwd(), 'zig_docs_std', 'Examples');
 
     console.error('Loading documentation into cache...');
 
@@ -76,6 +77,10 @@ class ZigDocumentationServer {
 
     if (fs.existsSync(stdDocsDir)) {
       await this.cacheDirectory(stdDocsDir, 'zig://std');
+    }
+
+    if (fs.existsSync(examplesDir)) {
+      await this.cacheExamplesDirectory(examplesDir, 'zig://examples');
     }
 
     console.error(`Cached ${this.docCache.size} documentation files`);
@@ -89,6 +94,9 @@ class ZigDocumentationServer {
       const fullPath = path.join(dir, item.name);
 
       if (item.isDirectory()) {
+        // Skip the Examples directory in regular caching
+        if (item.name === 'Examples') continue;
+
         const subUri = `${baseUri}/${item.name}`;
         await this.cacheDirectory(fullPath, subUri);
       } else if (item.isFile() && item.name.endsWith('.md')) {
@@ -118,13 +126,55 @@ class ZigDocumentationServer {
     }
   }
 
+  // Cache example files (.zig files) from Examples directory
+  async cacheExamplesDirectory(dir, baseUri) {
+    const items = await fs.promises.readdir(dir, { withFileTypes: true });
+
+    for (const item of items) {
+      const fullPath = path.join(dir, item.name);
+
+      if (item.isDirectory()) {
+        // Recursively cache subdirectories
+        const subUri = `${baseUri}/${item.name}`;
+        await this.cacheExamplesDirectory(fullPath, subUri);
+      } else if (item.isFile() && item.name.endsWith('.zig')) {
+        try {
+          // Read file content
+          const content = await fs.promises.readFile(fullPath, 'utf8');
+
+          // Store in cache with relative path as key
+          const relativePath = path.relative(process.cwd(), fullPath);
+          this.docCache.set(relativePath, content);
+
+          // Build resource list for examples
+          const fileName = item.name.replace('.zig', '');
+          // Remove 'test_' prefix for cleaner names
+          const cleanName = fileName.replace(/^test_/, '');
+          const uri = `${baseUri}/${cleanName}`;
+
+          this.resourceList.push({
+            uri,
+            name: `Example: ${cleanName}`,
+            description: `Working Zig code example for ${cleanName}`,
+            mimeType: 'text/x-zig',
+            _filePath: relativePath
+          });
+        } catch (error) {
+          console.error(`Error caching example ${fullPath}:`, error);
+        }
+      }
+    }
+  }
+
 
   formatResourceName(uri) {
     const parts = uri.split('/');
     const last = parts[parts.length - 1];
-    
+
     // Format different types of names - keep consistent with search results
-    if (uri.includes('/Types/')) {
+    if (uri.startsWith('zig://examples/')) {
+      return `Example: ${last}`;
+    } else if (uri.includes('/Types/')) {
       const typeGroup = parts[parts.length - 2]; // e.g., ArrayHashMap
       return `Types.${typeGroup}.${last}`;
     } else if (uri.includes('/Namespaces/')) {
@@ -135,19 +185,21 @@ class ZigDocumentationServer {
     } else if (uri === 'zig://std/index') {
       return 'index';
     }
-    
+
     return last;
   }
 
   generateDescription(uri) {
-    if (uri.includes('/Types/')) {
+    if (uri.startsWith('zig://examples/')) {
+      return `Working Zig code example`;
+    } else if (uri.includes('/Types/')) {
       return `Zig standard library type documentation`;
     } else if (uri.includes('/Namespaces/')) {
       return `Zig standard library namespace documentation`;
     } else if (uri.startsWith('zig://doc/')) {
       return `Zig language documentation`;
     }
-    
+
     return 'Zig documentation';
   }
 
@@ -184,9 +236,13 @@ class ZigDocumentationServer {
     if (uri.startsWith('zig://doc/')) {
       const topic = uri.replace('zig://doc/', '');
       return `zig_docs/${topic.replace(/-/g, '_')}.md`;
+    } else if (uri.startsWith('zig://examples/')) {
+      const exampleName = uri.replace('zig://examples/', '');
+      // Try to find the file (check both with and without test_ prefix)
+      return `zig_docs_std/Examples/test_${exampleName}.zig`;
     } else if (uri.startsWith('zig://std/')) {
       const parts = uri.replace('zig://std/', '').split('/');
-      
+
       if (parts.length === 1) {
         // Top-level file like index.md
         return `zig_docs_std/${parts[0]}.md`;
@@ -195,7 +251,7 @@ class ZigDocumentationServer {
         return `zig_docs_std/${parts.join('/')}.md`;
       }
     }
-    
+
     throw new Error(`Unknown URI format: ${uri}`);
   }
 
@@ -273,6 +329,20 @@ class ZigDocumentationServer {
               required: ['construct'],
             },
           },
+          {
+            name: 'get_example',
+            description: 'Get a working Zig code example by topic or name',
+            inputSchema: {
+              type: 'object',
+              properties: {
+                topic: {
+                  type: 'string',
+                  description: 'Topic or example name (e.g., "arraylist", "reader", "json_parser")',
+                },
+              },
+              required: ['topic'],
+            },
+          },
         ],
       };
     });
@@ -317,6 +387,16 @@ class ZigDocumentationServer {
               {
                 type: 'text',
                 text: await this.getSyntaxExamples(args.construct),
+              },
+            ],
+          };
+
+        case 'get_example':
+          return {
+            content: [
+              {
+                type: 'text',
+                text: await this.getExample(args.topic),
               },
             ],
           };
@@ -656,7 +736,7 @@ class ZigDocumentationServer {
     let inCodeBlock = false;
     let currentExample = [];
     let exampleCount = 0;
-    
+
     for (const line of lines) {
       if (line.trim().startsWith('```zig') || line.trim().startsWith('```')) {
         if (!inCodeBlock) {
@@ -676,12 +756,91 @@ class ZigDocumentationServer {
         currentExample.push(line);
       }
     }
-    
+
     if (examples.length === 0) {
       return 'No code examples found in the documentation for this construct.';
     }
-    
+
     return examples.join('\n\n---\n\n');
+  }
+
+  async getExample(topic) {
+    try {
+      const lowerTopic = topic.toLowerCase();
+
+      // Search for matching examples in cache
+      const matches = [];
+
+      for (const resource of this.resourceList) {
+        if (!resource.uri.startsWith('zig://examples/')) continue;
+
+        const exampleName = resource.uri.replace('zig://examples/', '').toLowerCase();
+        const content = this.docCache.get(resource._filePath);
+
+        if (!content) continue;
+
+        // Calculate match score
+        let score = 0;
+
+        // Exact match
+        if (exampleName === lowerTopic) {
+          score = 100;
+        }
+        // Example name contains topic
+        else if (exampleName.includes(lowerTopic)) {
+          score = 80;
+        }
+        // Topic contains example name (partial match)
+        else if (lowerTopic.includes(exampleName)) {
+          score = 60;
+        }
+        // Check content for topic keywords
+        else if (content.toLowerCase().includes(lowerTopic)) {
+          score = 40;
+        }
+
+        if (score > 0) {
+          matches.push({
+            score,
+            name: exampleName,
+            uri: resource.uri,
+            filePath: resource._filePath,
+            content
+          });
+        }
+      }
+
+      if (matches.length === 0) {
+        // List available examples
+        const availableExamples = this.resourceList
+          .filter(r => r.uri.startsWith('zig://examples/'))
+          .map(r => r.uri.replace('zig://examples/', ''))
+          .sort()
+          .slice(0, 20);
+
+        return `No examples found for "${topic}". Available examples include:\n\n${availableExamples.join(', ')}`;
+      }
+
+      // Sort by score and get best match
+      matches.sort((a, b) => b.score - a.score);
+      const bestMatch = matches[0];
+
+      // Format the response
+      let response = `# Example: ${bestMatch.name}\n\n`;
+      response += `Found working example code:\n\n`;
+      response += `\`\`\`zig\n${bestMatch.content}\n\`\`\`\n`;
+
+      // If there are other matches, mention them
+      if (matches.length > 1) {
+        const otherMatches = matches.slice(1, 4).map(m => m.name);
+        response += `\n\nRelated examples: ${otherMatches.join(', ')}`;
+      }
+
+      return response;
+
+    } catch (error) {
+      return `Error retrieving example: ${error.message}`;
+    }
   }
 
   async run() {
