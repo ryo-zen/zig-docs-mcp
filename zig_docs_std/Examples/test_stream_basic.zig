@@ -1,20 +1,20 @@
+// Basic Stream usage: listen, connect, write, read, close.
+// A simple TCP echo server and client in one program.
+//
+// Stream.reader() / .writer() return wrapper structs; the actual
+// Io.Reader / Io.Writer methods are on the .interface field.
+//
+// Use takeDelimiterInclusive (not Exclusive) to correctly advance
+// past the delimiter byte in the reader buffer.
+
 const std = @import("std");
 const net = std.Io.net;
 
-/// Basic Stream usage: listen, connect, write, read, close.
-/// A simple TCP echo server and client in one program.
-///
-/// Stream.reader() / .writer() return wrapper structs; the actual
-/// Io.Reader / Io.Writer interface is accessed via the .interface field.
-///
-/// Note: use takeDelimiterInclusive (not Exclusive) to correctly advance
-/// past the delimiter byte in the reader buffer.
 pub fn main() !void {
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
     defer _ = gpa.deinit();
-    const allocator = gpa.allocator();
 
-    var threaded = std.Io.Threaded.init(allocator, .{ .environ = .empty });
+    var threaded = std.Io.Threaded.init(gpa.allocator(), .{ .environ = .empty });
     defer threaded.deinit();
     const io = threaded.io();
 
@@ -24,12 +24,12 @@ pub fn main() !void {
     defer server.deinit(io);
     std.debug.print("Server listening on 127.0.0.1:8181\n", .{});
 
-    // --- Client: connect to the server ---
+    // --- Client: connect ---
     const client_stream = try addr.connect(io, .{ .mode = .stream });
     defer client_stream.close(io);
     std.debug.print("Client connected\n", .{});
 
-    // --- Server: accept the connection ---
+    // --- Server: accept ---
     var server_stream = try server.accept(io);
     defer server_stream.close(io);
     std.debug.print("Server accepted connection\n", .{});
@@ -41,12 +41,11 @@ pub fn main() !void {
     try writer.interface.flush();
     std.debug.print("Client sent: Hello, Stream!\n", .{});
 
-    // --- Server: read the message and echo it back ---
+    // --- Server: read and echo back ---
     var server_rbuf: [256]u8 = undefined;
     var server_reader = server_stream.reader(io, &server_rbuf);
-    // takeDelimiterInclusive returns content + delimiter; strip the \n
-    const received_with_delim = try server_reader.interface.takeDelimiterInclusive('\n');
-    const received = received_with_delim[0 .. received_with_delim.len - 1];
+    const raw = try server_reader.interface.takeDelimiterInclusive('\n');
+    const received = raw[0 .. raw.len - 1]; // strip \n
     std.debug.print("Server received: {s}\n", .{received});
 
     var server_wbuf: [256]u8 = undefined;
@@ -58,9 +57,8 @@ pub fn main() !void {
     // --- Client: read the echo ---
     var rbuf: [256]u8 = undefined;
     var reader = client_stream.reader(io, &rbuf);
-    const echo_with_delim = try reader.interface.takeDelimiterInclusive('\n');
-    const echo = echo_with_delim[0 .. echo_with_delim.len - 1];
-    std.debug.print("Client received: {s}\n", .{echo});
+    const echo_raw = try reader.interface.takeDelimiterInclusive('\n');
+    std.debug.print("Client received: {s}\n", .{echo_raw[0 .. echo_raw.len - 1]});
 
     std.debug.print("✅ Basic stream test complete\n", .{});
 }

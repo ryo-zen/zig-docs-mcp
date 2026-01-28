@@ -1,21 +1,21 @@
+// Graceful shutdown: demonstrate .send shutdown and reading remaining data.
+// The client sends data, shuts down the write direction, then drains the
+// server's echo response before closing.
+//
+// Stream.reader() / .writer() return wrapper structs; the actual
+// Io.Reader / Io.Writer methods are on the .interface field.
+//
+// Use takeDelimiterInclusive (not Exclusive) to correctly advance
+// past the delimiter byte in the reader buffer.
+
 const std = @import("std");
 const net = std.Io.net;
 
-/// Graceful shutdown: demonstrate .send shutdown and reading remaining data.
-/// The client sends data, shuts down the write direction, then drains the
-/// server's echo response before closing.
-///
-/// Stream.reader() / .writer() return wrapper structs; the actual
-/// Io.Reader / Io.Writer interface is accessed via the .interface field.
-///
-/// Note: use takeDelimiterInclusive (not Exclusive) to correctly advance
-/// past the delimiter byte in the reader buffer.
 pub fn main() !void {
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
     defer _ = gpa.deinit();
-    const allocator = gpa.allocator();
 
-    var threaded = std.Io.Threaded.init(allocator, .{ .environ = .empty });
+    var threaded = std.Io.Threaded.init(gpa.allocator(), .{ .environ = .empty });
     defer threaded.deinit();
     const io = threaded.io();
 
@@ -50,14 +50,13 @@ pub fn main() !void {
     var server_wbuf: [1024]u8 = undefined;
     var server_writer = server_stream.writer(io, &server_wbuf);
 
-    // Read lines until EOF (client shut down write)
     std.debug.print("Server echoing:\n", .{});
     while (true) {
         const raw = server_reader.interface.takeDelimiterInclusive('\n') catch |err| {
             if (err == error.EndOfStream) break;
             return err;
         };
-        const line = raw[0 .. raw.len - 1]; // strip \n
+        const line = raw[0 .. raw.len - 1];
         std.debug.print("  > {s}\n", .{line});
         try server_writer.interface.writeAll(line);
         try server_writer.interface.writeAll("\n");
@@ -65,7 +64,7 @@ pub fn main() !void {
     try server_writer.interface.flush();
     std.debug.print("Server done echoing\n", .{});
 
-    // Server shuts down its write direction too
+    // Server shuts down its write direction
     try server_stream.shutdown(io, .send);
     std.debug.print("Server shut down write direction (.send)\n", .{});
 
@@ -79,8 +78,7 @@ pub fn main() !void {
             if (err == error.EndOfStream) break;
             return err;
         };
-        const line = raw[0 .. raw.len - 1];
-        std.debug.print("  < {s}\n", .{line});
+        std.debug.print("  < {s}\n", .{raw[0 .. raw.len - 1]});
     }
 
     std.debug.print("✅ Graceful shutdown test complete\n", .{});

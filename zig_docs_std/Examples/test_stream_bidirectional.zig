@@ -1,16 +1,16 @@
+// Bidirectional Stream: separate read/write buffers, multi-line exchange.
+// Demonstrates an HTTP-style request/response pattern over a local TCP stream.
+//
+// Stream.reader() / .writer() return wrapper structs; the actual
+// Io.Reader / Io.Writer methods are on the .interface field.
+//
+// Use takeDelimiterInclusive (not Exclusive) to correctly advance
+// past the delimiter byte in the reader buffer.
+
 const std = @import("std");
 const net = std.Io.net;
 
-/// Bidirectional Stream: separate read/write buffers, multi-line exchange.
-/// Demonstrates an HTTP-style request/response pattern over a local TCP stream.
-///
-/// Stream.reader() / .writer() return wrapper structs; the actual
-/// Io.Reader / Io.Writer interface is accessed via the .interface field.
-///
-/// Note: use takeDelimiterInclusive (not Exclusive) to correctly advance
-/// past the delimiter byte in the reader buffer.
-
-/// Strip trailing \r from a slice (for \r\n line endings split on \n).
+/// Strip trailing \r from a \r\n line that was split on \n.
 fn stripCR(s: []const u8) []const u8 {
     if (s.len > 0 and s[s.len - 1] == '\r') return s[0 .. s.len - 1];
     return s;
@@ -19,9 +19,8 @@ fn stripCR(s: []const u8) []const u8 {
 pub fn main() !void {
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
     defer _ = gpa.deinit();
-    const allocator = gpa.allocator();
 
-    var threaded = std.Io.Threaded.init(allocator, .{ .environ = .empty });
+    var threaded = std.Io.Threaded.init(gpa.allocator(), .{ .environ = .empty });
     defer threaded.deinit();
     const io = threaded.io();
 
@@ -50,17 +49,15 @@ pub fn main() !void {
     var server_rbuf: [4096]u8 = undefined;
     var server_reader = server_stream.reader(io, &server_rbuf);
 
-    // Read request line (includes \n; strip \r\n)
+    // Read request line, strip \r\n
     const req_raw = try server_reader.interface.takeDelimiterInclusive('\n');
-    const request_line = stripCR(req_raw[0 .. req_raw.len - 1]);
-    std.debug.print("Server got request: {s}\n", .{request_line});
+    std.debug.print("Server got request: {s}\n", .{stripCR(req_raw[0 .. req_raw.len - 1])});
 
-    // Read headers until empty line (\r\n alone)
+    // Read headers until empty line
     while (true) {
         const raw = try server_reader.interface.takeDelimiterInclusive('\n');
-        // Strip trailing \n, then check for \r
         const line = stripCR(raw[0 .. raw.len - 1]);
-        if (line.len == 0) break; // empty line = end of headers
+        if (line.len == 0) break;
         std.debug.print("  Header: {s}\n", .{line});
     }
 
@@ -80,8 +77,7 @@ pub fn main() !void {
     var reader = client_stream.reader(io, &rbuf);
 
     const status_raw = try reader.interface.takeDelimiterInclusive('\n');
-    const status_line = stripCR(status_raw[0 .. status_raw.len - 1]);
-    std.debug.print("Client status: {s}\n", .{status_line});
+    std.debug.print("Client status: {s}\n", .{stripCR(status_raw[0 .. status_raw.len - 1])});
 
     std.debug.print("Client headers:\n", .{});
     while (true) {
@@ -91,7 +87,7 @@ pub fn main() !void {
         std.debug.print("  {s}\n", .{line});
     }
 
-    // Read the body (13 bytes as declared in Content-Length)
+    // Read body (13 bytes as declared in Content-Length)
     const body = try reader.interface.take(13);
     std.debug.print("Client body: {s}\n", .{body});
 
