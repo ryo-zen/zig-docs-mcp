@@ -22,7 +22,7 @@ pub fn main() !void {
 
         var buf: [100]u8 = undefined;
         // 100ms timeout
-        const result = socket.receiveTimeout(io, &buf, .{ .duration = .{ .raw = .{ .nanoseconds = 100 * std.time.ns_per_ms }, .clock = .awake } });
+        const result = socket.receiveTimeout(io, &buf, .{ .duration = .{ .raw = std.Io.Duration.fromMilliseconds(100), .clock = .awake } });
         
         if (result) |_| {
             std.debug.print("❌ Expected timeout, got message\n", .{});
@@ -83,7 +83,7 @@ pub fn main() !void {
         var recv_buf: [1024]u8 = undefined;
         
         // Wait up to 1 second
-        const result = server.receiveManyTimeout(io, &in_msgs, &recv_buf, .{}, .{ .duration = .{ .raw = .{ .nanoseconds = 1 * std.time.ns_per_s }, .clock = .awake } });
+        const result = server.receiveManyTimeout(io, &in_msgs, &recv_buf, .{}, .{ .duration = .{ .raw = std.Io.Duration.fromSeconds(1), .clock = .awake } });
         
         const count = result[1];
         if (result[0]) |err| {

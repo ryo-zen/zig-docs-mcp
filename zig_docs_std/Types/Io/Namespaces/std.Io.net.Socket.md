@@ -109,7 +109,7 @@ Same as `receive`, but fails with `error.Timeout` if no data is received within 
 ```zig
 const timeout = std.Io.Timeout{
     .duration = .{
-        .raw = .{ .nanoseconds = 100 * std.time.ns_per_ms },
+        .raw = std.Io.Duration.fromMilliseconds(100),
         .clock = .awake,
     },
 };
