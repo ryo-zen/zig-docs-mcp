@@ -1,0 +1,181 @@
+//! Comprehensive test suite for std.Io.Threaded covering initialization,
+//! concurrency, file I/O, and environment handling.
+
+const std = @import("std");
+const testing = std.testing;
+const Io = std.Io;
+
+test "Io.Threaded initialization" {
+    const allocator = testing.allocator;
+
+    var threaded = std.Io.Threaded.init(allocator, .{ .environ = .empty });
+    defer threaded.deinit();
+
+    const io = threaded.io();
+    _ = io;
+    try testing.expectEqual(@as(usize, 0), threaded.busy_count);
+}
+
+test "Io.Threaded concurrent tasks" {
+    const allocator = testing.allocator;
+
+    var threaded = std.Io.Threaded.init(allocator, .{ .environ = .empty });
+    defer threaded.deinit();
+    const io = threaded.io();
+
+    const TaskData = struct {
+        value: u32,
+    };
+
+    const Work = struct {
+        fn double(data: TaskData) u32 {
+            return data.value * 2;
+        }
+    };
+
+    var task1 = io.async(Work.double, .{TaskData{ .value = 10 }});
+    defer _ = task1.cancel(io);
+
+    var task2 = io.async(Work.double, .{TaskData{ .value = 20 }});
+    defer _ = task2.cancel(io);
+
+    const res1 = task1.await(io);
+    const res2 = task2.await(io);
+
+    try testing.expectEqual(@as(u32, 20), res1);
+    try testing.expectEqual(@as(u32, 40), res2);
+}
+
+test "Io.Threaded file operations" {
+    const allocator = testing.allocator;
+
+    var threaded = std.Io.Threaded.init(allocator, .{ .environ = .empty });
+    defer threaded.deinit();
+    const io = threaded.io();
+
+    const cwd = std.Io.Dir.cwd();
+    const filename = "temp_test_threaded.txt";
+    defer cwd.deleteFile(io, filename) catch {};
+
+    {
+        const file = try cwd.createFile(io, filename, .{});
+        defer file.close(io);
+
+        var buffer: [1024]u8 = undefined;
+        var writer = file.writer(io, &buffer);
+        try writer.interface.writeAll("Hello Threaded World");
+        try writer.interface.flush();
+    }
+
+    {
+        const file = try cwd.openFile(io, filename, .{});
+        defer file.close(io);
+
+        var buf: [100]u8 = undefined;
+        // readStreaming requires a slice of slices (scatter/gather I/O)
+        const bytes_read = try file.readStreaming(io, &[_][]u8{&buf});
+        const read_slice = buf[0..bytes_read];
+
+        try testing.expectEqualStrings("Hello Threaded World", read_slice);
+    }
+}
+
+test "Io.Threaded environment variables" {
+    const allocator = testing.allocator;
+
+    // Verify mechanism works with safe .empty defaults
+    var threaded = std.Io.Threaded.init(allocator, .{ .environ = .empty });
+    defer threaded.deinit();
+
+    const result = threaded.environString("PATH");
+    try testing.expect(result == null);
+}
+
+test "File writeStreamingAll one-shot" {
+    const allocator = testing.allocator;
+
+    var threaded = std.Io.Threaded.init(allocator, .{ .environ = .empty });
+    defer threaded.deinit();
+    const io = threaded.io();
+
+    const cwd = std.Io.Dir.cwd();
+    const filename = "temp_test_streaming_all.txt";
+    defer cwd.deleteFile(io, filename) catch {};
+
+    {
+        const file = try cwd.createFile(io, filename, .{});
+        defer file.close(io);
+        try file.writeStreamingAll(io, "one-shot streaming write");
+    }
+
+    {
+        const file = try cwd.openFile(io, filename, .{});
+        defer file.close(io);
+
+        var buf: [100]u8 = undefined;
+        const bytes_read = try file.readStreaming(io, &[_][]u8{&buf});
+        try testing.expectEqualStrings("one-shot streaming write", buf[0..bytes_read]);
+    }
+}
+
+test "File positional write and read" {
+    const allocator = testing.allocator;
+
+    var threaded = std.Io.Threaded.init(allocator, .{ .environ = .empty });
+    defer threaded.deinit();
+    const io = threaded.io();
+
+    const cwd = std.Io.Dir.cwd();
+    const filename = "temp_test_positional.dat";
+    defer cwd.deleteFile(io, filename) catch {};
+
+    // Write phase
+    {
+        const file = try cwd.createFile(io, filename, .{});
+        defer file.close(io);
+        try file.writePositionalAll(io, "AAAA", 0);
+        try file.writePositionalAll(io, "BBBB", 4);
+    }
+
+    // Read phase
+    {
+        const file = try cwd.openFile(io, filename, .{});
+        defer file.close(io);
+
+        var buf: [4]u8 = undefined;
+        _ = try file.readPositionalAll(io, &buf, 4);
+        try testing.expectEqualStrings("BBBB", &buf);
+
+        _ = try file.readPositionalAll(io, &buf, 0);
+        try testing.expectEqualStrings("AAAA", &buf);
+    }
+}
+
+test "File stat and length" {
+    const allocator = testing.allocator;
+
+    var threaded = std.Io.Threaded.init(allocator, .{ .environ = .empty });
+    defer threaded.deinit();
+    const io = threaded.io();
+
+    const cwd = std.Io.Dir.cwd();
+    const filename = "temp_test_stat.txt";
+    defer cwd.deleteFile(io, filename) catch {};
+
+    {
+        const file = try cwd.createFile(io, filename, .{});
+        defer file.close(io);
+        try file.writeStreamingAll(io, "hello stat");
+    }
+
+    {
+        const file = try cwd.openFile(io, filename, .{});
+        defer file.close(io);
+
+        const len = try file.length(io);
+        try testing.expectEqual(@as(u64, 10), len);
+
+        const info = try file.stat(io);
+        try testing.expectEqual(@as(u64, 10), info.size);
+    }
+}
