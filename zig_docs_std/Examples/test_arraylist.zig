@@ -5,10 +5,12 @@ pub fn main() !void {
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
 
-    var list = std.ArrayList(u32).init(allocator);
-    defer list.deinit();
+    // Test the new ArrayList API
+    var list: std.ArrayList(u32) = .{};
+    defer list.deinit(allocator);
 
-    try list.append(42);
-    std.debug.print("Item: {}\n", .{list.items[0]});
+    try list.append(allocator, 42);
+    try list.append(allocator, 100);
+
+    std.debug.print("ArrayList items: {any}\n", .{list.items});
 }
-
