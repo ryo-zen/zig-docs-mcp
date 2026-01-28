@@ -1,57 +1,184 @@
 # std.Io.Clock
 
-### Fields
+📚 **[See Comprehensive Examples & Tests](../../Examples/test_clock_comprehensive.zig)** - Runnable code demonstrating Clock, Duration, and Timestamp usage
 
-    real
+## Quick Start
 
-A settable system-wide clock that measures real (i.e. wall-clock) time. This clock is affected by discontinuous jumps in the system time (e.g., if the system administrator manually changes the clock), and by frequency adjustments performed by NTP and similar applications.
+### Get the Current Unix Time
+```zig
+const ts = try std.Io.Clock.real.now(io);
+const unix_seconds = ts.toSeconds();
+```
 
-This clock normally counts the number of seconds since 1970-01-01 00:00:00 Coordinated Universal Time (UTC) except that it ignores leap seconds; near a leap second it is typically adjusted by NTP to stay roughly in sync with UTC.
+### Measure Elapsed Time
+```zig
+const before = try std.Io.Clock.awake.now(io);
+// ... do work ...
+const after = try std.Io.Clock.awake.now(io);
+const elapsed = before.durationTo(after);
+std.debug.print("Took {}ms\n", .{elapsed.toMilliseconds()});
+```
 
-Timestamps returned by implementations of this clock represent time elapsed since 1970-01-01T00:00:00Z, the POSIX/Unix epoch, ignoring leap seconds. This is colloquially known as "Unix time". If the underlying OS uses a different epoch for native timestamps (e.g., Windows, which uses 1601-01-01) they are translated accordingly.
+### Sleep for a Duration
+```zig
+io.sleep(.fromMilliseconds(500), .awake) catch {};
+```
 
-    awake
+### Compute a Future Timestamp
+```zig
+const now = try std.Io.Clock.real.now(io);
+const deadline = now.addDuration(.fromSeconds(30));
+```
 
-A nonsettable system-wide clock that represents time since some unspecified point in the past.
+⚠️ **Critical**: Use `.awake` for elapsed-time measurement and timeouts — it is monotonic and unaffected by system clock changes. Use `.real` only when you need wall-clock time (e.g. Unix timestamps, log entries).
 
-Monotonic: Guarantees that the time returned by consecutive calls will not go backwards, but successive calls may return identical (not-increased) time values.
+---
 
-Not affected by discontinuous jumps in the system time (e.g., if the system administrator manually changes the clock), but may be affected by frequency adjustments.
+## Overview
 
-This clock expresses intent to **exclude time that the system is suspended**. However, implementations may be unable to satisify this, and may include that time.
+`std.Io.Clock` is an enum representing the different time sources available in the system. Each variant has distinct guarantees about monotonicity, settability, and what time it tracks. The primary operation is `now`, which returns a `Timestamp` for the chosen clock.
 
-- On Linux, corresponds `CLOCK_MONOTONIC`.
-- On macOS, corresponds to `CLOCK_UPTIME_RAW`.
+Clocks, Durations, and Timestamps form a trio:
+- **`Clock`** — selects *which* time source to read.
+- **`Timestamp`** — a point in time returned by `Clock.now`.
+- **`Duration`** — a span of time, used for arithmetic on timestamps and for timeouts.
 
-<!-- -->
+**Key Characteristics:**
+- **Enum-based**: Clock variants are accessed as `Clock.real`, `Clock.awake`, etc. — not instantiated.
+- **Not cancelable**: `now` does not block, so it cannot be canceled. This is intentional — cancellation logic itself may need to check the time.
+- **Requires `Io`**: `now` takes an `Io` parameter to route through the active backend.
+- **Platform-mapped**: Each variant maps to a specific OS clock (see variant docs below).
 
-    boot
+**When to use:**
+- `.real` — when you need wall-clock time (Unix timestamps, log entries, expiry dates).
+- `.awake` — when you need monotonic elapsed time (benchmarks, timeouts, animation loops).
+- `.boot` — like `.awake` but includes suspend time. Rarely needed.
+- `.cpu_process` / `.cpu_thread` — for profiling CPU usage.
 
-Identical to `awake` except it expresses intent to **include time that the system is suspended**, however, due to limitations it may behave identically to `awake`.
+## Clock Variants (Fields)
 
-- On Linux, corresponds `CLOCK_BOOTTIME`.
-- On macOS, corresponds to `CLOCK_MONOTONIC_RAW`.
+`real`
 
-<!-- -->
+A settable system-wide clock measuring real (wall-clock) time. Affected by NTP adjustments and manual system clock changes. Timestamps represent seconds since the Unix epoch (1970-01-01T00:00:00Z), ignoring leap seconds. On Windows, the native epoch (1601-01-01) is translated automatically.
 
-    cpu_process
+------
 
-Tracks the amount of CPU in user or kernel mode used by the calling process.
+`awake`
 
-    cpu_thread
+A nonsettable monotonic clock representing time since some unspecified point in the past. Consecutive calls are guaranteed to never go backwards (though successive calls may return identical values). Not affected by system clock jumps. Expresses intent to **exclude suspended time**, though implementations may include it.
 
-Tracks the amount of CPU in user or kernel mode used by the calling thread.
+- On Linux: `CLOCK_MONOTONIC`
+- On macOS: `CLOCK_UPTIME_RAW`
+
+------
+
+`boot`
+
+Identical to `awake` except it expresses intent to **include suspended time**. Due to platform limitations, it may behave identically to `awake` on some systems.
+
+- On Linux: `CLOCK_BOOTTIME`
+- On macOS: `CLOCK_MONOTONIC_RAW`
+
+------
+
+`cpu_process`
+
+Tracks the amount of CPU time (user + kernel mode) used by the calling process.
+
+------
+
+`cpu_thread`
+
+Tracks the amount of CPU time (user + kernel mode) used by the calling thread.
 
 ## Types
 
-- Duration
-- Timestamp
+- **Duration** — A span of time. See [std.Io.Duration](std.Io.Duration.md) for the full reference.
+- **Timestamp** — A point in time. See [std.Io.Timestamp](std.Io.Timestamp.md) for the full reference.
 
-## Functions
+## Core Functions
 
-`pub fn now(clock: Clock, io: Io) Error!Io.Timestamp`  
-This function is not cancelable because first of all it does not block, but more importantly, the cancelation logic itself may want to check the time.
+### `pub fn now(clock: Clock, io: Io) Error!Timestamp`
+
+Returns the current time for this clock as a `Timestamp`. Not cancelable — it does not block, and cancellation logic itself may need to read the time.
+
+**Example:**
+```zig
+const ts = try std.Io.Clock.real.now(io);
+std.debug.print("Unix time: {}s\n", .{ts.toSeconds()});
+```
+
+------
+
+### `io.sleep(duration: Duration, clock: Clock) !void`
+
+Suspends the current execution context for at least `duration` on the specified clock. This is the primary consumer of `Duration` values.
+
+**Example:**
+```zig
+// Sleep 200ms using the monotonic clock
+io.sleep(.fromMilliseconds(200), .awake) catch {};
+```
+
+Note: `sleep` lives on the `Io` interface, not on `Clock` itself, but it is the most common use of Clock variants alongside `now`.
+
+## Usage Patterns
+
+### Benchmarking a Block of Work
+```zig
+const before = try std.Io.Clock.awake.now(io);
+
+// ... work to measure ...
+var sum: u64 = 0;
+for (0..1_000_000) |i| sum += i;
+
+const after = try std.Io.Clock.awake.now(io);
+const elapsed = before.durationTo(after);
+std.debug.print("Sum {} took {}ms\n", .{ sum, elapsed.toMilliseconds() });
+```
+
+### Deadline-Based Loop
+```zig
+const deadline = (try std.Io.Clock.awake.now(io)).addDuration(.fromSeconds(5));
+
+while (true) {
+    const now = try std.Io.Clock.awake.now(io);
+    if (now.durationTo(deadline).nanoseconds <= 0) break;
+    // ... poll or do work ...
+    io.sleep(.fromMilliseconds(10), .awake) catch {};
+}
+```
+
+### Timeout for Network Operations
+```zig
+const result = socket.receiveTimeout(io, &buf, .{
+    .duration = .{
+        .raw = std.Io.Duration.fromMilliseconds(100),
+        .clock = .awake,
+    },
+});
+```
 
 ## Error Sets
 
-- Error
+- **Error** — Errors from `Clock.now` (e.g. unsupported clock on the current platform).
+
+## Debug Checklist
+
+1. ✅ **Using the right clock?** `.awake` for monotonic/elapsed time. `.real` for wall-clock Unix timestamps. Mixing them up gives meaningless durations.
+2. ✅ **Did you handle the error from `now`?** Some clock variants may not be supported on all platforms.
+3. ✅ **Sleep clock matches measurement clock?** If you sleep on `.awake` and measure on `.real`, a system clock adjustment can make the duration appear wrong.
+4. ✅ **Negative duration check?** `durationTo` can return negative values if the "to" timestamp is in the past. Check `.nanoseconds <= 0` before acting on it.
+
+## Performance Tips
+
+1. **Cache `now` calls** — Each `now` is a syscall. If you need the time multiple times in a tight loop, read it once per iteration.
+2. **Use `.awake` over `.real` for timeouts** — Monotonic clocks are immune to NTP jumps, so your timeout won't accidentally fire early or run forever.
+3. **Prefer `fromMilliseconds` for human-scale durations** — It reads clearly and avoids error-prone nanosecond math.
+
+## See Also
+
+- `std.Io.Duration` — Time span type used for arithmetic and timeouts.
+- `std.Io.Timestamp` — Point-in-time type returned by `Clock.now`.
+- `std.Io` — The generic I/O interface (hosts `sleep`).
+- `std.Io.Threaded` — The standard I/O backend.
