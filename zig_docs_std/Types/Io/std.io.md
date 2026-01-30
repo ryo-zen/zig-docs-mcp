@@ -1,167 +1,136 @@
-# struct
+# std.Io
 
-A cross-platform interface that abstracts all I/O operations and concurrency. It includes:
+📚 **[See Comprehensive Examples & Tests](../../Examples/test_io_threaded.zig)** - Runnable code showing initialization and basic usage.
 
-- file system
-- networking
-- processes
-- time and sleeping
-- randomness
-- async, await, concurrent, and cancel
-- concurrent queues
-- wait groups and select
-- mutexes, futexes, events, and conditions
-- memory mapped files This interface allows programmers to write optimal, reusable code while participating in these operations.
+## Quick Start
+
+### 1. Initialize an Backend
+To do any I/O in Zig 0.16, you first need to initialize a backend. `std.Io.Threaded` is the standard, cross-platform choice.
+
+```zig
+const std = @import("std");
+
+pub fn main() !void {
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    defer _ = gpa.deinit();
+    
+    // Initialize the Threaded backend
+    var threaded = std.Io.Threaded.init(gpa.allocator(), .{ .environ = .empty });
+    defer threaded.deinit();
+
+    // Get the generic 'Io' interface
+    const io = threaded.io();
+    
+    // Pass 'io' to functions that need it
+    try doWork(io);
+}
+```
+
+### 2. Async Execution
+```zig
+fn doWork(io: std.Io) !void {
+    // Launch a task concurrently
+    var task = io.async(heavyComputation, .{123});
+    defer _ = task.cancel(io); // Always clean up futures
+
+    // Do other work...
+    io.sleep(.fromMilliseconds(100), .awake) catch {};
+
+    // Await the result
+    const result = try task.await(io);
+}
+
+fn heavyComputation(arg: u32) u32 {
+    return arg * 2;
+}
+```
+
+---
+
+## Overview
+
+`std.Io` is the central abstraction for all I/O and concurrency operations in Zig. It replaces the old ad-hoc `std.fs`, `std.net`, and `std.time` functions with a unified, vtable-based interface.
+
+**Key Design Principles:**
+- **Backend Agnostic**: Code written against `std.Io` runs on threads, io_uring, kqueue, or even custom backends without changes.
+- **Explicit Context**: No global state. All I/O operations (reading files, sleeping, spawning tasks) require an `io` instance.
+- **Integrated Concurrency**: Async/await is a library feature, not just a language keyword. `io.async` spawns tasks that are managed by the backend.
 
 ## Fields
 
-```
-userdata: ?*anyopaque
-```
+`userdata: ?*anyopaque`
 
-```
-vtable: *const VTable
-```
+A pointer to the backend-specific state (e.g., the `Threaded` struct or `IoUring` instance).
 
-## Types
+------
 
-- [AnyFuture](https://ziglang.org/documentation/master/std/#std.Io.AnyFuture)
-- [CancelProtection](https://ziglang.org/documentation/master/std/#std.Io.CancelProtection)
-- [Clock](https://ziglang.org/documentation/master/std/#std.Io.Clock)
-- [Condition](https://ziglang.org/documentation/master/std/#std.Io.Condition)
-- [Dir](https://ziglang.org/documentation/master/std/#std.Io.Dir)
-- [Duration](https://ziglang.org/documentation/master/std/#std.Io.Duration)
-- [Event](https://ziglang.org/documentation/master/std/#std.Io.Event)
-- [Evented](https://ziglang.org/documentation/master/std/#std.Io.Evented)
-- [File](https://ziglang.org/documentation/master/std/#std.Io.File)
-- [Future](https://ziglang.org/documentation/master/std/#std.Io.Future)
-- [Group](https://ziglang.org/documentation/master/std/#std.Io.Group)
-- [IoUring](https://ziglang.org/documentation/master/std/#std.Io.IoUring)
-- [Kqueue](https://ziglang.org/documentation/master/std/#std.Io.Kqueue)
-- [Limit](https://ziglang.org/documentation/master/std/#std.Io.Limit)
-- [LockedStderr](https://ziglang.org/documentation/master/std/#std.Io.LockedStderr)
-- [Mutex](https://ziglang.org/documentation/master/std/#std.Io.Mutex)
-- [PollFiles](https://ziglang.org/documentation/master/std/#std.Io.PollFiles)
-- [Poller](https://ziglang.org/documentation/master/std/#std.Io.Poller)
-- [Queue](https://ziglang.org/documentation/master/std/#std.Io.Queue)
-- [Reader](https://ziglang.org/documentation/master/std/#std.Io.Reader)
-- [Select](https://ziglang.org/documentation/master/std/#std.Io.Select)
-- [SelectUnion](https://ziglang.org/documentation/master/std/#std.Io.SelectUnion)
-- [Terminal](https://ziglang.org/documentation/master/std/#std.Io.Terminal)
-- [Threaded](https://ziglang.org/documentation/master/std/#std.Io.Threaded)
-- [Timeout](https://ziglang.org/documentation/master/std/#std.Io.Timeout)
-- [Timestamp](https://ziglang.org/documentation/master/std/#std.Io.Timestamp)
-- [TypeErasedQueue](https://ziglang.org/documentation/master/std/#std.Io.TypeErasedQueue)
-- [VTable](https://ziglang.org/documentation/master/std/#std.Io.VTable)
-- [Writer](https://ziglang.org/documentation/master/std/#std.Io.Writer)
+`vtable: *const VTable`
 
-## Namespaces
+The table of function pointers implementing the standard I/O operations.
 
-[net](https://ziglang.org/documentation/master/std/#std.Io.net)
+## Core Types
 
-## Functions
+- **[Threaded](Types/std.Io.Threaded.md)**: The standard cross-platform backend.
+- **[Evented](Types/std.Io.Evented.md)**: High-performance async backend (IoUring/Kqueue).
+- **[File](Types/std.Io.File.md)**: Buffered file operations.
+- **[net](Namespaces/std.Io.net.md)**: Networking primitives.
+- **[Clock](Types/std.Io.Clock.md)**: Time and duration types.
 
-```
-pub fn async( io: Io, function: anytype, args: std.meta.ArgsTuple(@TypeOf(function)), ) Future(@typeInfo(@TypeOf(function)).@"fn".return_type.?)
-```
+## Function Reference
 
-Calls `function` with `args`, such that the return value of the function is not guaranteed to be available until `await` is called.
+### Concurrency & Tasks
 
-```
-pub fn checkCancel(io: Io) Cancelable!void
-```
+#### `pub fn async(io: Io, function: anytype, args: anytype) Future`
+Spawns a new task to run `function` with `args`. The task may run on another thread or be multiplexed on the same thread, depending on the backend. Returns a `Future` that must be awaited or canceled.
 
-This function acts as a pure cancelation point (subject to protection; see `CancelProtection`) and does nothing else. In other words, it returns `error.Canceled` if there is an outstanding non-blocked cancelation request, but otherwise is a no-op.
+#### `pub fn concurrent(io: Io, function: anytype, args: anytype) ConcurrentError!Future`
+Similar to `async`, but explicitly requests concurrent execution (e.g., on a separate thread). Can fail if the backend hits its concurrency limit.
 
-```
-pub fn concurrent( io: Io, function: anytype, args: std.meta.ArgsTuple(@TypeOf(function)), ) ConcurrentError!Future(@typeInfo(@TypeOf(function)).@"fn".return_type.?)
-```
+#### `pub fn select(io: Io, s: anytype) Cancelable!SelectUnion`
+Waits for one of multiple futures to complete. `s` is a struct of futures. Returns a union indicating which future finished first.
 
-Calls `function` with `args`, such that the return value of the function is not guaranteed to be available until `await` is called, allowing the caller to progress while waiting for any `Io` operations.
+#### `pub fn checkCancel(io: Io) Cancelable!void`
+Explicit cancellation point. Returns `error.Canceled` if the current task has been requested to stop.
 
-```
-pub fn futexWait(io: Io, comptime T: type, ptr: *align(@alignOf(u32)) const T, expected: T) Cancelable!void
-```
+#### `pub fn recancel(io: Io) void`
+Re-arms a cancellation request after it has been caught.
 
-Atomically checks if the value at `ptr` equals `expected`, and if so, blocks until either:
+#### `pub fn swapCancelProtection(io: Io, new: CancelProtection) CancelProtection`
+Enables or disables cancellation for a critical section of code.
 
-```
-pub fn futexWaitTimeout(io: Io, comptime T: type, ptr: *align(@alignOf(u32)) const T, expected: T, timeout: Timeout) Cancelable!void
-```
+### Synchronization
 
-Same as `futexWait`, except also unblocks if `timeout` expires. As with `futexWait`, spurious wakeups are possible. It remains the caller's responsibility to differentiate between these three possible wake-up reasons if necessary.
+#### `pub fn futexWait(io: Io, ptr: *const T, expected: T) Cancelable!void`
+Atomically checks if `*ptr == expected` and blocks if true. Efficient low-level waiting primitive.
 
-```
-pub fn futexWaitUncancelable(io: Io, comptime T: type, ptr: *align(@alignOf(u32)) const T, expected: T) void
-```
+#### `pub fn futexWaitTimeout(io: Io, ptr: *const T, expected: T, timeout: Timeout) Cancelable!void`
+Same as `futexWait` but with a timeout.
 
-Same as `futexWait`, except does not introduce a cancelation point.
+#### `pub fn futexWake(io: Io, ptr: *const T, max_waiters: u32) void`
+Wakes up to `max_waiters` threads blocked on `ptr`.
 
-```
-pub fn futexWake(io: Io, comptime T: type, ptr: *align(@alignOf(u32)) const T, max_waiters: u32) void
-```
+#### `pub fn lockStderr(io: Io, buffer: []u8, terminal_mode: ?Terminal.Mode) Cancelable!LockedStderr`
+Acquires a lock on standard error for coordinated printing.
 
-Unblocks pending futex waits on `ptr`, up to a limit of `max_waiters` calls.
+### Time & Randomness
 
-```
-pub fn lockStderr(io: Io, buffer: []u8, terminal_mode: ?Terminal.Mode) Cancelable!LockedStderr
-```
+#### `pub fn sleep(io: Io, duration: Duration, clock: Clock) SleepError!void`
+Suspends execution for at least `duration`. Use `std.Io.Duration` constructors (e.g., `.fromMilliseconds(100)`).
 
-For doing application-level writes to the standard error stream. Coordinates also with debug-level writes that are ignorant of Io interface and implementations. When this returns, `std.process.stderr_thread_mutex` will be locked.
+#### `pub fn random(io: Io, buffer: []u8) void`
+Fills `buffer` with cryptographically secure pseudo-random bytes.
 
-```
-pub fn poll( gpa: Allocator, comptime StreamEnum: type, files: PollFiles(StreamEnum), ) Poller(StreamEnum)
-```
+#### `pub fn randomSecure(io: Io, buffer: []u8) RandomSecureError!void`
+Same as `random`, but guarantees entropy comes from the OS (may block or fail).
 
-```
-pub fn random(io: Io, buffer: []u8) void
-```
+### Polling
 
-Obtains entropy from a cryptographically secure pseudo-random number generator.
-
-```
-pub fn randomSecure(io: Io, buffer: []u8) RandomSecureError!void
-```
-
-Obtains cryptographically secure entropy from outside the process.
-
-```
-pub fn recancel(io: Io) void
-```
-
-Asserts that `error.Canceled` was returned from a prior cancelation point, and "re-arms" the cancelation request, so that `error.Canceled` will be returned again from the next cancelation point.
-
-```
-pub fn select(io: Io, s: anytype) Cancelable!SelectUnion(@TypeOf(s))
-```
-
-`s` is a struct with every field a `*Future(T)`, where `T` can be any type, and can be different for each field.
-
-```
-pub fn sleep(io: Io, duration: Duration, clock: Clock) SleepError!void
-```
-
-```
-pub fn swapCancelProtection(io: Io, new: CancelProtection) CancelProtection
-```
-
-Updates the current task's cancel protection state (see `CancelProtection`).
-
-```
-pub fn tryLockStderr(io: Io, buffer: []u8, terminal_mode: ?Terminal.Mode) Cancelable!?LockedStderr
-```
-
-Same as `lockStderr` but non-blocking.
-
-```
-pub fn unlockStderr(io: Io) void
-```
+#### `pub fn poll(gpa: Allocator, comptime StreamEnum: type, files: PollFiles) Poller`
+Creates a poller instance for monitoring multiple file descriptors or handles.
 
 ## Error Sets
 
-- [Cancelable](https://ziglang.org/documentation/master/std/#std.Io.Cancelable)
-- [ConcurrentError](https://ziglang.org/documentation/master/std/#std.Io.ConcurrentError)
-- [QueueClosedError](https://ziglang.org/documentation/master/std/#std.Io.QueueClosedError)
-- [RandomSecureError](https://ziglang.org/documentation/master/std/#std.Io.RandomSecureError)
-- [SleepError](https://ziglang.org/documentation/master/std/#std.Io.SleepError)
-- [UnexpectedError](https://ziglang.org/documentation/master/std/#std.Io.UnexpectedError)
+- **Cancelable**: `error{Canceled}`
+- **ConcurrentError**: `error{TooManyConcurrentTasks, OutOfMemory}` + `Cancelable`
+- **SleepError**: `error{UnsupportedClock, UnexpectedError}` + `Cancelable`
+- **RandomSecureError**: `error{SystemResources}`
