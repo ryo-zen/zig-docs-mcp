@@ -6,13 +6,18 @@ This documentation is organized into two main categories:
 Direct Zig standard library types and their methods:
 
 ### ArrayHashMap
-- ArrayHashMapUnmanaged
-- ArrayHashMapWithAllocator
+- ArrayHashMap
+- AutoHashMap
 
 ### ArrayList
 - ArrayList
 - ArrayListAligned
 - ArrayListAlignedUnmanaged
+
+### Io
+## Namespaces
+- std.Io.net.HostName.md
+## Types
 
 ## Namespaces
 Standard library modules and their contents:
