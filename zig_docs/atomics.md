@@ -1,13 +1,21 @@
-# Atomics §
+# Atomics
 
 TODO: @atomic rmw
 
+      
+
 TODO: builtin atomic memory ordering enum
+
+      
 
 See also:
 
-  * @atomicLoad
-  * @atomicStore
-  * @atomicRmw
-  * @cmpxchgWeak
-  * @cmpxchgStrong
+- [@atomicLoad](#atomicLoad)
+
+- [@atomicStore](#atomicStore)
+
+- [@atomicRmw](#atomicRmw)
+
+- [@cmpxchgWeak](#cmpxchgWeak)
+
+- [@cmpxchgStrong](#cmpxchgStrong)

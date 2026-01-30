@@ -1,54 +1,57 @@
-# Hello World §
+# Hello World
 
 hello.zig
+```zig
+const std = @import("std");
 
-    ```zig
-    const std = @import("std");
-    
-    pub fn main() !void {
-        const stdout = std.io.getStdOut().writer();
-        try stdout.print("Hello, {s}!\n", .{"world"});
-    }
-    ```
+pub fn main(init: std.process.Init) !void {
+    try std.Io.File.stdout().writeStreamingAll(init.io, "Hello, World!\n");
+}
+```
+Shell$ zig build-exe hello.zig
+$ ./hello
+Hello, World!
 
-Shell
+      
 
-    ```
-    $ zig build-exe hello.zig
-    $ ./hello
-    Hello, world!
-    
-    ```
+      Most of the time, it is more appropriate to write to stderr rather than stdout, and
+      whether or not the message is successfully written to the stream is irrelevant.
+      Also, formatted printing often comes in handy. For this common case,
+      there is a simpler API:
+      
 
-Most of the time, it is more appropriate to write to stderr rather than stdout, and whether or not the message is successfully written to the stream is irrelevant. For this common case, there is a simpler API: 
+      hello_again.zig
+```zig
+const std = @import("std");
 
-hello_again.zig
+pub fn main() void {
+    std.debug.print("Hello, {s}!\n", .{"World"});
+}
+```
+Shell$ zig build-exe hello_again.zig
+$ ./hello_again
+Hello, World!
 
-    ```zig
-    const std = @import("std");
-    
-    pub fn main() void {
-        std.debug.print("Hello, world!\n", .{});
-    }
-    ```
+      
 
-Shell
+      In this case, the `!` may be omitted from the return
+      type of `main` because no errors are returned from the function.
+      
 
-    ```
-    $ zig build-exe hello_again.zig
-    $ ./hello_again
-    Hello, world!
-    
-    ```
-
-In this case, the `!` may be omitted from the return type of `main` because no errors are returned from the function. 
+      
 
 See also:
 
-  * Values
-  * Tuples
-  * @import
-  * Errors
-  * Entry Point
-  * Source Encoding
-  * try
+- [Values](#Values)
+
+- [Tuples](#Tuples)
+
+- [@import](#import)
+
+- [Errors](#Errors)
+
+- [Entry Point](#Entry-Point)
+
+- [Source Encoding](#Source-Encoding)
+
+- [try](#try)

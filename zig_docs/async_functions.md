@@ -1,10 +1,8 @@
-# Async Functions §
+# Async Functions
 
-Async functions regressed with the release of 0.11.0. Their future in the Zig language is unclear due to multiple unsolved problems:
+Async functions regressed with the release of 0.11.0. The current plan is to
+      reintroduce them as a lower level primitive that powers I/O implementations.
 
-  * LLVM's lack of ability to optimize them.
-  * Third-party debuggers' lack of ability to debug them.
-  * [The cancellation problem](https://github.com/ziglang/zig/issues/5913).
-  * Async function pointers preventing the stack size from being known.
+      
 
-These problems are surmountable, but it will take time. The Zig team is currently focused on other priorities.
+Tracking issue: [Proposal: stackless coroutines as low-level primitives](https://github.com/ziglang/zig/issues/23446)
