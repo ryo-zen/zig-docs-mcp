@@ -20,7 +20,26 @@ import {
 import fs from 'fs';
 import path from 'path';
 
+// Interface for cached resource items
+interface ResourceEntry {
+  uri: string;
+  name: string;
+  description: string;
+  mimeType: string;
+  _filePath: string;
+}
+
+// Interface for search results
+interface SearchResult {
+  score: number;
+  text: string;
+}
+
 class ZigDocumentationServer {
+  private server: Server;
+  private docCache: Map<string, string>;
+  private resourceList: ResourceEntry[];
+
   constructor() {
     this.server = new Server({
       name: 'zig-documentation-server',
@@ -40,11 +59,11 @@ class ZigDocumentationServer {
     this.setupToolHandlers();
   }
 
-  async readMarkdownFile(filename) {
+  async readMarkdownFile(filename: string): Promise<string> {
     try {
       // Check cache first
       if (this.docCache.has(filename)) {
-        return this.docCache.get(filename);
+        return this.docCache.get(filename)!;
       }
 
       // If not in cache, read from disk (fallback)
@@ -55,7 +74,7 @@ class ZigDocumentationServer {
       this.docCache.set(filename, content);
 
       return content;
-    } catch (error) {
+    } catch (error: any) {
       throw new McpError(
         ErrorCode.InternalError,
         `Failed to read file ${filename}: ${error.message}`
@@ -64,7 +83,7 @@ class ZigDocumentationServer {
   }
 
   // Load all documentation files into memory cache at startup
-  async loadDocsIntoCache() {
+  async loadDocsIntoCache(): Promise<void> {
     const langDocsDir = path.join(process.cwd(), 'zig_docs');
     const stdDocsDir = path.join(process.cwd(), 'zig_docs_std');
     const examplesDir = path.join(process.cwd(), 'zig_docs_std', 'Examples');
@@ -87,7 +106,7 @@ class ZigDocumentationServer {
   }
 
   // Recursively cache all markdown files in a directory
-  async cacheDirectory(dir, baseUri) {
+  async cacheDirectory(dir: string, baseUri: string): Promise<void> {
     const items = await fs.promises.readdir(dir, { withFileTypes: true });
 
     for (const item of items) {
@@ -127,7 +146,7 @@ class ZigDocumentationServer {
   }
 
   // Cache example files (.zig files) from Examples directory
-  async cacheExamplesDirectory(dir, baseUri) {
+  async cacheExamplesDirectory(dir: string, baseUri: string): Promise<void> {
     const items = await fs.promises.readdir(dir, { withFileTypes: true });
 
     for (const item of items) {
@@ -167,7 +186,7 @@ class ZigDocumentationServer {
   }
 
 
-  formatResourceName(uri) {
+  formatResourceName(uri: string): string {
     const parts = uri.split('/');
     const last = parts[parts.length - 1];
 
@@ -189,7 +208,7 @@ class ZigDocumentationServer {
     return last;
   }
 
-  generateDescription(uri) {
+  generateDescription(uri: string): string {
     if (uri.startsWith('zig://examples/')) {
       return `Working Zig code example`;
     } else if (uri.includes('/Types/')) {
@@ -206,7 +225,9 @@ class ZigDocumentationServer {
   setupResourceHandlers() {
     this.server.setRequestHandler(ListResourcesRequestSchema, async () => {
       // Return cached resource list
-      return { resources: this.resourceList };
+      // Filter out internal _filePath property before returning to client
+      const resources = this.resourceList.map(({ _filePath, ...rest }) => rest);
+      return { resources };
     });
 
     this.server.setRequestHandler(ReadResourceRequestSchema, async (request) => {
@@ -223,7 +244,7 @@ class ZigDocumentationServer {
             text: content,
           }],
         };
-      } catch (error) {
+      } catch (error: any) {
         throw new McpError(
           ErrorCode.InvalidRequest,
           `Failed to read resource ${uri}: ${error.message}`
@@ -232,7 +253,7 @@ class ZigDocumentationServer {
     });
   }
 
-  uriToFilePath(uri) {
+  uriToFilePath(uri: string): string {
     if (uri.startsWith('zig://doc/')) {
       const topic = uri.replace('zig://doc/', '');
       return `zig_docs/${topic.replace(/-/g, '_')}.md`;
@@ -255,7 +276,7 @@ class ZigDocumentationServer {
     throw new Error(`Unknown URI format: ${uri}`);
   }
 
-  filePathToUri(filePath) {
+  filePathToUri(filePath: string): string {
     const relativePath = path.relative(process.cwd(), filePath);
     
     if (relativePath.startsWith('zig_docs/')) {
@@ -349,6 +370,10 @@ class ZigDocumentationServer {
 
     this.server.setRequestHandler(CallToolRequestSchema, async (request) => {
       const { name, arguments: args } = request.params;
+      
+      if (!args) {
+          throw new McpError(ErrorCode.InvalidParams, "No arguments provided");
+      }
 
       switch (name) {
         case 'search_zig_docs':
@@ -356,7 +381,7 @@ class ZigDocumentationServer {
             content: [
               {
                 type: 'text',
-                text: this.searchDocumentation(args.query),
+                text: this.searchDocumentation(args.query as string),
               },
             ],
           };
@@ -366,7 +391,7 @@ class ZigDocumentationServer {
             content: [
               {
                 type: 'text',
-                text: await this.getBuiltinInfo(args.builtin_name),
+                text: await this.getBuiltinInfo(args.builtin_name as string),
               },
             ],
           };
@@ -376,7 +401,7 @@ class ZigDocumentationServer {
             content: [
               {
                 type: 'text',
-                text: await this.explainConcept(args.concept),
+                text: await this.explainConcept(args.concept as string),
               },
             ],
           };
@@ -386,7 +411,7 @@ class ZigDocumentationServer {
             content: [
               {
                 type: 'text',
-                text: await this.getSyntaxExamples(args.construct),
+                text: await this.getSyntaxExamples(args.construct as string),
               },
             ],
           };
@@ -396,7 +421,7 @@ class ZigDocumentationServer {
             content: [
               {
                 type: 'text',
-                text: await this.getExample(args.topic),
+                text: await this.getExample(args.topic as string),
               },
             ],
           };
@@ -410,8 +435,8 @@ class ZigDocumentationServer {
     });
   }
 
-  searchDocumentation(query) {
-    const results = [];
+  searchDocumentation(query: string): string {
+    const results: SearchResult[] = [];
 
     try {
       // Search in cached documentation
@@ -434,7 +459,8 @@ class ZigDocumentationServer {
         if (score > 0) {
           results.push({
             score: score,
-            text: `**${category}: ${resourceName}** (score: ${score.toFixed(2)})\n  URI: ${uri}`
+            text: `**${category}: ${resourceName}** (score: ${score.toFixed(2)})
+  URI: ${uri}`
           });
         }
       }
@@ -449,14 +475,14 @@ class ZigDocumentationServer {
       // Format results
       return results.slice(0, 10).map(r => r.text).join('\n\n');
 
-    } catch (error) {
+    } catch (error: any) {
       return `Search error: ${error.message}`;
     }
   }
 
 
   // Calculate match score based on various criteria
-  calculateMatchScore(query, fileName, resourceName, content) {
+  calculateMatchScore(query: string, fileName: string, resourceName: string, content: string): number {
     let score = 0;
     const lowerQuery = query.toLowerCase();
     const lowerFileName = fileName.toLowerCase();
@@ -518,17 +544,17 @@ class ZigDocumentationServer {
   }
 
   // Split camelCase/PascalCase into words
-  splitWords(str) {
+  splitWords(str: string): string[] {
     return str
       .replace(/([a-z])([A-Z])/g, '$1 $2')
       .replace(/([A-Z])([A-Z][a-z])/g, '$1 $2')
-      .split(/[\s_-]+/)
+      .split(/[ -- -⁯⸀-⹿\s\-_]+/)
       .filter(w => w.length > 0);
   }
 
   // Calculate Levenshtein distance between two strings
-  levenshteinDistance(a, b) {
-    const matrix = [];
+  levenshteinDistance(a: string, b: string): number {
+    const matrix: number[][] = [];
     
     for (let i = 0; i <= b.length; i++) {
       matrix[i] = [i];
@@ -555,14 +581,14 @@ class ZigDocumentationServer {
     return matrix[b.length][a.length];
   }
 
-  async getBuiltinInfo(builtinName) {
+  async getBuiltinInfo(builtinName: string): Promise<string> {
     try {
       const normalizedName = builtinName.startsWith('@') ? builtinName : `@${builtinName}`;
       const builtinFilePath = 'zig_docs/builtin_functions.md';
       const content = await this.readMarkdownFile(builtinFilePath);
 
       const lines = content.split('\n');
-      const builtinSection = [];
+      const builtinSection: string[] = [];
       let inSection = false;
       let foundSection = false;
 
@@ -591,14 +617,14 @@ class ZigDocumentationServer {
       const result = builtinSection.join('\n').trim();
       return result || `Information for "${normalizedName}" found but content appears to be empty.`;
 
-    } catch (error) {
+    } catch (error: any) {
       return `Error retrieving builtin info: ${error.message}`;
     }
   }
 
-  async explainConcept(concept) {
+  async explainConcept(concept: string): Promise<string> {
     try {
-      const conceptMap = {
+      const conceptMap: Record<string, string> = {
         'comptime': 'comptime.md',
         'defer': 'defer.md',
         'optionals': 'optionals.md',
@@ -654,14 +680,14 @@ class ZigDocumentationServer {
 
       return content;
 
-    } catch (error) {
+    } catch (error: any) {
       return `Error explaining concept: ${error.message}`;
     }
   }
 
-  async getSyntaxExamples(construct) {
+  async getSyntaxExamples(construct: string): Promise<string> {
     try {
-      const constructMap = {
+      const constructMap: Record<string, string> = {
         'for': 'for.md',
         'for loops': 'for.md',
         'for loop': 'for.md',
@@ -725,16 +751,16 @@ class ZigDocumentationServer {
       const examples = this.extractCodeExamples(content);
       return examples;
 
-    } catch (error) {
+    } catch (error: any) {
       return `Error getting syntax examples: ${error.message}`;
     }
   }
 
-  extractCodeExamples(content) {
+  extractCodeExamples(content: string): string {
     const lines = content.split('\n');
-    const examples = [];
+    const examples: string[] = [];
     let inCodeBlock = false;
-    let currentExample = [];
+    let currentExample: string[] = [];
     let exampleCount = 0;
 
     for (const line of lines) {
@@ -764,12 +790,12 @@ class ZigDocumentationServer {
     return examples.join('\n\n---\n\n');
   }
 
-  async getExample(topic) {
+  async getExample(topic: string): Promise<string> {
     try {
       const lowerTopic = topic.toLowerCase();
 
       // Search for matching examples in cache
-      const matches = [];
+      const matches: { score: number; name: string; uri: string; filePath: string; content: string }[] = [];
 
       for (const resource of this.resourceList) {
         if (!resource.uri.startsWith('zig://examples/')) continue;
@@ -838,7 +864,7 @@ class ZigDocumentationServer {
 
       return response;
 
-    } catch (error) {
+    } catch (error: any) {
       return `Error retrieving example: ${error.message}`;
     }
   }
