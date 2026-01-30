@@ -1,67 +1,117 @@
 # std.Io.net.IpAddress
 
-### Fields
+📚 **[See Comprehensive Examples & Tests](../../Examples/test_ip_address_comprehensive.zig)**
 
-    ip4: Ip4Address
+Tagged union capable of holding either an IPv4 or IPv6 address.
 
-    ip6: Ip6Address
+## Quick Start
 
-## Types
+```zig
+const std = @import("std");
+const net = std.Io.net;
 
-- BindOptions
-- ConnectOptions
-- ListenOptions
+// Parse "Any" address (checks IPv4 then IPv6)
+const addr = try net.IpAddress.parse("127.0.0.1", 8080);
 
-## Values
+// Switch on family
+switch (addr) {
+    .ip4 => |v4| std.debug.print("IPv4: {}\n", .{v4}),
+    .ip6 => |v6| std.debug.print("IPv6: {}\n", .{v6}),
+}
 
-|        |     |     |
-|--------|-----|-----|
-| Family |     |     |
+// Access port polymorphically
+std.debug.print("Port: {}\n", .{addr.getPort()});
+```
 
-## Functions
+---
 
-`pub fn bind(address: *const IpAddress, io: Io, options: BindOptions) BindError!Socket`  
-Associates an address with a `Socket` which can be used to receive UDP packets and other kinds of non-streaming messages. See `listen` for a streaming alternative.
+## Overview
 
-`pub fn connect(address: IpAddress, io: Io, options: ConnectOptions) ConnectError!Stream`  
-Initiates a connection-oriented network stream.
+`std.Io.net.IpAddress` is the primary type for representing network endpoints in Zig. It is a tagged union that wraps `Ip4Address` and `Ip6Address`, allowing functions to accept any valid IP address type.
 
-`pub fn eql(a: *const IpAddress, b: *const IpAddress) bool`  
+**Key Characteristics:**
+- **Polymorphic**: Used by `socket.bind`, `connect`, and `listen` to support dual-stack networking.
+- **Convenience Methods**: Provides unified helpers like `getPort` and `setPort` that work on both variants.
+- **Parsing Power**: Can parse literals with ports (e.g., `127.0.0.1:80`) via `parseLiteral`.
 
-`pub fn format(a: IpAddress, w: *Io.Writer) Io.Writer.Error!void`  
-See `formatResolved` for an alternative that additionally prints the optional scope at the end of IPv6 addresses and requires an `Io` parameter.
+## Fields
 
-`pub fn formatResolved(a: IpAddress, io: Io, w: *Io.Writer) Ip6Address.FormatError!void`  
-Includes the optional scope ("%foo" at the end) in IPv6 addresses.
+`ip4: Ip4Address`
+The IPv4 variant.
 
-`pub fn getPort(a: IpAddress) u16`  
-Returns the port in native endian.
+`ip6: Ip6Address`
+The IPv6 variant.
 
-`pub fn listen(address: IpAddress, io: Io, options: ListenOptions) ListenError!Server`  
-Waits for a TCP connection. When using this API, `bind` does not need to be called. The returned `Server` has an open `stream`.
+## Core Functions
 
-`pub fn parse(text: []const u8, port: u16) !IpAddress`  
-Parse the given IP address string into an `IpAddress` value.
+`pub fn parse(text: []const u8, port: u16) !IpAddress`
 
-`pub fn parseIp4(text: []const u8, port: u16) Ip4Address.ParseError!IpAddress`  
+Parses a string into an address. Tries IPv4 first, then IPv6.
+- **text**: The IP string (e.g., "1.2.3.4" or "::1").
+- **port**: The port to assign.
 
-`pub fn parseIp6(text: []const u8, port: u16) Ip6Address.ParseError!IpAddress`  
-This is a pure function but it cannot handle IPv6 addresses that have scope ids ("%foo" at the end). To also handle those, `resolveIp6` must be called instead.
+------
 
-`pub fn parseLiteral(text: []const u8) ParseLiteralError!IpAddress`  
-Parse an IP address which may include a port.
+`pub fn parseLiteral(text: []const u8) ParseLiteralError!IpAddress`
 
-`pub fn resolve(io: Io, text: []const u8, port: u16) !IpAddress`  
-This function requires an `Io` parameter because it must query the operating system to convert interface name to index. For example, in "fe80::e0e:76ff:fed4:cf22%eno1", "eno1" must be resolved to an index by creating a socket and then using an `ioctl` syscall.
+Parses a string that includes the port.
+- **IPv4**: "1.2.3.4:80"
+- **IPv6**: "[::1]:80" (Brackets required for IPv6)
 
-`pub fn resolveIp6(io: Io, text: []const u8, port: u16) Ip6Address.ResolveError!IpAddress`  
+------
 
-`pub fn setPort(a: *IpAddress, port: u16) void`  
-`port` is native-endian.
+`pub fn resolve(io: Io, text: []const u8, port: u16) !IpAddress`
+
+Resolves an IP string that might include a scope ID (e.g., "fe80::1%eth0").
+- **Requires `Io`**: Needed for interface name lookup.
+
+------
+
+`pub fn getPort(a: IpAddress) u16`
+
+Returns the port number regardless of the active union tag.
+
+------
+
+`pub fn setPort(a: *IpAddress, port: u16) void`
+
+Sets the port number for the active union tag.
+
+## Network Operations
+
+`pub fn bind(address: *const IpAddress, io: Io, options: BindOptions) BindError!Socket`
+
+Creates a socket and binds it to this address. Used for receiving UDP or listening for TCP.
+
+`pub fn connect(address: IpAddress, io: Io, options: ConnectOptions) ConnectError!Stream`
+
+Initiates a TCP connection to this address.
+
+`pub fn listen(address: IpAddress, io: Io, options: ListenOptions) ListenError!Server`
+
+Binds and listens for incoming TCP connections. Returns a `Server`.
+
+## Usage Patterns
+
+### Generic Server Binding
+Bind to any valid address string provided by configuration.
+
+```zig
+const addr = try net.IpAddress.parseLiteral(config.listen_address); // e.g. "0.0.0.0:80"
+const server = try addr.listen(io, .{});
+```
+
+### Handling Client Connections
+When accepting connections, store the remote address as `IpAddress` to handle both IPv4 and IPv6 clients uniformly.
+
+```zig
+var client_addr: net.IpAddress = undefined;
+// ... accept connection ...
+std.debug.print("Client connected from: {}\n", .{client_addr});
+```
 
 ## Error Sets
 
-- BindError
-- ConnectError
-- ListenError
-- ParseLiteralError
+- `ParseLiteralError`: Invalid format or missing port.
+- `BindError`: Address in use, permission denied, etc.
+- `ConnectError`: Connection refused, network unreachable, etc.
