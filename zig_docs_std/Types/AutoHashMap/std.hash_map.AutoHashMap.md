@@ -984,16 +984,16 @@ Functions that may fail:
 
 When debugging hash map issues, verify:
 
-1. ✅ **Calling `deinit()` exactly once** - Missing `deinit()` causes memory leaks, double-deinit causes crashes
-2. ✅ **Freeing heap-allocated keys/values before `deinit()`** - The map only frees internal storage, not your data
-3. ✅ **Not using pointers after growth operations** - `put()`, `getOrPut()` may invalidate existing `*K` and `*V` pointers
-4. ✅ **Not modifying map during iteration** - Iterators are invalidated by insertions/removals
-5. ✅ **Initializing values after `getOrPut()`** - When `found_existing == false`, the value is undefined
-6. ✅ **Using `AssumeCapacity` only after `ensure*Capacity`** - Otherwise triggers assertion failure
-7. ✅ **Proper key equality for your use case** - For string keys, consider `std.StringHashMap` vs `AutoHashMap([]const u8, V)`
-8. ✅ **Checking return values** - `get()` returns `?V`, not `V` - handle the null case
-9. ✅ **Not storing pointers to stack-allocated keys** - Keys must outlive the map or be copied
-10. ✅ **Using `errdefer` for cleanup on error paths** - Prevent leaks when initialization fails partway
+1. **Calling `deinit()` exactly once** - Missing `deinit()` causes memory leaks, double-deinit causes crashes
+2. **Freeing heap-allocated keys/values before `deinit()`** - The map only frees internal storage, not your data
+3. **Not using pointers after growth operations** - `put()`, `getOrPut()` may invalidate existing `*K` and `*V` pointers
+4. **Not modifying map during iteration** - Iterators are invalidated by insertions/removals
+5. **Initializing values after `getOrPut()`** - When `found_existing == false`, the value is undefined
+6. **Using `AssumeCapacity` only after `ensure*Capacity`** - Otherwise triggers assertion failure
+7. **Proper key equality for your use case** - For string keys, consider `std.StringHashMap` vs `AutoHashMap([]const u8, V)`
+8. **Checking return values** - `get()` returns `?V`, not `V` - handle the null case
+9. **Not storing pointers to stack-allocated keys** - Keys must outlive the map or be copied
+10. **Using `errdefer` for cleanup on error paths** - Prevent leaks when initialization fails partway
 
 ## Performance Tips
 
