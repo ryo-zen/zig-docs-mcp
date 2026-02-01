@@ -4,7 +4,7 @@
       "type": "stdio",
       "command": "node",
       "args": [
-        "zig-mcp-server.js"
+        "build/index.js"
       ],
       "env": {}
     }
