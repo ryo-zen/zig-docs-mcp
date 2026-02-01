@@ -2,8 +2,8 @@
 
 /**
  * Zig Documentation MCP Server - Hierarchical Version
- * 
- * This MCP server provides access to the complete Zig 0.14.1 documentation.
+ *
+ * This MCP server provides access to the complete Zig 0.16 documentation.
  * Uses dynamic file discovery with hierarchical folder structure.
  */
 
@@ -39,11 +39,13 @@ class ZigDocumentationServer {
   private server: Server;
   private docCache: Map<string, string>;
   private resourceList: ResourceEntry[];
+  private readonly serverName = 'zig-documentation-server';
+  private readonly serverVersion = '0.5.0';
 
   constructor() {
     this.server = new Server({
-      name: 'zig-documentation-server',
-      version: '0.5.0',
+      name: this.serverName,
+      version: this.serverVersion,
     }, {
       capabilities: {
         resources: {},
@@ -364,6 +366,19 @@ class ZigDocumentationServer {
               required: ['topic'],
             },
           },
+          {
+            name: 'server_diagnostics',
+            description: 'Get server health, cache stats, and diagnostic information',
+            inputSchema: {
+              type: 'object',
+              properties: {
+                include_samples: {
+                  type: 'boolean',
+                  description: 'Include sample resource URIs (default: false)',
+                },
+              },
+            },
+          },
         ],
       };
     });
@@ -422,6 +437,16 @@ class ZigDocumentationServer {
               {
                 type: 'text',
                 text: await this.getExample(args.topic as string),
+              },
+            ],
+          };
+
+        case 'server_diagnostics':
+          return {
+            content: [
+              {
+                type: 'text',
+                text: this.getDiagnostics(args.include_samples as boolean ?? false),
               },
             ],
           };
@@ -581,6 +606,40 @@ class ZigDocumentationServer {
     return matrix[b.length][a.length];
   }
 
+  // Extract all builtin function names from content
+  extractAllBuiltins(content: string): string[] {
+    const builtins: string[] = [];
+    const lines = content.split('\n');
+
+    for (const line of lines) {
+      // Match both ## [@functionName] and ### @functionName formats
+      if (line.startsWith('## [@') || line.startsWith('### @')) {
+        const match = line.match(/\[@?(\w+)\]|### @(\w+)/);
+        if (match) {
+          const name = match[1] || match[2];
+          builtins.push(`@${name}`);
+        }
+      }
+    }
+
+    return builtins;
+  }
+
+  // Find similar strings using Levenshtein distance
+  findSimilarStrings(target: string, candidates: string[], maxResults = 3): string[] {
+    const targetLower = target.toLowerCase();
+
+    const scored = candidates
+      .map(candidate => ({
+        value: candidate,
+        distance: this.levenshteinDistance(targetLower, candidate.toLowerCase()),
+      }))
+      .filter(item => item.distance <= 3)  // Only suggest if edit distance is 3 or less
+      .sort((a, b) => a.distance - b.distance);
+
+    return scored.slice(0, maxResults).map(item => item.value);
+  }
+
   async getBuiltinInfo(builtinName: string): Promise<string> {
     try {
       const normalizedName = builtinName.startsWith('@') ? builtinName : `@${builtinName}`;
@@ -611,14 +670,36 @@ class ZigDocumentationServer {
       }
 
       if (!foundSection) {
-        return `Builtin function "${normalizedName}" not found. Try checking the spelling or use search_zig_docs to find similar functions.`;
+        // Find similar builtins for suggestions
+        const allBuiltins = this.extractAllBuiltins(content);
+        const similar = this.findSimilarStrings(normalizedName, allBuiltins, 3);
+
+        let message = `Builtin function "${normalizedName}" not found.`;
+
+        if (similar.length > 0) {
+          message += `\n\n**Did you mean one of these?**\n${similar.map(b => `  • ${b}`).join('\n')}`;
+        }
+
+        message += `\n\n**Troubleshooting:**\n`;
+        message += `  • Builtin functions start with @ (e.g., @import, @sizeof)\n`;
+        message += `  • Use search_zig_docs to search for related builtins\n`;
+        message += `  • Common builtins: @import, @as, @typeInfo, @sizeof, @alignOf`;
+
+        return message;
       }
 
       const result = builtinSection.join('\n').trim();
       return result || `Information for "${normalizedName}" found but content appears to be empty.`;
 
     } catch (error: any) {
-      return `Error retrieving builtin info: ${error.message}`;
+      const errorMsg = error instanceof Error ? error.message : String(error);
+      return `Error retrieving builtin info: ${errorMsg}
+
+**Troubleshooting:**
+  • Ensure builtin_functions.md exists in zig_docs/
+  • Check file permissions are readable
+  • Verify server was built: npm run build
+  • Try server_diagnostics tool to check server status`;
     }
   }
 
@@ -671,8 +752,19 @@ class ZigDocumentationServer {
           return `Found related concept "${partialMatch}":\n\n${content}`;
         }
 
-        const availableConcepts = Object.keys(conceptMap).join(', ');
-        return `Concept "${concept}" not found. Available concepts: ${availableConcepts}`;
+        const allConcepts = Object.keys(conceptMap);
+        const similar = this.findSimilarStrings(lowercaseConcept, allConcepts, 5);
+
+        let message = `Concept "${concept}" not found.`;
+
+        if (similar.length > 0) {
+          message += `\n\n**Did you mean one of these?**\n${similar.map(c => `  • ${c}`).join('\n')}`;
+        }
+
+        message += `\n\n**Available concepts:** ${allConcepts.join(', ')}`;
+        message += `\n\n**Tip:** Use search_zig_docs for broader searches across all documentation.`;
+
+        return message;
       }
 
       const filePath = `zig_docs/${filename}`;
@@ -681,7 +773,14 @@ class ZigDocumentationServer {
       return content;
 
     } catch (error: any) {
-      return `Error explaining concept: ${error.message}`;
+      const errorMsg = error instanceof Error ? error.message : String(error);
+      return `Error explaining concept: ${errorMsg}
+
+**Troubleshooting:**
+  • Ensure documentation files exist in zig_docs/
+  • Check file permissions
+  • Use search_zig_docs as an alternative
+  • Try server_diagnostics to verify server health`;
     }
   }
 
@@ -867,6 +966,78 @@ class ZigDocumentationServer {
     } catch (error: any) {
       return `Error retrieving example: ${error.message}`;
     }
+  }
+
+  getDiagnostics(includeSamples: boolean): string {
+    const langDocs = this.resourceList.filter(r => r.uri.startsWith('zig://doc/')).length;
+    const stdDocs = this.resourceList.filter(r => r.uri.startsWith('zig://std/')).length;
+    const examples = this.resourceList.filter(r => r.uri.startsWith('zig://examples/')).length;
+
+    const memUsage = process.memoryUsage();
+    const uptime = process.uptime();
+
+    let output = `# Server Diagnostics
+
+**Server Name:** ${this.serverName}
+**Server Version:** ${this.serverVersion}
+**Node Version:** ${process.version}
+**Platform:** ${process.platform} ${process.arch}
+
+## Cache Status
+- **Total Cached Files:** ${this.docCache.size}
+- **Total Resources:** ${this.resourceList.length}
+- **Cache Size (MB):** ${(memUsage.heapUsed / 1024 / 1024).toFixed(2)}
+
+## Documentation Breakdown
+- **Language Docs:** ${langDocs} files
+- **Standard Library Docs:** ${stdDocs} files
+- **Working Examples:** ${examples} files
+
+## Memory Usage
+- **RSS:** ${(memUsage.rss / 1024 / 1024).toFixed(2)} MB
+- **Heap Used:** ${(memUsage.heapUsed / 1024 / 1024).toFixed(2)} MB
+- **Heap Total:** ${(memUsage.heapTotal / 1024 / 1024).toFixed(2)} MB
+- **External:** ${(memUsage.external / 1024 / 1024).toFixed(2)} MB
+
+## Runtime
+- **Uptime:** ${uptime.toFixed(2)} seconds
+- **PID:** ${process.pid}
+`;
+
+    if (includeSamples) {
+      const sampleLangDocs = this.resourceList
+        .filter(r => r.uri.startsWith('zig://doc/'))
+        .slice(0, 5)
+        .map(r => `  • ${r.uri} - ${r.name}`)
+        .join('\n');
+
+      const sampleStdDocs = this.resourceList
+        .filter(r => r.uri.startsWith('zig://std/'))
+        .slice(0, 5)
+        .map(r => `  • ${r.uri} - ${r.name}`)
+        .join('\n');
+
+      const sampleExamples = this.resourceList
+        .filter(r => r.uri.startsWith('zig://examples/'))
+        .slice(0, 5)
+        .map(r => `  • ${r.uri} - ${r.name}`)
+        .join('\n');
+
+      output += `
+## Sample Resources
+
+**Language Documentation (first 5):**
+${sampleLangDocs}
+
+**Standard Library (first 5):**
+${sampleStdDocs}
+
+**Examples (first 5):**
+${sampleExamples}
+`;
+    }
+
+    return output.trim();
   }
 
   async run() {

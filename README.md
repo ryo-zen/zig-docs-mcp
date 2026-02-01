@@ -1,20 +1,72 @@
 # Zig Documentation MCP Server
 
-MCP server providing comprehensive access to Zig language documentation, standard library references, and working code examples.
+MCP server providing comprehensive access to Zig 0.16 language documentation, standard library references, and working code examples.
 
-## Setup
+## Quick Start
+
+### Prerequisites
+- Node.js 18.x or later
+- npm (comes with Node.js)
+
+### Setup & Build
 
 ```bash
+# Install dependencies
 npm install
+
+# Build the TypeScript source
+npm run build
+
+# Start the server
+npm start
 ```
 
-## Running
+The server compiles from TypeScript (`src/index.ts`) to JavaScript (`build/index.js`).
+
+### Running Tests
 
 ```bash
-npm start
-# or
-node zig-mcp-server.js
+# Run all tests
+npm test
+
+# Run tests in watch mode
+npm run test:watch
+
+# Run tests with UI
+npm run test:ui
+
+# Generate coverage report
+npm run test:coverage
 ```
+
+## MCP Integration
+
+### Claude Desktop
+
+Add this server to your `claude_desktop_config.json`:
+
+```json
+{
+  "mcpServers": {
+    "zig-docs": {
+      "command": "node",
+      "args": ["/absolute/path/to/zig-docs-mcp/build/index.js"],
+      "cwd": "/absolute/path/to/zig-docs-mcp"
+    }
+  }
+}
+```
+
+**Important:**
+- Replace `/absolute/path/to/zig-docs-mcp` with the actual absolute path
+- Ensure you've run `npm run build` before starting the server
+- Restart Claude Desktop after updating the config
+
+### Other MCP Clients
+
+- **Command:** `node build/index.js`
+- **Protocol:** MCP (stdio transport)
+- **Working directory:** Repository root
 
 ## Features
 
@@ -25,11 +77,12 @@ The server exposes three types of resources:
 - **Working Examples** (`zig://examples/*`) - Runnable Zig code examples
 
 ### Tools
-- `search_zig_docs` - Search across all documentation with smart scoring
-- `get_builtin_info` - Get details about builtin functions (e.g., @import, @sizeof)
+- `search_zig_docs` - Search across all documentation with smart scoring and fuzzy matching
+- `get_builtin_info` - Get details about builtin functions (e.g., @import, @sizeof) with suggestions
 - `explain_concept` - Get explanations of Zig concepts (comptime, defer, optionals, etc.)
 - `get_syntax_examples` - Get code examples for language constructs
 - `get_example` - Retrieve working code examples by topic
+- `server_diagnostics` - Get server health, cache stats, and diagnostic information
 
 ## Documentation Structure
 
@@ -39,18 +92,41 @@ The server exposes three types of resources:
   - `Examples/` - Working Zig code examples (50+ examples)
 - `templates/` - Documentation templates
 
+## What's Included
+
+- **64 Language Documentation Files** - Covering all Zig language features
+- **55 Standard Library Docs** - Detailed type and namespace documentation
+- **88 Working Code Examples** - Runnable Zig code demonstrating features
+- **207 Total Cached Resources** - All loaded into memory at startup
+
 ## Working Examples
 
-The server includes 50+ working Zig examples covering:
+The server includes 88 working Zig examples covering:
 - Data structures (ArrayList, ArrayHashMap)
-- I/O operations (Reader, Writer)
+- I/O operations (Reader, Writer, std.Io)
 - JSON parsing and serialization
 - Async/await patterns
 - File operations
+- Network programming
 - And more
 
 Access examples via:
-- Resources: `zig://examples/arraylist`, `zig://examples/json_parser`, etc.
+- Resources: `zig://examples/arraylist`, `zig://examples/reader`, etc.
 - Tool: `get_example("arraylist")`
 
-See CLAUDE.md and STRUCTURE_GUIDE.md for detailed information.
+## Documentation
+
+- **CLAUDE.md** - Comprehensive guide for development and contributing
+- **IMPROVEMENTS.md** - Detailed improvement plan and roadmap
+- Run `server_diagnostics` tool for real-time server statistics
+
+## Testing
+
+All code is tested with a comprehensive test suite:
+- 49 automated tests covering core functionality
+- URI parsing and file path resolution
+- Search algorithm and scoring
+- Error handling and suggestions
+- Cache behavior and performance
+
+Run `npm test` to verify everything works.
