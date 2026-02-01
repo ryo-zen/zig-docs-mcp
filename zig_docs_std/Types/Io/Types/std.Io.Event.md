@@ -144,6 +144,188 @@ Blocks until the event is set or the specified timeout expires.
 try event.waitTimeout(io, .fromMillis(500));
 ```
 
+## Usage Patterns
+
+### Background Task Completion Signal
+
+```zig
+const std = @import("std");
+
+var completion_event = std.Io.Event.unset;
+
+fn backgroundWorker(io: std.Io) !void {
+    // Perform expensive computation
+    performHeavyWork();
+
+    // Signal completion
+    completion_event.set(io);
+}
+
+pub fn main() !void {
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    defer _ = gpa.deinit();
+
+    var threaded = std.Io.Threaded.init(gpa.allocator(), .{ .environ = .empty });
+    defer threaded.deinit();
+    const io = threaded.io();
+
+    // Spawn background task
+    var group = std.Io.Group.init(io);
+    group.async(backgroundWorker, .{io});
+
+    // Wait for completion
+    try completion_event.wait(io);
+    std.debug.print("Background task completed!\n", .{});
+}
+```
+
+### Multi-Phase Startup Coordination
+
+```zig
+const std = @import("std");
+
+const StartupPhases = struct {
+    database_ready: std.Io.Event = .unset,
+    cache_ready: std.Io.Event = .unset,
+    network_ready: std.Io.Event = .unset,
+};
+
+fn initDatabase(phases: *StartupPhases, io: std.Io) !void {
+    try connectToDatabase();
+    phases.database_ready.set(io);
+}
+
+fn initCache(phases: *StartupPhases, io: std.Io) !void {
+    // Wait for database first
+    try phases.database_ready.wait(io);
+
+    try setupCache();
+    phases.cache_ready.set(io);
+}
+
+fn initNetwork(phases: *StartupPhases, io: std.Io) !void {
+    // Wait for both database and cache
+    try phases.database_ready.wait(io);
+    try phases.cache_ready.wait(io);
+
+    try startNetworkServer();
+    phases.network_ready.set(io);
+}
+
+pub fn main() !void {
+    var phases = StartupPhases{};
+
+    // Launch initialization tasks
+    var group = std.Io.Group.init(io);
+    group.async(initDatabase, .{&phases, io});
+    group.async(initCache, .{&phases, io});
+    group.async(initNetwork, .{&phases, io});
+
+    // Wait for full startup
+    try phases.network_ready.wait(io);
+    std.debug.print("All services ready!\n", .{});
+}
+```
+
+### Graceful Shutdown Signal
+
+```zig
+const std = @import("std");
+
+var shutdown_event = std.Io.Event.unset;
+
+fn workerLoop(io: std.Io) !void {
+    while (!shutdown_event.isSet()) {
+        // Process work items
+        processNextItem() catch |err| {
+            if (err == error.NoMoreWork) {
+                std.time.sleep(10 * std.time.ns_per_ms);
+                continue;
+            }
+            return err;
+        };
+    }
+
+    // Cleanup before exit
+    cleanupResources();
+}
+
+pub fn main() !void {
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    defer _ = gpa.deinit();
+
+    var threaded = std.Io.Threaded.init(gpa.allocator(), .{ .environ = .empty });
+    defer threaded.deinit();
+    const io = threaded.io();
+
+    // Spawn workers
+    var group = std.Io.Group.init(io);
+    for (0..4) |_| {
+        group.async(workerLoop, .{io});
+    }
+
+    // Wait for shutdown signal (e.g., SIGTERM handler)
+    waitForShutdownSignal();
+
+    // Signal all workers to stop
+    shutdown_event.set(io);
+
+    // Wait for workers to finish cleanup
+    try group.wait();
+}
+```
+
+### Event with Timeout (Operation Timeout Pattern)
+
+```zig
+const std = @import("std");
+
+fn operationWithTimeout(
+    operation_event: *std.Io.Event,
+    io: std.Io,
+    timeout_ms: u64
+) !void {
+    const timeout = std.Io.Timeout{
+        .duration = .{
+            .raw = std.Io.Duration.fromMillis(timeout_ms),
+            .clock = .awake,
+        },
+    };
+
+    operation_event.waitTimeout(io, timeout) catch |err| {
+        if (err == error.Timeout) {
+            std.debug.print("Operation timed out after {} ms\n", .{timeout_ms});
+            return error.OperationTimeout;
+        }
+        return err;
+    };
+
+    std.debug.print("Operation completed within timeout\n", .{});
+}
+```
+
+### Reusable Event (Reset Pattern)
+
+```zig
+const std = @import("std");
+
+fn processMultipleBatches(io: std.Io) !void {
+    var batch_ready = std.Io.Event.unset;
+
+    for (0..5) |batch_num| {
+        // Spawn batch processor
+        spawnBatchProcessor(io, batch_num, &batch_ready);
+
+        // Wait for this batch
+        try batch_ready.wait(io);
+        std.debug.print("Batch {} completed\n", .{batch_num});
+
+        // Reset for next batch
+        batch_ready.reset();
+    }
+}
+```
+
 ## Error Sets
 
 ### `WaitTimeoutError`
