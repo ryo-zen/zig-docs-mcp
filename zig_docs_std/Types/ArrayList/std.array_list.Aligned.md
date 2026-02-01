@@ -6,17 +6,17 @@
 
 **Basic Dynamic Array**
 ```zig
-var list = std.ArrayList(i32).init(allocator);
-defer list.deinit();
-try list.append(42);
-try list.append(100);
+var list = std.ArrayList(i32){};
+defer list.deinit(allocator);
+try list.append(allocator, 42);
+try list.append(allocator, 100);
 std.debug.print("Items: {any}\n", .{list.items});
 ```
 
 **Pre-allocated Capacity**
 ```zig
 var list = try std.ArrayList(u8).initCapacity(allocator, 1024);
-defer list.deinit();
+defer list.deinit(allocator);
 list.appendAssumeCapacity('a');  // No allocation needed
 ```
 
@@ -24,14 +24,14 @@ list.appendAssumeCapacity('a');  // No allocation needed
 ```zig
 const owned_slice = try allocator.dupe(u8, "hello");
 var list = std.ArrayList(u8).fromOwnedSlice(owned_slice);
-defer list.deinit();
+defer list.deinit(allocator);
 ```
 
 **Taking Ownership**
 ```zig
-var list = std.ArrayList(u8).init(allocator);
-try list.appendSlice("data");
-const owned = try list.toOwnedSlice();  // Caller now owns memory
+var list = std.ArrayList(u8){};
+try list.appendSlice(allocator, "data");
+const owned = try list.toOwnedSlice(allocator);  // Caller now owns memory
 defer allocator.free(owned);
 ```
 
@@ -43,8 +43,8 @@ defer allocator.free(owned);
 
 ### ⚠️ Critical: Memory Management
 ```zig
-var list = std.ArrayList(T).init(allocator);
-defer list.deinit();  // ← REQUIRED! Always deinit or use toOwnedSlice
+var list = std.ArrayList(T){};
+defer list.deinit(allocator);  // ← REQUIRED! Always deinit or use toOwnedSlice
 ```
 
 ---
@@ -104,9 +104,9 @@ Contents of the list as a slice. **This field is intended to be accessed directl
 
 **Example:**
 ```zig
-var list = std.ArrayList(i32).init(allocator);
-try list.append(10);
-try list.append(20);
+var list = std.ArrayList(i32){};
+try list.append(allocator, 10);
+try list.append(allocator, 20);
 for (list.items) |item| {
     std.debug.print("{}\n", .{item});
 }
@@ -121,7 +121,7 @@ How many `T` values this list can hold without allocating additional memory. Alw
 **Example:**
 ```zig
 var list = try std.ArrayList(i32).initCapacity(allocator, 100);
-defer list.deinit();
+defer list.deinit(allocator);
 std.debug.print("Capacity: {}, Length: {}\n", .{list.capacity, list.items.len});
 // Output: Capacity: 100, Length: 0
 ```
@@ -147,14 +147,14 @@ var list: std.ArrayList(u8) = .empty;
 
 These are the fundamental operations you'll use most often.
 
-### `pub fn init(allocator: Allocator) Self`
+### Initialization
 
-**Not shown in original but implied** - Initialize an empty ArrayList with zero capacity.
+`std.ArrayList(T)` is initialized using a struct literal.
 
 **Example:**
 ```zig
-var list = std.ArrayList(i32).init(allocator);
-defer list.deinit();
+var list = std.ArrayList(i32){};
+defer list.deinit(allocator);
 ```
 
 ------
@@ -166,7 +166,7 @@ Initialize with capacity to hold exactly `num` elements. Useful when you know th
 **Example:**
 ```zig
 var list = try std.ArrayList(i32).initCapacity(allocator, 1000);
-defer list.deinit();
+defer list.deinit(allocator);
 // Can append 1000 items without reallocation
 ```
 
@@ -178,9 +178,9 @@ Release all allocated memory. After calling this, the ArrayList is in an undefin
 
 **Example:**
 ```zig
-var list = std.ArrayList(u8).init(allocator);
-try list.append('a');
-list.deinit();  // Must be called to free memory
+var list = std.ArrayList(u8){};
+try list.append(allocator, 'a');
+list.deinit(allocator);  // Must be called to free memory
 ```
 
 ------
@@ -191,10 +191,10 @@ Extend the list by 1 element. Allocates more memory as necessary using amortized
 
 **Example:**
 ```zig
-var list = std.ArrayList(i32).init(allocator);
-defer list.deinit();
-try list.append(42);
-try list.append(100);
+var list = std.ArrayList(i32){};
+defer list.deinit(allocator);
+try list.append(allocator, 42);
+try list.append(allocator, 100);
 ```
 
 ------
@@ -206,7 +206,7 @@ Extend the list by 1 element without checking capacity. **Asserts that capacity 
 **Example:**
 ```zig
 var list = try std.ArrayList(i32).initCapacity(allocator, 10);
-defer list.deinit();
+defer list.deinit(allocator);
 list.appendAssumeCapacity(42);  // No error check needed
 ```
 
@@ -218,10 +218,10 @@ Append the slice of items to the list. Allocates more memory as necessary. Inval
 
 **Example:**
 ```zig
-var list = std.ArrayList(u8).init(allocator);
-defer list.deinit();
-try list.appendSlice("Hello, ");
-try list.appendSlice("World!");
+var list = std.ArrayList(u8){};
+defer list.deinit(allocator);
+try list.appendSlice(allocator, "Hello, ");
+try list.appendSlice(allocator, "World!");
 ```
 
 ------
@@ -238,9 +238,9 @@ Remove and return the last element from the list. If the list is empty, returns 
 
 **Example:**
 ```zig
-var list = std.ArrayList(i32).init(allocator);
-defer list.deinit();
-try list.append(42);
+var list = std.ArrayList(i32){};
+defer list.deinit(allocator);
+try list.append(allocator, 42);
 const value = list.pop();  // Some(42)
 const empty = list.pop();  // null
 ```
@@ -270,9 +270,9 @@ Modify the array so that it can hold at least `additional_count` **more** items 
 
 **Example:**
 ```zig
-var list = std.ArrayList(u8).init(allocator);
-defer list.deinit();
-try list.ensureUnusedCapacity(100);
+var list = std.ArrayList(u8){};
+defer list.deinit(allocator);
+try list.ensureUnusedCapacity(allocator, 100);
 // Can now append 100 items without reallocation
 for (0..100) |_| {
     list.appendAssumeCapacity('x');
@@ -299,11 +299,11 @@ Reduce length to 0 while keeping allocated capacity. Invalidates all element poi
 
 **Example:**
 ```zig
-var list = std.ArrayList(u8).init(allocator);
-defer list.deinit();
-try list.appendSlice("temporary");
+var list = std.ArrayList(u8){};
+defer list.deinit(allocator);
+try list.appendSlice(allocator, "temporary");
 list.clearRetainingCapacity();  // Length is 0, capacity unchanged
-try list.appendSlice("reused");
+try list.appendSlice(allocator, "reused");
 ```
 
 ------
@@ -339,6 +339,7 @@ Returns a slice of only the extra capacity after items. This can be useful for w
 **Example:**
 ```zig
 var list = try std.ArrayList(u8).initCapacity(allocator, 100);
+defer list.deinit(allocator);
 const unused = list.unusedCapacitySlice();
 const bytes_written = try file.read(unused);
 list.items.len += bytes_written;
@@ -358,11 +359,11 @@ Insert `item` at index `i`. Moves `list[i .. list.len]` to higher indices to mak
 
 **Example:**
 ```zig
-var list = std.ArrayList(i32).init(allocator);
-defer list.deinit();
-try list.append(10);
-try list.append(30);
-try list.insert(1, 20);  // [10, 20, 30]
+var list = std.ArrayList(i32){};
+defer list.deinit(allocator);
+try list.append(allocator, 10);
+try list.append(allocator, 30);
+try list.insert(allocator, 1, 20);  // [10, 20, 30]
 ```
 
 ------
@@ -403,9 +404,9 @@ Remove the element at index `i` from the list and return its value. Shifts all e
 
 **Example:**
 ```zig
-var list = std.ArrayList(i32).init(allocator);
-defer list.deinit();
-try list.appendSlice(&[_]i32{10, 20, 30, 40});
+var list = std.ArrayList(i32){};
+defer list.deinit(allocator);
+try list.appendSlice(allocator, &[_]i32{10, 20, 30, 40});
 const removed = list.orderedRemove(1);  // 20
 // list.items is now [10, 30, 40]
 ```
@@ -418,9 +419,9 @@ Removes the element at the specified index and returns it. The empty slot is fil
 
 **Example:**
 ```zig
-var list = std.ArrayList(i32).init(allocator);
-defer list.deinit();
-try list.appendSlice(&[_]i32{10, 20, 30, 40});
+var list = std.ArrayList(i32){};
+defer list.deinit(allocator);
+try list.appendSlice(allocator, &[_]i32{10, 20, 30, 40});
 const removed = list.swapRemove(1);  // 20
 // list.items is now [10, 40, 30] (40 moved to index 1)
 ```
@@ -439,9 +440,9 @@ Increase length by 1, returning pointer to the new item with `undefined` value. 
 
 **Example:**
 ```zig
-var list = std.ArrayList(i32).init(allocator);
-defer list.deinit();
-const ptr = try list.addOne();
+var list = std.ArrayList(i32){};
+defer list.deinit(allocator);
+const ptr = try list.addOne(allocator);
 ptr.* = 42;
 ```
 
@@ -459,9 +460,9 @@ Resize the array, adding `n` new elements, which have `undefined` values. The re
 
 **Example:**
 ```zig
-var list = std.ArrayList(u8).init(allocator);
-defer list.deinit();
-const slice = try list.addManyAsSlice(10);
+var list = std.ArrayList(u8){};
+defer list.deinit(allocator);
+const slice = try list.addManyAsSlice(allocator, 10);
 @memset(slice, 'x');
 ```
 
@@ -491,9 +492,9 @@ Append a value to the list `n` times. Allocates more memory as necessary. Invali
 
 **Example:**
 ```zig
-var list = std.ArrayList(u8).init(allocator);
-defer list.deinit();
-try list.appendNTimes('-', 80);  // Add 80 dashes
+var list = std.ArrayList(u8){};
+defer list.deinit(allocator);
+try list.appendNTimes(allocator, '-', 80);  // Add 80 dashes
 ```
 
 ------
@@ -522,10 +523,10 @@ Replace `len` elements starting at `start` with `new_items`. Grows or shrinks th
 
 **Example:**
 ```zig
-var list = std.ArrayList(u8).init(allocator);
-defer list.deinit();
-try list.appendSlice("Hello, World!");
-try list.replaceRange(7, 6, "Zig!");
+var list = std.ArrayList(u8){};
+defer list.deinit(allocator);
+try list.appendSlice(allocator, "Hello, World!");
+try list.replaceRange(allocator, 7, 6, "Zig!");
 // list.items is now "Hello, Zig!"
 ```
 
@@ -543,9 +544,9 @@ Adjust the list length to `new_len`. Additional elements contain the value `unde
 
 **Example:**
 ```zig
-var list = std.ArrayList(i32).init(allocator);
-defer list.deinit();
-try list.resize(100);  // list.items.len is now 100
+var list = std.ArrayList(i32){};
+defer list.deinit(allocator);
+try list.resize(allocator, 100);  // list.items.len is now 100
 ```
 
 ## Memory Transfer Functions
@@ -556,9 +557,9 @@ The caller owns the returned memory and must free it with `allocator.free()`. Em
 
 **Example:**
 ```zig
-var list = std.ArrayList(u8).init(allocator);
-try list.appendSlice("transfer ownership");
-const owned = try list.toOwnedSlice();
+var list = std.ArrayList(u8){};
+try list.appendSlice(allocator, "transfer ownership");
+const owned = try list.toOwnedSlice(allocator);
 defer allocator.free(owned);
 // list is now empty and can be reused or ignored
 ```
@@ -580,7 +581,7 @@ ArrayList takes ownership of the passed in slice. The slice's memory becomes the
 const owned_memory = try allocator.alloc(u8, 100);
 @memcpy(owned_memory[0..5], "hello");
 var list = std.ArrayList(u8).fromOwnedSlice(owned_memory[0..5]);
-defer list.deinit();
+defer list.deinit(allocator);
 ```
 
 ------
@@ -597,12 +598,12 @@ Creates a complete copy of this ArrayList with independent memory allocation.
 
 **Example:**
 ```zig
-var original = std.ArrayList(i32).init(allocator);
-defer original.deinit();
-try original.append(42);
+var original = std.ArrayList(i32){};
+defer original.deinit(allocator);
+try original.append(allocator, 42);
 
-var copy = try original.clone();
-defer copy.deinit();
+var copy = try original.clone(allocator);
+defer copy.deinit(allocator);
 // Modifications to copy don't affect original
 ```
 
@@ -652,9 +653,9 @@ Format and append text to the ArrayList using `std.fmt` format strings. Similar 
 
 **Example:**
 ```zig
-var list = std.ArrayList(u8).init(allocator);
-defer list.deinit();
-try list.print("Value: {d}, Hex: 0x{x}\n", .{42, 255});
+var list = std.ArrayList(u8){};
+defer list.deinit(allocator);
+try list.print(allocator, "Value: {d}, Hex: 0x{x}\n", .{42, 255});
 ```
 
 ------
@@ -683,7 +684,7 @@ If your code doesn't compile, check:
 2. ✅ Are you using the right allocator type? (`std.mem.Allocator`)
 3. ✅ Did you handle `Allocator.Error` in functions that may allocate?
 4. ✅ Are you using `AssumeCapacity` variants after ensuring capacity?
-5. ✅ Did you initialize with `.init(allocator)` or `.empty`?
+5. ✅ Did you initialize with `.{}` or `.empty`?
 6. ✅ Are indices in bounds for operations like `insert` and `remove`?
 7. ✅ Are you avoiding use-after-free by not holding pointers across resize operations?
 
@@ -701,10 +702,10 @@ If your code doesn't compile, check:
 
 ### Building a String
 ```zig
-var string = std.ArrayList(u8).init(allocator);
-defer string.deinit();
-try string.appendSlice("Hello, ");
-try string.print("{s}!", .{"World"});
+var string = std.ArrayList(u8){};
+defer string.deinit(allocator);
+try string.appendSlice(allocator, "Hello, ");
+try string.print(allocator, "{s}!", .{"World"});
 std.debug.print("{s}\n", .{string.items});
 ```
 
@@ -717,9 +718,9 @@ var list = std.ArrayList(u8).initBuffer(&buffer);
 
 ### Efficient Batch Append
 ```zig
-var list = std.ArrayList(i32).init(allocator);
-defer list.deinit();
-try list.ensureUnusedCapacity(1000);
+var list = std.ArrayList(i32){};
+defer list.deinit(allocator);
+try list.ensureUnusedCapacity(allocator, 1000);
 for (0..1000) |i| {
     list.appendAssumeCapacity(@intCast(i));
 }
@@ -727,10 +728,10 @@ for (0..1000) |i| {
 
 ### Reading into ArrayList
 ```zig
-var list = std.ArrayList(u8).init(allocator);
-defer list.deinit();
+var list = std.ArrayList(u8){};
+defer list.deinit(allocator);
 while (true) {
-    const byte_ptr = try list.addOne();
+    const byte_ptr = try list.addOne(allocator);
     byte_ptr.* = try reader.readByte();
     if (byte_ptr.* == '\n') break;
 }
