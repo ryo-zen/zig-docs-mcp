@@ -70,11 +70,22 @@ The table of function pointers implementing the standard I/O operations.
 
 ## Core Types
 
+### Primary Interfaces
 - **[Threaded](Types/std.Io.Threaded.md)**: The standard cross-platform backend.
 - **[Evented](Types/std.Io.Evented.md)**: High-performance async backend (IoUring/Kqueue).
 - **[File](Types/std.Io.File.md)**: Buffered file operations.
-- **[net](Namespaces/std.Io.net.md)**: Networking primitives.
-- **[Clock](Types/std.Io.Clock.md)**: Time and duration types.
+- **[Reader](Types/std.Io.Reader.md)**: Generic stream reading interface.
+- **[Writer](Types/std.Io.Writer.md)**: Generic stream writing interface.
+
+### Namespaces
+- **[net](Namespaces/std.Io.net.md)**: Networking primitives (Sockets, IPs).
+
+### Support Types
+- **[Clock](Types/std.Io.Clock.md)**: Time sources (Monotonic, Realtime).
+- **[Duration](Types/std.Io.Duration.md)**: Time duration handling.
+- **[Future](Types/std.Io.Future.md)**: Handle for async task completion.
+- **[PollFiles](Types/std.Io.PollFiles.md)**: Struct for polling multiple file descriptors.
+- **[Poller](Types/std.Io.Poller.md)**: Mechanism for efficient I/O multiplexing.
 
 ## Function Reference
 

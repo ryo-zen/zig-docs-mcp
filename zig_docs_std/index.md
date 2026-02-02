@@ -1,28 +1,35 @@
 # Zig Standard Library Documentation Index
 
-This documentation is organized into two main categories:
+This documentation is organized into main categories:
 
 ## Types
 Direct Zig standard library types and their methods:
 
 ### ArrayHashMap
-- ArrayHashMap
-- AutoHashMap
+- [ArrayHashMapUnmanaged](Types/ArrayHashMap/std.array_hash_map.ArrayHashMapUnmanaged.md)
+- [ArrayHashMapWithAllocator](Types/ArrayHashMap/std.array_hash_map.ArrayHashMapWithAllocator.md)
+- [AutoArrayHashMap](Types/ArrayHashMap/std.array_hash_map.AutoArrayHashMap.md)
+- [AutoArrayHashMapUnmanaged](Types/ArrayHashMap/std.array_hash_map.AutoArrayHashMapUnmanaged.md)
 
 ### ArrayList
-- ArrayList
-- ArrayListAligned
-- ArrayListAlignedUnmanaged
+- [Aligned](Types/ArrayList/std.array_list.Aligned.md)
+- [ArrayList](Types/ArrayList/std.ArrayList.md)
+
+### AutoHashMap
+- [AutoHashMap](Types/AutoHashMap/std.hash_map.AutoHashMap.md)
+- [AutoHashMapUnmanaged](Types/AutoHashMap/std.hash_map.AutoHashMapUnmanaged.md)
 
 ### Io
-## Namespaces
-- std.Io.net.HostName.md
-## Types
+- [std.Io](Types/Io/std.io.md) - **Main Entry Point** (Includes Threaded, Evented, File, Reader, Writer, etc.)
+- [std.Io.net](Types/Io/Namespaces/std.Io.net.md) - Networking Module
 
 ## Namespaces
-Standard library modules and their contents:
+Standard library modules:
 
-*Documentation for namespace modules will be added here as they are scraped and organized.*
+### Net (std.Io.net)
+- [Network Overview](Types/Io/Namespaces/std.Io.net.md)
+- [IpAddress](Types/Io/Namespaces/std.Io.net.IpAddress.md)
+- [Socket](Types/Io/Namespaces/std.Io.net.Socket.md)
 
 ## Navigation
 Use the MCP server tools to search and explore the documentation:
