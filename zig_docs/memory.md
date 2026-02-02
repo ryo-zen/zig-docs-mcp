@@ -1,40 +1,49 @@
 # Memory
 
-The Zig language performs no memory management on behalf of the programmer. This is
-      why Zig has no runtime, and why Zig code works seamlessly in so many environments,
-      including real-time software, operating system kernels, embedded devices, and
-      low latency servers. As a consequence, Zig programmers must always be able to answer
-      the question:
-      
+Zig performs no implicit memory allocations. There is no hidden runtime, no garbage collector, and no default allocator. This manual management allows Zig to be used in real-time software, kernels, and embedded devices.
 
-      
+As a consequence, a Zig programmer must always be able to answer: **[Where are the bytes?](#where-are-the-bytes)**
 
-[Where are the bytes?](#Where-are-the-bytes)
+📚 **[See Memory Patterns & Examples](../../Examples/test_memory_patterns.zig)** - Complete working examples of all patterns discussed in this guide
 
-      
+📚 **[See Memory Safety Examples](../../Examples/test_memory_safety.zig)** - Tests demonstrating null safety, leak detection, and bounds checking
 
-      Like Zig, the C programming language has manual memory management. However, unlike Zig,
-      C has a default allocator - `malloc`, `realloc`, and `free`.
-      When linking against libc, Zig exposes this allocator with `std.heap.c_allocator`.
-      However, by convention, there is no default allocator in Zig. Instead, functions which need to
-      allocate accept an `Allocator` parameter. Likewise, some data structures
-      accept an `Allocator` parameter in their initialization functions:
-      
+## Quick Reference
 
-      test_allocator.zig
+| Allocator | Use When | Performance | Memory Overhead | Debug Features |
+|-----------|----------|-------------|-----------------|----------------|
+| `GeneralPurposeAllocator` | Most applications | Good | Medium | ✅ Leak detection, double-free, use-after-free |
+| `ArenaAllocator` | Batch deallocation (request handlers, frames) | Excellent | Low | ❌ (uses child allocator's) |
+| `FixedBufferAllocator` | Known max memory, embedded systems | Fastest | None | ❌ Fails on overflow |
+| `c_allocator` | Linking with C libraries | Variable | Variable | ❌ (depends on libc) |
+| `page_allocator` | Large allocations, OS pages | Good for large | High (page-aligned) | ❌ |
+| `testing.allocator` | Unit tests | Good | Medium | ✅ Automatic leak detection |
+
+## Allocators
+
+In C, `malloc` is a global default. In Zig, functions that need to allocate memory accept an `Allocator` parameter.
+
+### Basic Usage
+
+The standard library provides several allocators. The `std.mem.Allocator` interface is used to pass them around.
+
 ```zig
 const std = @import("std");
 const Allocator = std.mem.Allocator;
-const expect = std.testing.expect;
 
 test "using an allocator" {
+    // 1. Create an allocator (FixedBufferAllocator in this example)
     var buffer: [100]u8 = undefined;
     var fba = std.heap.FixedBufferAllocator.init(&buffer);
     const allocator = fba.allocator();
+
+    // 2. Pass it to functions
     const result = try concat(allocator, "foo", "bar");
-    try expect(std.mem.eql(u8, "foobar", result));
+    
+    try std.testing.expect(std.mem.eql(u8, "foobar", result));
 }
 
+// Function accepting a generic Allocator interface
 fn concat(allocator: Allocator, a: []const u8, b: []const u8) ![]u8 {
     const result = try allocator.alloc(u8, a.len + b.len);
     @memcpy(result[0..a.len], a);
@@ -42,294 +51,456 @@ fn concat(allocator: Allocator, a: []const u8, b: []const u8) ![]u8 {
     return result;
 }
 ```
-Shell$ zig test test_allocator.zig
-1/1 test_allocator.test.using an allocator...OK
-All 1 tests passed.
 
-      
+## Choosing an Allocator
 
-      In the above example, 100 bytes of stack memory are used to initialize a
-      `FixedBufferAllocator`, which is then passed to a function.
-      As a convenience there is a global `FixedBufferAllocator`
-      available for quick tests at `std.testing.allocator`,
-      which will also perform basic leak detection.
-      
+Different problems require different memory strategies. Use this guide to choose the right tool:
 
-      
+### 1. General Purpose
+For most applications, use `std.heap.GeneralPurposeAllocator`.
+*   **Debug Mode:** Automatically detects memory leaks, double-frees, and use-after-frees.
+*   **Release Mode:** Becomes a high-performance allocator (backing off to `smp_allocator` or similar).
 
-      Zig has a general purpose allocator available to be imported
-      with `std.heap.GeneralPurposeAllocator`. However, it is still recommended to
-      follow the [Choosing an Allocator](#Choosing-an-Allocator) guide.
-      
-
-      
-## [Choosing an Allocator](#toc-Choosing-an-Allocator) §
-
-      
-
-What allocator to use depends on a number of factors. Here is a flow chart to help you decide:
-      
-
-      
-          
-              Are you making a library? In this case, best to accept an `Allocator`
-              as a parameter and allow your library's users to decide what allocator to use.
-          
-          Are you linking libc? In this case, `std.heap.c_allocator` is likely
-              the right choice, at least for your main allocator.
-          
-              Is the maximum number of bytes that you will need bounded by a number known at
-              [comptime](#comptime)? In this case, use `std.heap.FixedBufferAllocator`.
-          
-          
-              Is your program a command line application which runs from start to end without any fundamental
-              cyclical pattern (such as a video game main loop, or a web server request handler),
-              such that it would make sense to free everything at once at the end?
-              In this case, it is recommended to follow this pattern:
-              cli_allocation.zig
 ```zig
-const std = @import("std");
+var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+// Check for leaks at program exit (returns true if leak detected)
+defer _ = gpa.deinit();
+const allocator = gpa.allocator();
+```
 
+------
+
+### 2. Linking with C (libc)
+If your project links against `libc`, use `std.heap.c_allocator`. This wraps `malloc`/`free`, allowing seamless integration with C libraries.
+
+------
+
+### 3. Bounded Memory (Fixed Buffer)
+If you know the maximum memory usage at **comptime** or strictly bounded runtime, use `std.heap.FixedBufferAllocator`.
+*   **Performance:** Extremely fast (just increments a pointer).
+*   **Safety:** Fails with `OutOfMemory` if the buffer is full.
+*   **Use case:** Embedded systems, request buffers, short-lived stack allocations.
+
+------
+
+### 4. Arena (Batch Deallocation)
+If you have a cycle (like a request handler or a game frame) where you allocate many items and free them all at once, use `std.heap.ArenaAllocator`.
+*   **Mechanism:** Wraps a child allocator. Allocations are fast.
+*   **Deallocation:** `arena.deinit()` frees *everything* at once. You don't need to free individual objects.
+
+```zig
 pub fn main() !void {
     var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
+    // Free everything in the arena when scope exits
     defer arena.deinit();
+    const allocator = arena.allocator();
+
+    // No need to free 'ptr' manually!
+    const ptr = try allocator.create(i32);
+    _ = ptr;
+}
+```
+
+------
+
+### 5. Testing
+*   **`std.testing.allocator`**: A GPA preset for tests. Detects leaks automatically.
+*   **`std.testing.FailingAllocator`**: Wraps another allocator and artificially fails after `N` allocations. Use this to test your `error.OutOfMemory` handling logic.
+
+## Common Pitfalls
+
+### ❌ Forgetting to free memory
+```zig
+// BAD: Memory leak
+const ptr = try allocator.create(i32);
+// Function ends, ptr is lost forever
+```
+
+**Fix:** Use `defer` immediately after allocation:
+```zig
+// GOOD: Automatic cleanup
+const ptr = try allocator.create(i32);
+defer allocator.destroy(ptr);
+ptr.* = 42;
+```
+
+------
+
+### ❌ Returning stack memory
+```zig
+// BAD: Dangling pointer
+fn makeString() []u8 {
+    var buffer: [10]u8 = undefined;
+    return buffer[0..]; // ⚠️ Points to dead stack frame
+}
+```
+
+**Fix:** Allocate on heap or use caller-provided buffer:
+```zig
+// GOOD: Heap allocation
+fn makeString(allocator: Allocator) ![]u8 {
+    return allocator.dupe(u8, "hello");
+}
+
+// GOOD: Caller-provided buffer
+fn makeString(buffer: []u8) []u8 {
+    const msg = "hello";
+    @memcpy(buffer[0..msg.len], msg);
+    return buffer[0..msg.len];
+}
+```
+
+------
+
+### ❌ Double-freeing with Arena
+```zig
+// BAD: Unnecessary and wrong
+var arena = std.heap.ArenaAllocator.init(child);
+defer arena.deinit();
+
+const ptr = try arena.allocator().create(i32);
+arena.allocator().destroy(ptr); // ❌ Don't do this
+// arena.deinit() will try to free again
+```
+
+**Fix:** Let arena handle all deallocation:
+```zig
+// GOOD: Arena manages everything
+var arena = std.heap.ArenaAllocator.init(child);
+defer arena.deinit();
+
+const ptr = try arena.allocator().create(i32);
+// No manual free needed - arena.deinit() handles it
+```
+
+------
+
+### ❌ Using uninitialized memory
+```zig
+// BAD: Reading undefined memory
+var buffer: [100]u8 = undefined;
+std.debug.print("{s}\n", .{buffer}); // ⚠️ Garbage data
+```
+
+**Fix:** Initialize before use:
+```zig
+// GOOD: Zero-initialize
+var buffer = [_]u8{0} ** 100;
+std.debug.print("{s}\n", .{buffer}); // Safe
+
+// GOOD: Explicit initialization
+var buffer: [100]u8 = undefined;
+@memset(&buffer, 0);
+std.debug.print("{s}\n", .{buffer}); // Safe
+```
+
+------
+
+### ❌ Forgetting to check allocation errors
+```zig
+// BAD: Ignoring OutOfMemory
+const ptr = allocator.create(i32) catch unreachable;
+// ⚠️ What if allocation actually fails?
+```
+
+**Fix:** Propagate errors or handle explicitly:
+```zig
+// GOOD: Propagate to caller
+const ptr = try allocator.create(i32);
+
+// GOOD: Explicit handling
+const ptr = allocator.create(i32) catch |err| {
+    std.debug.print("Allocation failed: {}\n", .{err});
+    return err;
+};
+```
+
+## Where are the bytes?
+
+Zig distinguishes between memory locations explicitly.
+
+### Global Constant Data
+String literals and `const` values known at comptime live here. They are immutable.
+
+```zig
+test "string literals are const" {
+    // This is valid:
+    const s: []const u8 = "hello";
+    
+    // This would be a compile error:
+    // var mutable_s: []u8 = "hello"; 
+    // Error: types '[]u8' and '*const [5:0]u8' are incompatible
+    
+    _ = s;
+}
+```
+
+### Stack
+`var` declarations inside functions live on the stack.
+*   **Lifetime:** Valid only until the function returns.
+*   **Danger:** Never return a pointer to a stack variable.
+
+### Heap
+Memory returned by `allocator.alloc` or `allocator.create`.
+*   **Lifetime:** Valid until explicitly freed (or the arena is cleared).
+
+## Heap Allocation Failure
+
+Zig treats memory allocation failure as a handleable error (`error.OutOfMemory`), not an immediate crash.
+
+*   **Libraries:** Should always propagate `!Allocator` errors so the caller can decide (crash, retry, or fallback).
+*   **Applications:** Can choose to crash (panic) if memory is exhausted, but having the *option* to handle it is critical for high-reliability software (aviation, kernels, medical).
+
+## Memory Safety
+
+Zig prioritizes spatial memory safety and provides tooling for temporal memory safety, though it relies on runtime checks rather than compile-time borrow checking.
+
+### 1. Null Safety
+Standard pointers (`*T`) **cannot** be null.
+*   **Safe:** `var ptr: *i32` is guaranteed to point to a valid address (if initialized).
+*   **Optional:** `var ptr: ?*i32` allows null, but the compiler forces you to unwrap it (e.g., `if (ptr) |p|`) before dereferencing.
+
+### 2. Bounds Checking
+Accessing arrays and slices (`[]T`) is checked at runtime in `Debug` and `ReleaseSafe` modes. Buffer overflows result in a safe panic rather than a security vulnerability.
+
+### 3. Debug Tooling (GPA)
+The `std.heap.GeneralPurposeAllocator` is not just for allocation; it is a safety tool. In Debug mode, it detects:
+*   **Memory Leaks:** Prints a report of un-freed bytes at exit.
+*   **Double Free:** Panics if you free the same pointer twice.
+*   **Use-After-Free:** Attempts to detect access to freed memory (implementation dependent, usually by scrubbing memory).
+
+### 4. Undefined Memory
+In Debug builds, Zig often fills `undefined` memory with `0xaa` bytes. This ensures that logic errors involving uninitialized variables cause immediate, visible crashes (like segfaults) rather than silently corrupting data.
+
+## Debugging Memory Issues
+
+### Finding Memory Leaks with GPA
+
+**Step 1:** Wrap your allocator in GPA
+```zig
+var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+defer {
+    const leaked = gpa.deinit();
+    if (leaked == .leak) {
+        std.debug.print("❌ MEMORY LEAK DETECTED\n", .{});
+    }
+}
+const allocator = gpa.allocator();
+```
+
+**Step 2:** Run in Debug mode
+```bash
+zig build run
+# or
+zig run src/main.zig
+```
+
+**Step 3:** Read the leak report
+```
+=== LEAK DETECTED ===
+Address: 0x7f8a4c000b80
+Size: 24 bytes
+Allocated at:
+  src/main.zig:15:32
+  std/mem/Allocator.zig:89:41
+```
+
+**Step 4:** Find the missing `defer allocator.free()`
+- Search for line 15 in main.zig
+- Add `defer allocator.free(ptr);` after the allocation
+- Re-run to verify the leak is fixed
+
+------
+
+### Debugging Use-After-Free
+
+GPA can detect some use-after-free bugs by scrubbing freed memory:
+
+```zig
+test "detecting use-after-free" {
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    defer _ = gpa.deinit();
+    const allocator = gpa.allocator();
+
+    const ptr = try allocator.create(i32);
+    ptr.* = 42;
+    allocator.destroy(ptr);
+
+    // ❌ This may panic in Debug mode:
+    // const val = ptr.*; // Use-after-free
+}
+```
+
+**Tip:** In Debug builds, GPA often fills freed memory with `0xaa`, making use-after-free bugs more visible.
+
+------
+
+### Debugging Double-Free
+
+GPA immediately panics on double-free:
+
+```zig
+test "detecting double-free" {
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    defer _ = gpa.deinit();
+    const allocator = gpa.allocator();
+
+    const ptr = try allocator.create(i32);
+    allocator.destroy(ptr);
+    // allocator.destroy(ptr); // ❌ Panic: double-free detected
+}
+```
+
+**Output:**
+```
+thread X panic: Double free detected
+```
+
+## Lifetime and Ownership
+
+Because there is no garbage collection, documentation and conventions define ownership:
+
+*   **"Caller owns memory":** The function returns a pointer, and you (the caller) must free it.
+*   **"Arena managed":** The object lives in an arena and doesn't need individual freeing.
+*   **`std.ArrayList`:** The list owns the items array. When you call `list.deinit(allocator)`, the items array is freed (but complex items *inside* the list might need their own cleanup first).
+
+## Real-World Patterns
+
+### HTTP Request Handler Pattern
+```zig
+fn handleRequest(gpa: Allocator, request: Request) !Response {
+    // Arena for request-scoped allocations
+    var arena = std.heap.ArenaAllocator.init(gpa);
+    defer arena.deinit(); // Free everything at once
 
     const allocator = arena.allocator();
 
-    const ptr = try allocator.create(i32);
-    std.debug.print("ptr={*}\n", .{ptr});
+    // Parse JSON, build strings, etc. - all arena-allocated
+    const body = try parseJson(allocator, request.body);
+    const response = try buildResponse(allocator, body);
+
+    // Response is copied before arena.deinit()
+    return response.clone(gpa);
+}
+
+fn parseJson(allocator: Allocator, data: []const u8) !ParsedData {
+    // All temp allocations use arena - no manual free needed
+    const parsed = try allocator.alloc(u8, data.len);
+    @memcpy(parsed, data);
+    return ParsedData{ .content = parsed };
 }
 ```
-Shell$ zig build-exe cli_allocation.zig
-$ ./cli_allocation
-ptr=i32@7fde146af010
 
-              When using this kind of allocator, there is no need to free anything manually. Everything
-              gets freed at once with the call to `arena.deinit()`.
-          
-          
-              Are the allocations part of a cyclical pattern such as a video game main loop, or a web
-              server request handler? If the allocations can all be freed at once, at the end of the cycle,
-              for example once the video game frame has been fully rendered, or the web server request has
-              been served, then `std.heap.ArenaAllocator` is a great candidate. As
-              demonstrated in the previous bullet point, this allows you to free entire arenas at once.
-              Note also that if an upper bound of memory can be established, then
-              `std.heap.FixedBufferAllocator` can be used as a further optimization.
-          
-          
-              Are you writing a test, and you want to make sure `error.OutOfMemory`
-              is handled correctly? In this case, use `std.testing.FailingAllocator`.
-          
-          
-              Are you writing a test? In this case, use `std.testing.allocator`.
-          
-          
-              Finally, if none of the above apply, you need a general purpose allocator.
-              If you are in Debug mode, `std.heap.DebugAllocator` is available as a
-              function that takes a [comptime](#comptime) [struct](#struct) of configuration options and returns a type.
-              Generally, you will set up exactly one in your main function, and
-              then pass it or sub-allocators around to various parts of your
-              application.
-          
-          
-              If you are compiling in ReleaseFast mode, `std.heap.smp_allocator` is
-              a solid choice for a general purpose allocator.
-          
-          
-              You can also consider implementing an allocator.
-          
-      
-      
+------
 
-      
-## [Where are the bytes?](#toc-Where-are-the-bytes) §
-
-      
-
-String literals such as `"hello"` are in the global constant data section.
-      This is why it is an error to pass a string literal to a mutable slice, like this:
-      
-
-      test_string_literal_to_slice.zig
+### Game Frame Pattern
 ```zig
-fn foo(s: []u8) void {
-    _ = s;
-}
+fn gameLoop(gpa: Allocator) !void {
+    var frame_arena = std.heap.ArenaAllocator.init(gpa);
+    defer frame_arena.deinit();
 
-test "string literal to mutable slice" {
-    foo("hello");
+    while (game.running) {
+        // Reset arena but keep capacity for next frame
+        defer _ = frame_arena.reset(.retain_capacity);
+
+        const allocator = frame_arena.allocator();
+        const entities = try loadEntities(allocator);
+        try renderFrame(allocator, entities);
+        // All frame memory freed at loop end
+    }
 }
 ```
-Shell$ zig test test_string_literal_to_slice.zig
-/home/ci/zig-bootstrap/zig/doc/langref/test_string_literal_to_slice.zig:6:9: error: expected type '[]u8', found '*const [5:0]u8'
-    foo("hello");
-        ^~~~~~~
-/home/ci/zig-bootstrap/zig/doc/langref/test_string_literal_to_slice.zig:6:9: note: cast discards const qualifier
-/home/ci/zig-bootstrap/zig/doc/langref/test_string_literal_to_slice.zig:1:11: note: parameter type declared here
-fn foo(s: []u8) void {
-          ^~~~
 
-      
+------
 
-However if you make the slice constant, then it works:
-
-      test_string_literal_to_const_slice.zig
+### Embedded System Pattern (Fixed Buffer)
 ```zig
-fn foo(s: []const u8) void {
-    _ = s;
-}
+fn processCommand(command: []const u8) !void {
+    // Stack buffer - no heap allocation
+    var buffer: [1024]u8 = undefined;
+    var fba = std.heap.FixedBufferAllocator.init(&buffer);
+    const allocator = fba.allocator();
 
-test "string literal to constant slice" {
-    foo("hello");
+    // Parse and process within fixed budget
+    const parsed = try parseCommand(allocator, command);
+    try executeCommand(parsed);
+    // Buffer automatically reclaimed when function returns
 }
 ```
-Shell$ zig test test_string_literal_to_const_slice.zig
-1/1 test_string_literal_to_const_slice.test.string literal to constant slice...OK
-All 1 tests passed.
 
-      
+------
 
-      Just like string literals, `const` declarations, when the value is known at [comptime](#comptime),
-      are stored in the global constant data section. Also [Compile Time Variables](#Compile-Time-Variables) are stored
-      in the global constant data section.
-      
+### Library Function Pattern (Caller Allocates)
+```zig
+// Library API: caller provides allocator
+pub fn parseConfig(allocator: Allocator, path: []const u8) !Config {
+    const file_content = try std.fs.cwd().readFileAlloc(allocator, path, 1024 * 1024);
+    defer allocator.free(file_content);
 
-      
+    // Parse and return owned data
+    var config = Config{};
+    config.entries = try parseEntries(allocator, file_content);
+    return config; // Caller must call config.deinit(allocator) later
+}
 
-      `var` declarations inside functions are stored in the function's stack frame. Once a function returns,
-      any [Pointers](#Pointers) to variables in the function's stack frame become invalid references, and
-      dereferencing them becomes unchecked [Illegal Behavior](#Illegal-Behavior).
-      
+pub const Config = struct {
+    entries: []Entry,
 
-      
+    pub fn deinit(self: *Config, allocator: Allocator) void {
+        allocator.free(self.entries);
+    }
+};
+```
 
-      `var` declarations at the top level or in [struct](#struct) declarations are stored in the global
-      data section.
-      
+------
 
-      
+### Testing Pattern with Multiple Allocations
+```zig
+test "complex data structure" {
+    const allocator = std.testing.allocator;
 
-      The location of memory allocated with `allocator.alloc` or
-      `allocator.create` is determined by the allocator's implementation.
-      
+    // Create list (Zig 0.16 API)
+    var list: std.ArrayList(i32) = .{};
+    defer list.deinit(allocator);
 
-      
+    // Allocate separate items
+    const item1 = try allocator.create(i32);
+    defer allocator.destroy(item1);
 
-TODO: thread local variables
+    const item2 = try allocator.create(i32);
+    defer allocator.destroy(item2);
 
-      
+    // Use items
+    item1.* = 10;
+    item2.* = 20;
+    try list.append(allocator, item1.*);
+    try list.append(allocator, item2.*);
 
-      
-## [Heap Allocation Failure](#toc-Heap-Allocation-Failure) §
+    // std.testing.allocator will catch any leaks
+}
+```
 
-      
+## When NOT to Use Each Allocator
 
-      Many programming languages choose to handle the possibility of heap allocation failure by
-      unconditionally crashing. By convention, Zig programmers do not consider this to be a
-      satisfactory solution. Instead, `error.OutOfMemory` represents
-      heap allocation failure, and Zig libraries return this error code whenever heap allocation
-      failure prevented an operation from completing successfully.
-      
+### ❌ Don't use ArenaAllocator for:
+- **Long-running services without clear cleanup points** - Memory will accumulate indefinitely
+- **When individual deallocations are needed** - Can't free specific items, only everything
+- **Memory-constrained environments** - Can't reclaim memory until full deinit
+- **Example:** A daemon process that runs for days/weeks without restart points
 
-      
+### ❌ Don't use FixedBufferAllocator for:
+- **Unbounded user input** - Buffer overflow will cause `error.OutOfMemory`
+- **Recursive algorithms with unknown depth** - Stack frames may exceed buffer
+- **Anything that might exceed buffer size unpredictably** - Better to fail gracefully with GPA
+- **Example:** Parsing arbitrary-size JSON from untrusted sources
 
-      Some have argued that because some operating systems such as Linux have memory overcommit enabled by
-      default, it is pointless to handle heap allocation failure. There are many problems with this reasoning:
-      
+### ❌ Don't use page_allocator for:
+- **Small allocations** - Wastes memory due to page alignment (typically 4KB minimum)
+- **Frequent allocations** - Every allocation is a syscall (expensive)
+- **Example:** Allocating hundreds of small structs individually
 
-      
-          Only some operating systems have an overcommit feature.
-              
-                  
-- Linux has it enabled by default, but it is configurable.
-                  
-- Windows does not overcommit.
-                  
-- Embedded systems do not have overcommit.
-                  
-- Hobby operating systems may or may not have overcommit.
-              
-          
-          
-              For real-time systems, not only is there no overcommit, but typically the maximum amount
-              of memory per application is determined ahead of time.
-          
-          
-              When writing a library, one of the main goals is code reuse. By making code handle
-              allocation failure correctly, a library becomes eligible to be reused in
-              more contexts.
-          
-          
-              Although some software has grown to depend on overcommit being enabled, its existence
-              is the source of countless user experience disasters. When a system with overcommit enabled,
-              such as Linux on default settings, comes close to memory exhaustion, the system locks up
-              and becomes unusable. At this point, the OOM Killer selects an application to kill
-              based on heuristics. This non-deterministic decision often results in an important process
-              being killed, and often fails to return the system back to working order.
-          
-      
-      
-
-      
-## [Recursion](#toc-Recursion) §
-
-      
-
-      Recursion is a fundamental tool in modeling software. However it has an often-overlooked problem:
-      unbounded memory allocation.
-      
-
-      
-
-      Recursion is an area of active experimentation in Zig and so the documentation here is not final.
-      You can read a
-      [summary of recursion status in the 0.3.0 release notes](https://ziglang.org/download/0.3.0/release-notes.html#recursion).
-      
-
-      
-
-      The short summary is that currently recursion works normally as you would expect. Although Zig code
-      is not yet protected from stack overflow, it is planned that a future version of Zig will provide
-      such protection, with some degree of cooperation from Zig code required.
-      
-
-      
-
-      
-## [Lifetime and Ownership](#toc-Lifetime-and-Ownership) §
-
-      
-
-      It is the Zig programmer's responsibility to ensure that a [pointer](#Pointers) is not
-      accessed when the memory pointed to is no longer available. Note that a [slice](#Slices)
-      is a form of pointer, in that it references other memory.
-      
-
-      
-
-      In order to prevent bugs, there are some helpful conventions to follow when dealing with pointers.
-      In general, when a function returns a pointer, the documentation for the function should explain
-      who "owns" the pointer. This concept helps the programmer decide when it is appropriate, if ever,
-      to free the pointer.
-      
-
-      
-
-      For example, the function's documentation may say "caller owns the returned memory", in which case
-      the code that calls the function must have a plan for when to free that memory. Probably in this situation,
-      the function will accept an `Allocator` parameter.
-      
-
-      
-
-      Sometimes the lifetime of a pointer may be more complicated. For example, the
-      `std.ArrayList(T).items` slice has a lifetime that remains
-      valid until the next time the list is resized, such as by appending new elements.
-      
-
-      
-
-      The API documentation for functions and data structures should take great care to explain
-      the ownership and lifetime semantics of pointers. Ownership determines whose responsibility it
-      is to free the memory referenced by the pointer, and lifetime determines the point at which
-      the memory becomes inaccessible (lest [Illegal Behavior](#Illegal-Behavior) occur).
+### ❌ Don't use GeneralPurposeAllocator for:
+- **Embedded systems with tiny RAM** - Debug features add overhead
+- **Hard real-time systems** - Lock contention and debug checks add latency
+- **When linking with C libraries that use malloc** - Use `c_allocator` instead for interop
+- **Example:** Microcontroller with 32KB RAM running a control loop
