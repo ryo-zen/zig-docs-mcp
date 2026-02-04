@@ -19,6 +19,18 @@ Direct Zig standard library types and their methods:
 - [AutoHashMap](Types/AutoHashMap/std.hash_map.AutoHashMap.md)
 - [AutoHashMapUnmanaged](Types/AutoHashMap/std.hash_map.AutoHashMapUnmanaged.md)
 
+### BitStack
+- [BitStack](Types/BitStack/std.BitStack.md) - Memory-efficient stack for u1 values (8 bits per byte)
+
+### BufMap
+- [BufMap](Types/BufMap/std.buf_map.BufMap.md) - String-to-string hash map with automatic string ownership
+
+### BufSet
+- [BufSet](Types/BufSet/std.buf_set.BufSet.md) - Set of strings with automatic string ownership and deduplication
+
+### Build
+- [Build](Types/Build/std.Build.md) - Zig build system API (core build.zig functionality)
+
 ### Io
 - [std.Io](Types/Io/std.io.md) - **Main Entry Point** (Includes Threaded, Evented, File, Reader, Writer, etc.)
 - [std.Io.net](Types/Io/Namespaces/std.Io.net.md) - Networking Module
