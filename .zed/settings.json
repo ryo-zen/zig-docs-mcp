@@ -1,3 +1,10 @@
 {
-  "project_name": "Zig 0.16 MCP Server"
+  "project_name": "Zig 0.16 MCP Server",
+  "lsp": {
+    "zls": {
+      "binary": {
+        "path": "/home/ryo/.local/bin/zls"
+      }
+    }
+  }
 }
