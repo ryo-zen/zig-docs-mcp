@@ -89,6 +89,7 @@ class ZigDocumentationServer {
     const langDocsDir = path.join(process.cwd(), 'zig_docs');
     const stdDocsDir = path.join(process.cwd(), 'zig_docs_std');
     const examplesDir = path.join(process.cwd(), 'zig_docs_std', 'Examples');
+    const patternsDir = path.join(process.cwd(), 'zig_patterns');
 
     console.error('Loading documentation into cache...');
 
@@ -102,6 +103,10 @@ class ZigDocumentationServer {
 
     if (fs.existsSync(examplesDir)) {
       await this.cacheExamplesDirectory(examplesDir, 'zig://examples');
+    }
+
+    if (fs.existsSync(patternsDir)) {
+      await this.cacheDirectory(patternsDir, 'zig://patterns');
     }
 
     console.error(`Cached ${this.docCache.size} documentation files`);
@@ -195,6 +200,9 @@ class ZigDocumentationServer {
     // Format different types of names - keep consistent with search results
     if (uri.startsWith('zig://examples/')) {
       return `Example: ${last}`;
+    } else if (uri.startsWith('zig://patterns/')) {
+      const category = parts[parts.length - 2]; // e.g., memory, errors
+      return `Pattern: ${category}/${last.replace(/_/g, ' ')}`;
     } else if (uri.includes('/Types/')) {
       const typeGroup = parts[parts.length - 2]; // e.g., ArrayHashMap
       return `Types.${typeGroup}.${last}`;
@@ -213,6 +221,8 @@ class ZigDocumentationServer {
   generateDescription(uri: string): string {
     if (uri.startsWith('zig://examples/')) {
       return `Working Zig code example`;
+    } else if (uri.startsWith('zig://patterns/')) {
+      return `Practical Zig coding pattern with examples`;
     } else if (uri.includes('/Types/')) {
       return `Zig standard library type documentation`;
     } else if (uri.includes('/Namespaces/')) {
@@ -263,6 +273,9 @@ class ZigDocumentationServer {
       const exampleName = uri.replace('zig://examples/', '');
       // Try to find the file (check both with and without test_ prefix)
       return `zig_docs_std/Examples/test_${exampleName}.zig`;
+    } else if (uri.startsWith('zig://patterns/')) {
+      const patternPath = uri.replace('zig://patterns/', '');
+      return `zig_patterns/${patternPath}.md`;
     } else if (uri.startsWith('zig://std/')) {
       const parts = uri.replace('zig://std/', '').split('/');
 
@@ -280,15 +293,18 @@ class ZigDocumentationServer {
 
   filePathToUri(filePath: string): string {
     const relativePath = path.relative(process.cwd(), filePath);
-    
+
     if (relativePath.startsWith('zig_docs/')) {
       const topic = relativePath.replace('zig_docs/', '').replace('.md', '').replace(/_/g, '-');
       return `zig://doc/${topic}`;
+    } else if (relativePath.startsWith('zig_patterns/')) {
+      const patternPath = relativePath.replace('zig_patterns/', '').replace('.md', '');
+      return `zig://patterns/${patternPath}`;
     } else if (relativePath.startsWith('zig_docs_std/')) {
       const stdPath = relativePath.replace('zig_docs_std/', '').replace('.md', '');
       return `zig://std/${stdPath}`;
     }
-    
+
     throw new Error(`Cannot convert file path to URI: ${relativePath}`);
   }
 
