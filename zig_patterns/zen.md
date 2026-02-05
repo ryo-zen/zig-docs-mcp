@@ -153,11 +153,11 @@ processBuffer(0); // Compile error: Buffer size must be non-zero
 **In practice**:
 ```zig
 // ❌ Local maximum: fast but inflexible
-var buffer: [1024]u8 = undefined; // fixed size
+const buffer: [1024]u8 = undefined; // fixed size
 
 // ✅ Better long-term: flexible and composable
-const buffer = try allocator.alloc(u8, needed_size);
-defer allocator.free(buffer);
+const dynamic_buffer = try allocator.alloc(u8, needed_size);
+defer allocator.free(dynamic_buffer);
 ```
 
 **Related patterns**:
