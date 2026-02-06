@@ -38,6 +38,17 @@ Direct Zig standard library types and their methods:
 ## Namespaces
 Standard library modules:
 
+### mem (std.mem)
+- [std.mem Overview](Namespaces/mem/std.mem.md) - Memory manipulation, allocation, and utilities
+- [Allocator](Namespaces/mem/std.mem.Allocator.md) - Standard memory allocation interface
+- [Alignment](Namespaces/mem/std.mem.Alignment.md) - Memory alignment type and operations
+- [SplitIterator](Namespaces/mem/std.mem.SplitIterator.md) - Forward splitting iterator (preserves empty fields)
+- [SplitBackwardsIterator](Namespaces/mem/std.mem.SplitBackwardsIterator.md) - Backward splitting iterator
+- [TokenIterator](Namespaces/mem/std.mem.TokenIterator.md) - Tokenization iterator (skips empty fields)
+- [WindowIterator](Namespaces/mem/std.mem.WindowIterator.md) - Sliding window iterator
+- [DelimiterType](Namespaces/mem/std.mem.DelimiterType.md) - Delimiter type enum for iterators
+- [ValidationAllocator](Namespaces/mem/std.mem.ValidationAllocator.md) - Allocator wrapper with validation checks
+
 ### Net (std.Io.net)
 - [Network Overview](Types/Io/Namespaces/std.Io.net.md)
 - [IpAddress](Types/Io/Namespaces/std.Io.net.IpAddress.md)
