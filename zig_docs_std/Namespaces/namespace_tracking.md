@@ -3,19 +3,19 @@
 ## Tier 1 - Essential (used in almost every project)
 | Namespace | Description | Status |
 |-----------|-------------|--------|
-| `mem` | Memory manipulation, allocation, slicing, comparison | Done |
-| `fmt` | String formatting, printing, parsing | Done |
-| `fs` | Path manipulation (0.16: file I/O moved to std.Io.Dir) | Done |
-| `heap` | Allocators (GeneralPurpose, page, arena, c) | Done |
+| `mem` | Memory manipulation, allocation, slicing, comparison | ✅ Done |
+| `fmt` | String formatting, printing, parsing | ✅ Done |
+| `fs` | Path manipulation (0.16: file I/O moved to std.Io.Dir) | ✅ Done |
+| `heap` | Allocators (GeneralPurpose, page, arena, c) | ✅ Done |
 | `testing` | Test assertions, expect, allocator for tests | ✅ Done |
-| `log` | Structured logging | Not started |
+| `log` | Structured logging | ✅ Done |
 | `array_list` | Dynamic arrays (ArrayList) | Partial (Types) |
 | `hash_map` | Hash maps (HashMap, AutoHashMap) | Partial (Types) |
 
 ## Tier 2 - Very Common (most non-trivial projects)
 | Namespace | Description | Status |
 |-----------|-------------|--------|
-| `json` | JSON parsing and serialization | Not started |
+| `json` | JSON parsing and serialization | ✅ Done |
 | `math` | Math operations, min/max, clamp, overflow | Not started |
 | `sort` | Sorting algorithms | Not started |
 | `ascii` | ASCII character classification and manipulation | Not started |
@@ -31,7 +31,7 @@
 | `builtin` | Compile-time target info, cpu, os, features | Not started |
 | `unicode` | Unicode handling, UTF-8/16 | Not started |
 | `compress` | Compression (zlib, gzip, zstd, xz) | Not started |
-| `crypto` | Hashing, encryption, random | Not started |
+| `crypto` | Hashing, encryption, random | ✅ Done |
 | `bit_set` | Bit set data structures | Not started |
 | `enums` | Enum utilities (from std.enums, not the language feature) | Not started |
 | `atomic` | Atomic operations for concurrency | Not started |
@@ -71,4 +71,4 @@
 - **Tier 1** should be documented first - these are the namespaces every Zig programmer needs
 - **Tier 2** covers the next most common needs and should follow soon after
 - Types already partially documented (ArrayList, HashMap, ArrayHashMap) under `zig_docs_std/Types/`
-- `mem` is the only namespace with full documentation so far
+- **Completed namespaces:** `mem`, `fmt`, `fs`, `heap`, `testing`, `log`, `json`, `crypto`
