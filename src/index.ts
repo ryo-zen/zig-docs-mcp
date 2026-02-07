@@ -19,6 +19,7 @@ import {
 } from '@modelcontextprotocol/sdk/types.js';
 import fs from 'fs';
 import path from 'path';
+import { execSync } from 'child_process';
 
 // Interface for cached resource items
 interface ResourceEntry {
@@ -395,6 +396,57 @@ class ZigDocumentationServer {
               },
             },
           },
+          {
+            name: 'introspect_type',
+            description: 'Introspect a Zig type to see its methods, fields, and structure',
+            inputSchema: {
+              type: 'object',
+              properties: {
+                type_expression: {
+                  type: 'string',
+                  description: 'Zig type expression to introspect (e.g., "std.ArrayList(i32)", "std.heap.GeneralPurposeAllocator({})")',
+                },
+              },
+              required: ['type_expression'],
+            },
+          },
+          {
+            name: 'validate_code',
+            description: 'Validate a Zig code snippet and get compilation errors if any',
+            inputSchema: {
+              type: 'object',
+              properties: {
+                code: {
+                  type: 'string',
+                  description: 'Zig code snippet to validate',
+                },
+                code_type: {
+                  type: 'string',
+                  description: 'Type of code: "test" (default), "main", or "function"',
+                  enum: ['test', 'main', 'function'],
+                },
+              },
+              required: ['code'],
+            },
+          },
+          {
+            name: 'query_stdlib_source',
+            description: 'Query the Zig standard library source code for a specific file/module',
+            inputSchema: {
+              type: 'object',
+              properties: {
+                module_path: {
+                  type: 'string',
+                  description: 'Path to stdlib module (e.g., "std/array_list.zig", "std/heap.zig")',
+                },
+                search_term: {
+                  type: 'string',
+                  description: 'Optional: search for specific function or type within the module',
+                },
+              },
+              required: ['module_path'],
+            },
+          },
         ],
       };
     });
@@ -463,6 +515,36 @@ class ZigDocumentationServer {
               {
                 type: 'text',
                 text: this.getDiagnostics(args.include_samples as boolean ?? false),
+              },
+            ],
+          };
+
+        case 'introspect_type':
+          return {
+            content: [
+              {
+                type: 'text',
+                text: await this.introspectType(args.type_expression as string),
+              },
+            ],
+          };
+
+        case 'validate_code':
+          return {
+            content: [
+              {
+                type: 'text',
+                text: await this.validateCode(args.code as string, args.code_type as string),
+              },
+            ],
+          };
+
+        case 'query_stdlib_source':
+          return {
+            content: [
+              {
+                type: 'text',
+                text: await this.queryStdlibSource(args.module_path as string, args.search_term as string),
               },
             ],
           };
@@ -1054,6 +1136,212 @@ ${sampleExamples}
     }
 
     return output.trim();
+  }
+
+  async introspectType(typeExpression: string): Promise<string> {
+    try {
+      // Create a temporary test file that uses @typeInfo to introspect the type
+      const testCode = `
+const std = @import("std");
+
+test "introspect" {
+    const T = ${typeExpression};
+    const info = @typeInfo(T);
+    std.debug.print("\\nType: {s}\\n", .{@typeName(T)});
+    std.debug.print("TypeInfo: {any}\\n", .{info});
+}
+`;
+
+      const tmpFile = `/tmp/zig_introspect_${Date.now()}.zig`;
+      fs.writeFileSync(tmpFile, testCode);
+
+      try {
+        // Run zig test to get type information
+        const output = execSync(`zig test ${tmpFile} 2>&1`, {
+          encoding: 'utf8',
+          timeout: 5000,
+        });
+
+        // Clean up temp file
+        fs.unlinkSync(tmpFile);
+
+        // Parse and format the output
+        return `# Type Introspection: ${typeExpression}
+
+${output}
+
+**Note:** This shows the compile-time type information. For methods and fields, check the standard library source.`;
+      } catch (error: any) {
+        // Clean up temp file
+        if (fs.existsSync(tmpFile)) {
+          fs.unlinkSync(tmpFile);
+        }
+
+        return `# Type Introspection Failed
+
+**Expression:** \`${typeExpression}\`
+
+**Error:**
+\`\`\`
+${error.stdout || error.message}
+\`\`\`
+
+This type expression may be invalid or require additional context.`;
+      }
+    } catch (error: any) {
+      return `Error introspecting type: ${error.message}`;
+    }
+  }
+
+  async validateCode(code: string, codeType: string = 'test'): Promise<string> {
+    try {
+      let fullCode: string;
+
+      switch (codeType) {
+        case 'main':
+          fullCode = `const std = @import("std");\n\n${code}`;
+          break;
+        case 'function':
+          fullCode = `const std = @import("std");\n\n${code}\n\ntest "validate" { _ = &main; }`;
+          break;
+        case 'test':
+        default:
+          fullCode = `const std = @import("std");\n\n${code}`;
+          break;
+      }
+
+      const tmpFile = `/tmp/zig_validate_${Date.now()}.zig`;
+      fs.writeFileSync(tmpFile, fullCode);
+
+      try {
+        const output = execSync(`zig test ${tmpFile} 2>&1`, {
+          encoding: 'utf8',
+          timeout: 10000,
+        });
+
+        fs.unlinkSync(tmpFile);
+
+        return `# ✅ Code Validation Passed
+
+**Code Type:** ${codeType}
+
+**Output:**
+\`\`\`
+${output.trim()}
+\`\`\`
+
+The code compiles successfully!`;
+      } catch (error: any) {
+        if (fs.existsSync(tmpFile)) {
+          fs.unlinkSync(tmpFile);
+        }
+
+        const errorOutput = error.stdout || error.stderr || error.message;
+
+        return `# ❌ Code Validation Failed
+
+**Code Type:** ${codeType}
+
+**Compilation Errors:**
+\`\`\`
+${errorOutput}
+\`\`\`
+
+Fix the errors above to make the code compile.`;
+      }
+    } catch (error: any) {
+      return `Error validating code: ${error.message}`;
+    }
+  }
+
+  async queryStdlibSource(modulePath: string, searchTerm?: string): Promise<string> {
+    try {
+      // Find Zig stdlib installation
+      const zigLibPath = execSync('zig env', { encoding: 'utf8' });
+      const zigEnv = JSON.parse(zigLibPath);
+      const stdlibPath = path.join(zigEnv.lib_dir, 'std');
+
+      // Normalize module path
+      let fullPath = path.join(stdlibPath, modulePath);
+      if (!fullPath.endsWith('.zig')) {
+        fullPath += '.zig';
+      }
+
+      if (!fs.existsSync(fullPath)) {
+        return `# ❌ Module Not Found
+
+**Path:** \`${modulePath}\`
+**Resolved:** \`${fullPath}\`
+
+The module does not exist in the standard library.
+
+**Available stdlib root:**
+\`\`\`
+${fs.readdirSync(stdlibPath).filter(f => f.endsWith('.zig')).slice(0, 20).join('\\n')}
+...
+\`\`\``;
+      }
+
+      const content = fs.readFileSync(fullPath, 'utf8');
+      const lines = content.split('\n');
+
+      if (searchTerm) {
+        // Search for the term in the file
+        const matches: string[] = [];
+        lines.forEach((line, idx) => {
+          if (line.toLowerCase().includes(searchTerm.toLowerCase())) {
+            // Include surrounding context
+            const start = Math.max(0, idx - 2);
+            const end = Math.min(lines.length, idx + 3);
+            const context = lines.slice(start, end).map((l, i) => {
+              const lineNum = start + i + 1;
+              const marker = (start + i === idx) ? '>' : ' ';
+              return `${marker} ${lineNum}: ${l}`;
+            }).join('\n');
+            matches.push(context);
+          }
+        });
+
+        if (matches.length === 0) {
+          return `# 🔍 No Matches Found
+
+**Module:** \`${modulePath}\`
+**Search Term:** \`${searchTerm}\`
+
+The search term was not found in this module.`;
+        }
+
+        return `# 🔍 Search Results in ${modulePath}
+
+**Search Term:** \`${searchTerm}\`
+**Matches Found:** ${matches.length}
+
+\`\`\`zig
+${matches.slice(0, 10).join('\n\n---\n\n')}
+\`\`\`
+
+${matches.length > 10 ? `\n*(Showing first 10 of ${matches.length} matches)*` : ''}`;
+      } else {
+        // Return first 100 lines or summary
+        const summary = lines.slice(0, 100).join('\n');
+        return `# 📄 ${modulePath}
+
+**Full Path:** \`${fullPath}\`
+**Lines:** ${lines.length}
+
+## Preview (first 100 lines):
+
+\`\`\`zig
+${summary}
+\`\`\`
+
+${lines.length > 100 ? `\n*(File has ${lines.length} total lines)*` : ''}
+
+**Tip:** Use the \`search_term\` parameter to find specific functions or types.`;
+      }
+    } catch (error: any) {
+      return `Error querying stdlib source: ${error.message}`;
+    }
   }
 
   async run() {

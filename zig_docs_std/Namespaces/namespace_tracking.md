@@ -4,9 +4,9 @@
 | Namespace | Description | Status |
 |-----------|-------------|--------|
 | `mem` | Memory manipulation, allocation, slicing, comparison | Done |
-| `fmt` | String formatting, printing, parsing | Not started |
-| `fs` | File system operations, reading/writing files | Not started |
-| `heap` | Allocators (GeneralPurpose, page, arena, c) | Not started |
+| `fmt` | String formatting, printing, parsing | Done |
+| `fs` | Path manipulation (0.16: file I/O moved to std.Io.Dir) | Done |
+| `heap` | Allocators (GeneralPurpose, page, arena, c) | Done |
 | `testing` | Test assertions, expect, allocator for tests | Not started |
 | `log` | Structured logging | Not started |
 | `array_list` | Dynamic arrays (ArrayList) | Partial (Types) |

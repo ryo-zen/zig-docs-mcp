@@ -1,441 +1,952 @@
 # std.mem
 
-## Types
+📚 **[See Comprehensive Examples & Tests](../../Examples/)** - Complete runnable code demonstrating all mem features
+
+## Quick Start
+
+### Most Common Patterns
+
+**Compare Slices**
+```zig
+const a = "hello";
+const b = "hello";
+if (std.mem.eql(u8, a, b)) {
+    std.debug.print("Equal!\n", .{});
+}
+```
+
+**Find in Slice**
+```zig
+const text = "Hello, World!";
+if (std.mem.indexOf(u8, text, "World")) |index| {
+    std.debug.print("Found at index {d}\n", .{index}); // 7
+}
+```
+
+**Copy Memory**
+```zig
+const src = [_]u8{ 1, 2, 3, 4, 5 };
+var dst: [5]u8 = undefined;
+@memcpy(&dst, &src);
+// dst is now [1, 2, 3, 4, 5]
+```
+
+**Split String**
+```zig
+var iter = std.mem.splitScalar(u8, "a,b,c", ',');
+while (iter.next()) |part| {
+    std.debug.print("Part: {s}\n", .{part}); // "a", "b", "c"
+}
+```
+
+**Trim Whitespace**
+```zig
+const trimmed = std.mem.trim(u8, "  hello  ", " \t\n");
+// trimmed = "hello"
+```
+
+### Common Operations Quick Reference
+
+| Operation | Function | Example |
+|-----------|----------|---------|
+| Compare slices | `eql()` | `std.mem.eql(u8, a, b)` |
+| Find substring | `indexOf()` | `std.mem.indexOf(u8, haystack, needle)` |
+| Find element | `indexOfScalar()` | `std.mem.indexOfScalar(u8, slice, 'x')` |
+| Check prefix | `startsWith()` | `std.mem.startsWith(u8, str, "prefix")` |
+| Check suffix | `endsWith()` | `std.mem.endsWith(u8, str, "suffix")` |
+| Split string | `splitScalar()` | `std.mem.splitScalar(u8, str, ',')` |
+| Trim ends | `trim()` | `std.mem.trim(u8, str, " \t\n")` |
+| Concatenate | `concat()` | `std.mem.concat(allocator, u8, slices)` |
+| Replace | `replace()` | `std.mem.replace(u8, input, old, new, output)` |
+| Sort | `sort()` | `std.mem.sort(u8, items, {}, lessThan)` |
+
+### ⚠️ Critical: Use @memcpy for Overlapping Memory
+
+```zig
+// WRONG - copyForwards/copyBackwards are deprecated
+std.mem.copyForwards(u8, dest, source); // ❌ Deprecated
+
+// CORRECT - Use @memcpy (handles overlaps correctly)
+@memcpy(dest, source); // ✅ Always safe
+```
 
-- Alignment
-- Allocator
-- DelimiterType
-- SplitBackwardsIterator
-- SplitIterator
-- TokenIterator
-- ValidationAllocator
-- WindowIterator
-- findMinMax
-- indexOfMinMax
-- minMax
+---
 
-## Values
+## Overview
+
+`std.mem` provides fundamental memory operations for working with slices, pointers, and byte sequences in Zig. It's the core toolkit for string processing, slice manipulation, searching, copying, and low-level memory operations.
 
-|  |  |  |
-|----|----|----|
-| byte_size_in_bits |  | The standard library currently thoroughly depends on byte size being 8 bits. (see the use of u8 throughout allocation code as the "byte" type.) Code which depends on this can reference this declaration. If we ever try to port the standard library to a non-8-bit-byte platform, this will allow us to search for things which need to be updated. |
-| readPackedIntForeign |  | Deprecated: use readPackedInt(T, bytes, bit_offset, value, .foreign) |
-| readPackedIntNative |  | Deprecated: use readPackedInt(T, bytes, bit_offset, value, .native) |
-| writePackedIntForeign |  | Deprecated: use writePackedInt(T, bytes, bit_offset, value, .foreign) |
-| writePackedIntNative |  | Deprecated: use writePackedInt(T, bytes, bit_offset, value, .native) |
+**Key Characteristics:**
+- **Type-generic** - Most functions work with any slice type via `comptime T: type`
+- **Zero-allocation** - Many operations work in-place or with caller-provided buffers
+- **Explicit endianness** - Byte order conversions are explicit and clear
+- **Safety-focused** - Functions assert preconditions and avoid undefined behavior
+- **Iterator-based** - Complex operations like split/tokenize use iterators
+- **No hidden allocations** - Functions requiring allocation take explicit `Allocator` parameter
 
-## Functions
+**When to use std.mem:**
+- String searching, splitting, and manipulation
+- Comparing slices for equality or ordering
+- Copying, concatenating, or transforming byte sequences
+- Reading/writing integers with specific endianness
+- Sorting arrays with custom comparison functions
+- Working with pointers and memory alignment
+- Converting between types and byte representations
 
-`pub fn alignBackward(comptime T: type, addr: T, alignment: T) T`  
-Round an address down to the previous (or current) aligned address. The alignment must be a power of 2 and greater than 0.
+**Related namespaces:**
+- `std.fmt` - String formatting and parsing (higher-level)
+- `std.heap` - Memory allocation strategies
+- `std.ArrayList` - Dynamic array type
+- `std.io` - Buffered I/O operations
 
-`pub fn alignBackwardAnyAlign(comptime T: type, addr: T, alignment: T) T`  
-Round an address down to the previous (or current) aligned address. Unlike `alignBackward`, `alignment` can be any positive number, not just a power of 2.
+---
 
-`pub fn alignForward(comptime T: type, addr: T, alignment: T) T`  
-Round an address up to the next (or current) aligned address. The alignment must be a power of 2 and greater than 0. Asserts that rounding up the address does not cause integer overflow.
+## Searching & Finding Functions
 
-`pub fn alignForwardAnyAlign(comptime T: type, addr: T, alignment: T) T`  
-Round an address down to the next (or current) aligned address. Unlike `alignForward`, `alignment` can be any positive number, not just a power of 2.
+### `pub fn indexOf(comptime T: type, haystack: []const T, needle: []const T) ?usize`
 
-`pub fn alignForwardLog2(addr: usize, log2_alignment: u8) usize`  
-Rounds an address up to the next alignment boundary using log2 representation. Equivalent to alignForward with alignment = 1 \<\< log2_alignment. More efficient when alignment is known to be a power of 2.
+Searches for the first occurrence of a subsequence within a slice. Returns the index or `null` if not found. Uses Boyer-Moore-Horspool algorithm on large inputs for efficiency.
 
-`pub fn alignInBytes(bytes: []u8, comptime new_alignment: usize) ?[]align(new_alignment) u8`  
-Returns the largest slice in the given bytes that conforms to the new alignment, or `null` if the given bytes contain no conforming address.
+**Example:**
+```zig
+const text = "The quick brown fox";
+const index = std.mem.indexOf(u8, text, "quick"); // 4
+const missing = std.mem.indexOf(u8, text, "slow"); // null
+```
 
-`pub fn alignInSlice(slice: anytype, comptime new_alignment: usize) ?AlignedSlice(@TypeOf(slice), new_alignment)`  
-Returns the largest sub-slice within the given slice that conforms to the new alignment, or `null` if the given slice contains no conforming address.
+------
 
-`pub fn alignPointer(ptr: anytype, align_to: usize) ?@TypeOf(ptr)`  
-Aligns a given pointer value to a specified alignment factor. Returns an aligned pointer or null if one of the following conditions is met:
+### `pub fn indexOfScalar(comptime T: type, slice: []const T, value: T) ?usize`
 
-- The aligned pointer would not fit the address space,
-- The delta required to align the pointer is not a multiple of the pointee's type.
+Linear search for a single element in a slice.
 
-`pub fn alignPointerOffset(ptr: anytype, align_to: usize) ?usize`  
-Returns the number of elements that, if added to the given pointer, align it to a multiple of the given quantity, or `null` if one of the following conditions is met:
+**Example:**
+```zig
+const numbers = [_]i32{ 10, 20, 30, 40 };
+const index = std.mem.indexOfScalar(i32, &numbers, 30); // 2
+```
 
-- The aligned pointer would not fit the address space,
-- The delta required to align the pointer is not a multiple of the pointee's type.
+------
 
-`pub fn allEqual(comptime T: type, slice: []const T, scalar: T) bool`  
-Returns true if all elements in a slice are equal to the scalar value provided
+### `pub fn lastIndexOf(comptime T: type, haystack: []const T, needle: []const T) ?usize`
 
-`pub fn asBytes(ptr: anytype) AsBytesReturnType(@TypeOf(ptr))`  
-Given a pointer to a single item, returns a slice of the underlying bytes, preserving pointer attributes.
+Searches backwards from the end. Returns the index of the last occurrence.
 
-`pub fn bigToNative(comptime T: type, x: T) T`  
-Converts a big-endian integer to host endianness.
+**Example:**
+```zig
+const text = "one two one";
+const index = std.mem.lastIndexOf(u8, text, "one"); // 8
+```
 
-`pub fn boundedOrderZ(comptime T: type, lhs: [*:0]const T, rhs: [*:0]const T, bound: usize) math.Order`  
-Compares two many-item pointers with NUL-termination lexicographically until some specified bound.
+------
 
-`pub fn byteSwapAllElements(comptime Elem: type, slice: []Elem) void`  
-Reverses the byte order of all elements in a slice. Handles structs, unions, arrays, enums, floats, and integers recursively. Useful for converting between little-endian and big-endian representations.
+### `pub fn indexOfAny(comptime T: type, slice: []const T, values: []const T) ?usize`
 
-`pub fn byteSwapAllFields(comptime S: type, ptr: *S) void`  
-Swap the byte order of all the members of the fields of a struct (Changing their endianness)
+Finds the first occurrence of ANY value from a set.
 
-`pub fn byteSwapAllFieldsAligned(comptime S: type, comptime a: Alignment, ptr: *align(a.toByteUnits()) S) void`  
-Swap the byte order of all the members of the fields of a struct (Changing their endianness)
+**Example:**
+```zig
+const text = "hello";
+const index = std.mem.indexOfAny(u8, text, "aeiou"); // 1 (found 'e')
+```
 
-`pub fn bytesAsSlice(comptime T: type, bytes: anytype) BytesAsSliceReturnType(T, @TypeOf(bytes))`  
-Given a slice of bytes, returns a slice of the specified type backed by those bytes, preserving pointer attributes. If `T` is zero-bytes sized, the returned slice has a len of zero.
+------
 
-`pub fn bytesAsValue(comptime T: type, bytes: anytype) BytesAsValueReturnType(T, @TypeOf(bytes))`  
-Given a pointer to an array of bytes, returns a pointer to a value of the specified type backed by those bytes, preserving pointer attributes.
+### `pub fn indexOfNone(comptime T: type, slice: []const T, values: []const T) ?usize`
 
-`pub fn bytesToValue(comptime T: type, bytes: anytype) T`  
-Given a pointer to an array of bytes, returns a value of the specified type backed by a copy of those bytes.
+Finds the first element NOT in the given set.
 
-`pub fn collapseRepeats(comptime T: type, slice: []T, elem: T) []T`  
-Collapse consecutive duplicate elements into one entry.
+**Example:**
+```zig
+const digits = "12345abc";
+const index = std.mem.indexOfNone(u8, digits, "0123456789"); // 5 (found 'a')
+```
 
-`pub fn collapseRepeatsLen(comptime T: type, slice: []T, elem: T) usize`  
-Collapse consecutive duplicate elements into one entry.
+------
 
-`pub fn concat(allocator: Allocator, comptime T: type, slices: []const []const T) Allocator.Error![]T`  
-Copies each T from slices into a new slice that exactly holds all the elements.
+### `pub fn containsAtLeast(comptime T: type, haystack: []const T, expected_count: usize, needle: []const T) bool`
 
-`pub fn concatMaybeSentinel(allocator: Allocator, comptime T: type, slices: []const []const T, comptime s: ?T) Allocator.Error![]T`  
-Copies each T from slices into a new slice that exactly holds all the elements as well as the sentinel.
+Returns `true` if `needle` appears at least `expected_count` times in `haystack`.
 
-`pub fn concatWithSentinel(allocator: Allocator, comptime T: type, slices: []const []const T, comptime s: T) Allocator.Error![:s]T`  
-Copies each T from slices into a new slice that exactly holds all the elements.
+**Example:**
+```zig
+const text = "banana";
+const result = std.mem.containsAtLeast(u8, text, 2, "na"); // true
+```
 
-`pub fn containsAtLeast(comptime T: type, haystack: []const T, expected_count: usize, needle: []const T) bool`  
-Returns true if the haystack contains expected_count or more needles needle.len must be \> 0 does not count overlapping needles See also: `containsAtLeastScalar`
+------
 
-`pub fn containsAtLeastScalar(comptime T: type, list: []const T, minimum: usize, element: T) bool`  
-Deprecated in favor of `containsAtLeastScalar2`.
+### `pub fn count(comptime T: type, haystack: []const T, needle: []const T) usize`
 
-`pub fn containsAtLeastScalar2(comptime T: type, list: []const T, element: T, minimum: usize) bool`  
-Returns true if `element` appears at least `minimum` number of times in `list`. Related:
+Counts non-overlapping occurrences of `needle` in `haystack`.
 
-- `containsAtLeast`
-- `countScalar`
+**Example:**
+```zig
+const text = "ababab";
+const n = std.mem.count(u8, text, "ab"); // 3
+```
 
-`pub fn copyBackwards(comptime T: type, dest: []T, source: []const T) void`  
-Copy all of source into dest at position 0. dest.len must be \>= source.len. If the slices overlap, dest.ptr must be \>= src.ptr. This function is deprecated; use @memmove instead.
+------
 
-`pub fn copyForwards(comptime T: type, dest: []T, source: []const T) void`  
-Copy all of source into dest at position 0. dest.len must be \>= source.len. If the slices overlap, dest.ptr must be \<= src.ptr. This function is deprecated; use @memmove instead.
+### `pub fn countScalar(comptime T: type, list: []const T, element: T) usize`
 
-`pub fn count(comptime T: type, haystack: []const T, needle: []const T) usize`  
-Returns the number of needles inside the haystack needle.len must be \> 0 does not count overlapping needles
+Counts occurrences of a single element.
 
-`pub fn countScalar(comptime T: type, list: []const T, element: T) usize`  
-Returns the number of times `element` appears in a slice of memory.
+**Example:**
+```zig
+const text = "hello";
+const n = std.mem.countScalar(u8, text, 'l'); // 2
+```
 
-`pub fn cut(comptime T: type, haystack: []const T, needle: []const T) ?struct { []const T, []const T }`  
-Returns slice of `haystack` before and after first occurrence of `needle`, or `null` if not found.
+------
 
-`pub fn cutLast(comptime T: type, haystack: []const T, needle: []const T) ?struct { []const T, []const T }`  
-Returns slice of `haystack` before and after last occurrence of `needle`, or `null` if not found.
+## Comparison & Ordering Functions
 
-`pub fn cutPrefix(comptime T: type, slice: []const T, prefix: []const T) ?[]const T`  
-If `slice` starts with `prefix`, returns the rest of `slice` starting at `prefix.len`.
+### `pub fn eql(comptime T: type, a: []const T, b: []const T) bool`
 
-`pub fn cutScalar(comptime T: type, haystack: []const T, needle: T) ?struct { []const T, []const T }`  
-Returns slice of `haystack` before and after first occurrence `needle`, or `null` if not found.
+Returns `true` if slices have the same length and all elements are equal.
 
-`pub fn cutScalarLast(comptime T: type, haystack: []const T, needle: T) ?struct { []const T, []const T }`  
-Returns slice of `haystack` before and after last occurrence of `needle`, or `null` if not found.
+**Example:**
+```zig
+const a = "hello";
+const b = "hello";
+const c = "world";
 
-`pub fn cutSuffix(comptime T: type, slice: []const T, suffix: []const T) ?[]const T`  
-If `slice` ends with `suffix`, returns `slice` from beginning to start of `suffix`.
+std.mem.eql(u8, a, b); // true
+std.mem.eql(u8, a, c); // false
+```
 
-`pub fn doNotOptimizeAway(val: anytype) void`  
-Force an evaluation of the expression; this tries to prevent the compiler from optimizing the computation away even if the result eventually gets discarded.
+------
 
-`pub fn endsWith(comptime T: type, haystack: []const T, needle: []const T) bool`  
-Returns true if haystack ends with needle. Time complexity: O(needle.len)
+### `pub fn order(comptime T: type, lhs: []const T, rhs: []const T) math.Order`
 
-`pub fn eql(comptime T: type, a: []const T, b: []const T) bool`  
-Returns true if and only if the slices have the same length and all elements compare true using equality operator.
+Lexicographically compares two slices. Returns `.lt`, `.eq`, or `.gt`.
 
-`pub fn find(comptime T: type, haystack: []const T, needle: []const T) ?usize`  
-Search for needle in haystack and return the index of the first occurrence. Uses Boyer-Moore-Horspool algorithm on large inputs; linear search on small inputs. Returns null if needle is not found.
+**Example:**
+```zig
+const result = std.mem.order(u8, "abc", "abd");
+// result == .lt (abc < abd)
+```
 
-`pub fn find(comptime T: type, haystack: []const T, needle: []const T) ?usize`  
-Search for needle in haystack and return the index of the first occurrence. Uses Boyer-Moore-Horspool algorithm on large inputs; linear search on small inputs. Returns null if needle is not found.
+------
 
-`pub fn findAny(comptime T: type, slice: []const T, values: []const T) ?usize`  
-Linear search for the index of any value in the provided list inside a slice. Returns null if no values are found.
+### `pub fn lessThan(comptime T: type, lhs: []const T, rhs: []const T) bool`
 
-`pub fn findAny(comptime T: type, slice: []const T, values: []const T) ?usize`  
-Linear search for the index of any value in the provided list inside a slice. Returns null if no values are found.
+Returns `true` if `lhs` is lexicographically less than `rhs`.
 
-`pub fn findAnyPos(comptime T: type, slice: []const T, start_index: usize, values: []const T) ?usize`  
-Linear search for the index of any value in the provided list inside a slice, starting from a given position. Returns null if no values are found.
+**Example:**
+```zig
+std.mem.lessThan(u8, "abc", "xyz"); // true
+```
 
-`pub fn findAnyPos(comptime T: type, slice: []const T, start_index: usize, values: []const T) ?usize`  
-Linear search for the index of any value in the provided list inside a slice, starting from a given position. Returns null if no values are found.
+------
 
-`pub fn findDiff(comptime T: type, a: []const T, b: []const T) ?usize`  
-Compares two slices and returns the index of the first inequality. Returns null if the slices are equal.
+### `pub fn startsWith(comptime T: type, haystack: []const T, needle: []const T) bool`
 
-`pub fn findDiff(comptime T: type, a: []const T, b: []const T) ?usize`  
-Compares two slices and returns the index of the first inequality. Returns null if the slices are equal.
+Returns `true` if `haystack` begins with `needle`.
 
-`pub fn findLast(comptime T: type, haystack: []const T, needle: []const T) ?usize`  
-Find the index in a slice of a sub-slice, searching from the end backwards. To start looking at a different index, slice the haystack first. Uses the Reverse Boyer-Moore-Horspool algorithm on large inputs; `lastIndexOfLinear` on small inputs.
+**Example:**
+```zig
+const text = "Hello, World!";
+std.mem.startsWith(u8, text, "Hello"); // true
+std.mem.startsWith(u8, text, "World"); // false
+```
 
-`pub fn findLast(comptime T: type, haystack: []const T, needle: []const T) ?usize`  
-Find the index in a slice of a sub-slice, searching from the end backwards. To start looking at a different index, slice the haystack first. Uses the Reverse Boyer-Moore-Horspool algorithm on large inputs; `lastIndexOfLinear` on small inputs.
+------
 
-`pub fn findLastAny(comptime T: type, slice: []const T, values: []const T) ?usize`  
-Linear search for the last index of any value in the provided list inside a slice. Returns null if no values are found.
+### `pub fn endsWith(comptime T: type, haystack: []const T, needle: []const T) bool`
 
-`pub fn findLastAny(comptime T: type, slice: []const T, values: []const T) ?usize`  
-Linear search for the last index of any value in the provided list inside a slice. Returns null if no values are found.
+Returns `true` if `haystack` ends with `needle`.
 
-`pub fn findLastLinear(comptime T: type, haystack: []const T, needle: []const T) ?usize`  
-Find the index in a slice of a sub-slice, searching from the end backwards. To start looking at a different index, slice the haystack first. Consider using `lastIndexOf` instead of this, which will automatically use a more sophisticated algorithm on larger inputs.
+**Example:**
+```zig
+const file = "document.txt";
+std.mem.endsWith(u8, file, ".txt"); // true
+```
 
-`pub fn findLastLinear(comptime T: type, haystack: []const T, needle: []const T) ?usize`  
-Find the index in a slice of a sub-slice, searching from the end backwards. To start looking at a different index, slice the haystack first. Consider using `lastIndexOf` instead of this, which will automatically use a more sophisticated algorithm on larger inputs.
+------
 
-`pub fn findLastNone(comptime T: type, slice: []const T, values: []const T) ?usize`  
-Find the last item in `slice` which is not contained in `values`.
+## Slicing & Manipulation Functions
 
-`pub fn findLastNone(comptime T: type, slice: []const T, values: []const T) ?usize`  
-Find the last item in `slice` which is not contained in `values`.
+### `pub fn splitScalar(comptime T: type, buffer: []const T, delimiter: T) SplitIterator(T, .scalar)`
 
-`pub fn findMax(comptime T: type, slice: []const T) usize`  
-Returns the index of the largest number in a slice. O(n). `slice` must not be empty.
+Returns an iterator over slices separated by a single delimiter. Preserves empty fields.
 
-`pub fn findMax(comptime T: type, slice: []const T) usize`  
-Returns the index of the largest number in a slice. O(n). `slice` must not be empty.
+**Example:**
+```zig
+var iter = std.mem.splitScalar(u8, "a,b,,c", ',');
+while (iter.next()) |part| {
+    // Yields: "a", "b", "", "c"
+}
+```
 
-`pub fn findMin(comptime T: type, slice: []const T) usize`  
-Returns the index of the smallest number in a slice. O(n). `slice` must not be empty.
+See [std.mem.SplitIterator](std.mem.SplitIterator.md) for details.
 
-`pub fn findMin(comptime T: type, slice: []const T) usize`  
-Returns the index of the smallest number in a slice. O(n). `slice` must not be empty.
+------
 
-`pub fn findNone(comptime T: type, slice: []const T, values: []const T) ?usize`  
-Find the first item in `slice` which is not contained in `values`.
+### `pub fn splitSequence(comptime T: type, buffer: []const T, delimiter: []const T) SplitIterator(T, .sequence)`
 
-`pub fn findNone(comptime T: type, slice: []const T, values: []const T) ?usize`  
-Find the first item in `slice` which is not contained in `values`.
+Splits on a multi-character delimiter sequence.
 
-`pub fn findNonePos(comptime T: type, slice: []const T, start_index: usize, values: []const T) ?usize`  
-Find the first item in `slice[start_index..]` which is not contained in `values`. The returned index will be relative to the start of `slice`, and never less than `start_index`.
+**Example:**
+```zig
+var iter = std.mem.splitSequence(u8, "one::two::three", "::");
+// Yields: "one", "two", "three"
+```
 
-`pub fn findNonePos(comptime T: type, slice: []const T, start_index: usize, values: []const T) ?usize`  
-Find the first item in `slice[start_index..]` which is not contained in `values`. The returned index will be relative to the start of `slice`, and never less than `start_index`.
+------
 
-`pub fn findPos(comptime T: type, haystack: []const T, start_index: usize, needle: []const T) ?usize`  
-Uses Boyer-Moore-Horspool algorithm on large inputs; `findPosLinear` on small inputs.
+### `pub fn tokenizeScalar(comptime T: type, buffer: []const T, delimiter: T) TokenIterator(T, .scalar)`
 
-`pub fn findPos(comptime T: type, haystack: []const T, start_index: usize, needle: []const T) ?usize`  
-Uses Boyer-Moore-Horspool algorithm on large inputs; `findPosLinear` on small inputs.
+Like `splitScalar` but skips empty fields (consecutive delimiters).
 
-`pub fn findPosLinear(comptime T: type, haystack: []const T, start_index: usize, needle: []const T) ?usize`  
-Consider using `findPos` instead of this, which will automatically use a more sophisticated algorithm on larger inputs.
+**Example:**
+```zig
+var iter = std.mem.tokenizeScalar(u8, "a,b,,c", ',');
+while (iter.next()) |token| {
+    // Yields: "a", "b", "c" (empty field skipped)
+}
+```
 
-`pub fn findPosLinear(comptime T: type, haystack: []const T, start_index: usize, needle: []const T) ?usize`  
-Consider using `findPos` instead of this, which will automatically use a more sophisticated algorithm on larger inputs.
+See [std.mem.TokenIterator](std.mem.TokenIterator.md) for details.
 
-`pub fn findScalar(comptime T: type, slice: []const T, value: T) ?usize`  
-Linear search for the index of a scalar value inside a slice.
+------
 
-`pub fn findScalar(comptime T: type, slice: []const T, value: T) ?usize`  
-Linear search for the index of a scalar value inside a slice.
+### `pub fn trim(comptime T: type, slice: []const T, values_to_strip: []const T) []const T`
 
-`pub fn findScalarLast(comptime T: type, slice: []const T, value: T) ?usize`  
-Linear search for the last index of a scalar value inside a slice.
+Removes any elements in `values_to_strip` from both ends of `slice`.
 
-`pub fn findScalarLast(comptime T: type, slice: []const T, value: T) ?usize`  
-Linear search for the last index of a scalar value inside a slice.
+**Example:**
+```zig
+const result = std.mem.trim(u8, "  hello  ", " \t\n");
+// result = "hello"
+```
 
-`pub fn findScalarPos(comptime T: type, slice: []const T, start_index: usize, value: T) ?usize`  
-Linear search for the index of a scalar value inside a slice, starting from a given position. Returns null if the value is not found.
+------
 
-`pub fn findScalarPos(comptime T: type, slice: []const T, start_index: usize, value: T) ?usize`  
-Linear search for the index of a scalar value inside a slice, starting from a given position. Returns null if the value is not found.
+### `pub fn trimLeft(comptime T: type, slice: []const T, values_to_strip: []const T) []const T`
 
-`pub fn findSentinel(comptime T: type, comptime sentinel: T, p: [*:sentinel]const T) usize`  
-Returns the index of the sentinel value in a sentinel-terminated pointer. Linear search through memory until the sentinel is found.
+Removes elements from the beginning only.
 
-`pub fn findSentinel(comptime T: type, comptime sentinel: T, p: [*:sentinel]const T) usize`  
-Returns the index of the sentinel value in a sentinel-terminated pointer. Linear search through memory until the sentinel is found.
+**Example:**
+```zig
+const result = std.mem.trimLeft(u8, "###hello", "#");
+// result = "hello"
+```
 
-`pub fn isAligned(addr: usize, alignment: usize) bool`  
-Given an address and an alignment, return true if the address is a multiple of the alignment The alignment must be a power of 2 and greater than 0.
+------
 
-`pub fn isAlignedAnyAlign(i: usize, alignment: usize) bool`  
-Returns true if i is aligned to the given alignment. Works with any positive alignment value, not just powers of 2. For power-of-2 alignments, `isAligned` is more efficient.
+### `pub fn trimRight(comptime T: type, slice: []const T, values_to_strip: []const T) []const T`
 
-`pub fn isAlignedGeneric(comptime T: type, addr: T, alignment: T) bool`  
-Generic version of `isAligned` that works with any integer type. Returns true if addr is aligned to the given alignment. Alignment must be a power of 2 and greater than 0.
+Removes elements from the end only.
 
-`pub fn isAlignedLog2(addr: usize, log2_alignment: u8) bool`  
-Returns true if addr is aligned to 2^log2_alignment. More efficient than `isAligned` when alignment is known to be a power of 2. log2_alignment must be \< @bitSizeOf(usize).
+**Example:**
+```zig
+const result = std.mem.trimRight(u8, "hello...", ".");
+// result = "hello"
+```
 
-`pub fn isValidAlign(alignment: usize) bool`  
-Returns whether `alignment` is a valid alignment, meaning it is a positive power of 2.
+------
 
-`pub fn isValidAlignGeneric(comptime T: type, alignment: T) bool`  
-Returns whether `alignment` is a valid alignment, meaning it is a positive power of 2.
+### `pub fn span(ptr: anytype) Span(@TypeOf(ptr))`
 
-`pub fn join(allocator: Allocator, separator: []const u8, slices: []const []const u8) Allocator.Error![]u8`  
-Naively combines a series of slices with a separator. Allocates memory for the result, which must be freed by the caller.
+Converts a sentinel-terminated pointer to a slice by finding the sentinel.
 
-`pub fn joinZ(allocator: Allocator, separator: []const u8, slices: []const []const u8) Allocator.Error![:0]u8`  
-Naively combines a series of slices with a separator and null terminator. Allocates memory for the result, which must be freed by the caller.
+**Example:**
+```zig
+const c_string: [*:0]const u8 = "hello";
+const slice = std.mem.span(c_string);
+// slice = "hello" (type: []const u8)
+```
 
-`pub fn len(value: anytype) usize`  
-Takes a sentinel-terminated pointer and iterates over the memory to find the sentinel and determine the length. `[*c]` pointers are assumed to be non-null and 0-terminated.
+------
 
-`pub fn lessThan(comptime T: type, lhs: []const T, rhs: []const T) bool`  
-Returns true if lhs \< rhs, false otherwise
+### `pub fn sliceTo(ptr: anytype, comptime end: T) SliceTo(@TypeOf(ptr), end)`
 
-`pub fn littleToNative(comptime T: type, x: T) T`  
-Converts a little-endian integer to host endianness.
+Returns a slice up to (but not including) the first occurrence of `end`.
 
-`pub fn max(comptime T: type, slice: []const T) T`  
-Returns the largest number in a slice. O(n). `slice` must not be empty.
+**Example:**
+```zig
+const data = "name=value";
+const name = std.mem.sliceTo(data, '=');
+// name = "name"
+```
 
-`pub fn min(comptime T: type, slice: []const T) T`  
-Returns the smallest number in a slice. O(n). `slice` must not be empty.
+------
 
-`pub fn nativeTo(comptime T: type, x: T, desired_endianness: Endian) T`  
-Converts an integer which has host endianness to the desired endianness.
+### `pub fn cut(comptime T: type, haystack: []const T, needle: []const T) ?struct { []const T, []const T }`
 
-`pub fn nativeToBig(comptime T: type, x: T) T`  
-Converts an integer which has host endianness to big endian.
+Splits `haystack` at the first occurrence of `needle`, returning both parts (before and after).
 
-`pub fn nativeToLittle(comptime T: type, x: T) T`  
-Converts an integer which has host endianness to little endian.
+**Example:**
+```zig
+const text = "key:value";
+if (std.mem.cut(u8, text, ":")) |result| {
+    // result[0] = "key"
+    // result[1] = "value"
+}
+```
 
-`pub fn order(comptime T: type, lhs: []const T, rhs: []const T) math.Order`  
-Compares two slices of numbers lexicographically. O(n).
+------
 
-`pub fn orderZ(comptime T: type, lhs: [*:0]const T, rhs: [*:0]const T) math.Order`  
-Compares two many-item pointers with NUL-termination lexicographically.
+## Copying & Joining Functions
 
-`pub inline fn readInt(comptime T: type, buffer: *const [@divExact(@typeInfo(T).int.bits, 8)]u8, endian: Endian) T`  
-Reads an integer from memory with bit count specified by T. The bit count of T must be evenly divisible by 8. This function cannot fail and cannot cause undefined behavior.
+### `pub fn concat(allocator: Allocator, comptime T: type, slices: []const []const T) ![]T`
 
-`pub fn readPackedInt(comptime T: type, bytes: []const u8, bit_offset: usize, endian: Endian) T`  
-Loads an integer from packed memory. Asserts that buffer contains at least bit_offset + @bitSizeOf(T) bits.
+Allocates and concatenates multiple slices into one.
 
-`pub fn readVarInt(comptime ReturnType: type, bytes: []const u8, endian: Endian) ReturnType`  
-Reads an integer from memory with size equal to bytes.len. ReturnType specifies the return type, which must be large enough to store the result.
+**Example:**
+```zig
+const allocator = std.testing.allocator;
+const parts = [_][]const u8{ "Hello", " ", "World" };
+const result = try std.mem.concat(allocator, u8, &parts);
+defer allocator.free(result);
+// result = "Hello World"
+```
 
-`pub fn readVarPackedInt( comptime T: type, bytes: []const u8, bit_offset: usize, bit_count: usize, endian: std.builtin.Endian, signedness: std.builtin.Signedness, ) T`  
-Loads an integer from packed memory with provided bit_count, bit_offset, and signedness. Asserts that T is large enough to store the read value.
+------
 
-`pub fn replace(comptime T: type, input: []const T, needle: []const T, replacement: []const T, output: []T) usize`  
-Replace needle with replacement as many times as possible, writing to an output buffer which is assumed to be of appropriate size. Use replacementSize to calculate an appropriate buffer size. The `input` and `output` slices must not overlap. The needle must not be empty. Returns the number of replacements made.
+### `pub fn join(allocator: Allocator, separator: []const u8, slices: []const []const u8) ![]u8`
 
-`pub fn replaceOwned(comptime T: type, allocator: Allocator, input: []const T, needle: []const T, replacement: []const T) Allocator.Error![]T`  
-Perform a replacement on an allocated buffer of pre-determined size. Caller must free returned memory.
+Joins slices with a separator between them.
 
-`pub fn replaceScalar(comptime T: type, slice: []T, match: T, replacement: T) void`  
-Replace all occurrences of `match` with `replacement`.
+**Example:**
+```zig
+const allocator = std.testing.allocator;
+const words = [_][]const u8{ "one", "two", "three" };
+const result = try std.mem.join(allocator, ", ", &words);
+defer allocator.free(result);
+// result = "one, two, three"
+```
 
-`pub fn replacementSize(comptime T: type, input: []const T, needle: []const T, replacement: []const T) usize`  
-Calculate the size needed in an output buffer to perform a replacement. The needle must not be empty.
+------
 
-`pub fn reverse(comptime T: type, items: []T) void`  
-In-place order reversal of a slice
+### `pub fn replace(comptime T: type, input: []const T, needle: []const T, replacement: []const T, output: []T) usize`
 
-`pub fn reverseIterator(slice: anytype) ReverseIterator(@TypeOf(slice))`  
-Iterates over a slice in reverse.
+Replaces all occurrences of `needle` with `replacement`, writing to `output`. Returns number of replacements made.
 
-`pub fn rotate(comptime T: type, items: []T, amount: usize) void`  
-In-place rotation of the values in an array (\[0 1 2 3\] becomes \[1 2 3 0\] if we rotate by 1) Assumes 0 \<= amount \<= items.len
+**Example:**
+```zig
+const input = "foo bar foo";
+var output: [20]u8 = undefined;
+const n = std.mem.replace(u8, input, "foo", "baz", &output);
+// output[0..n] = "baz bar baz", n = 2
+```
 
-`pub fn sliceAsBytes(slice: anytype) SliceAsBytesReturnType(@TypeOf(slice))`  
-Given a slice, returns a slice of the underlying bytes, preserving pointer attributes.
+------
 
-`pub fn sliceTo(ptr: anytype, comptime end: std.meta.Elem(@TypeOf(ptr))) SliceTo(@TypeOf(ptr), end)`  
-Takes a pointer to an array, a many-item pointer, or a slice, and returns a slice of the items up to the first occurrence of `end`. If `end` is not found, the resulting slice will include all items up to the input's length or sentinel. If the pointer type is unbounded (no length or sentinel), `end` will be the sentinel for the resulting slice. If the pointer type is sentinel-terminated by `end`, the resulting slice will also be sentinel-terminated by `end`. Pointer properties such as mutability and alignment are preserved. C pointers are assumed to be non-null.
+### `pub fn replaceScalar(comptime T: type, slice: []T, match: T, replacement: T) void`
 
-`pub fn sort( comptime T: type, items: []T, context: anytype, comptime lessThanFn: fn (@TypeOf(context), lhs: T, rhs: T) bool, ) void`  
-Sorts a slice in-place using a stable algorithm (maintains relative order of equal elements). Average time complexity: O(n log n), worst case: O(n log n) Space complexity: O(log n) for recursive calls
+In-place replacement of all occurrences of a single element.
 
-`pub fn sortContext(a: usize, b: usize, context: anytype) void`  
-TODO: currently this just calls `insertionSortContext`. The block sort implementation in this file needs to be adapted to use the sort context.
+**Example:**
+```zig
+var text = "hello".*;
+std.mem.replaceScalar(u8, &text, 'l', 'L');
+// text = "heLLo"
+```
 
-`pub fn sortUnstable( comptime T: type, items: []T, context: anytype, comptime lessThanFn: fn (@TypeOf(context), lhs: T, rhs: T) bool, ) void`  
-Sorts a slice in-place using an unstable algorithm (does not preserve relative order of equal elements). Time complexity: O(n) best case, O(n log n) worst case and average case. Generally faster than stable sort but order of equal elements is undefined.
+------
 
-`pub fn sortUnstableContext(a: usize, b: usize, context: anytype) void`  
-Sorts a range \[a, b) using an unstable algorithm with custom context. This is a lower-level interface for sorting that works with indices instead of slices. Does not preserve relative order of equal elements.
+## Byte & Endianness Functions
 
-`pub fn span(ptr: anytype) Span(@TypeOf(ptr))`  
-Takes a sentinel-terminated pointer and returns a slice, iterating over the memory to find the sentinel and determine the length. Pointer attributes such as const are preserved. `[*c]` pointers are assumed to be non-null and 0-terminated.
+### `pub fn readInt(comptime T: type, buffer: *const [@divExact(@typeInfo(T).int.bits, 8)]u8, endian: Endian) T`
 
-`pub fn splitAny(comptime T: type, buffer: []const T, delimiters: []const T) SplitIterator(T, .any)`  
-Returns an iterator that iterates over the slices of `buffer` that are separated by any item in `delimiters`.
+Reads an integer from a byte array with specified endianness.
 
-`pub fn splitBackwardsAny(comptime T: type, buffer: []const T, delimiters: []const T) SplitBackwardsIterator(T, .any)`  
-Returns an iterator that iterates backwards over the slices of `buffer` that are separated by any item in `delimiters`.
+**Example:**
+```zig
+const bytes = [_]u8{ 0x12, 0x34, 0x56, 0x78 };
+const value = std.mem.readInt(u32, &bytes, .big);
+// value = 0x12345678
+```
 
-`pub fn splitBackwardsScalar(comptime T: type, buffer: []const T, delimiter: T) SplitBackwardsIterator(T, .scalar)`  
-Returns an iterator that iterates backwards over the slices of `buffer` that are separated by `delimiter`.
+------
 
-`pub fn splitBackwardsSequence(comptime T: type, buffer: []const T, delimiter: []const T) SplitBackwardsIterator(T, .sequence)`  
-Returns an iterator that iterates backwards over the slices of `buffer` that are separated by the sequence in `delimiter`.
+### `pub fn writeInt(comptime T: type, buffer: *[@divExact(@typeInfo(T).int.bits, 8)]u8, value: T, endian: Endian) void`
 
-`pub fn splitScalar(comptime T: type, buffer: []const T, delimiter: T) SplitIterator(T, .scalar)`  
-Returns an iterator that iterates over the slices of `buffer` that are separated by `delimiter`.
+Writes an integer to a byte array with specified endianness.
 
-`pub fn splitSequence(comptime T: type, buffer: []const T, delimiter: []const T) SplitIterator(T, .sequence)`  
-Returns an iterator that iterates over the slices of `buffer` that are separated by the byte sequence in `delimiter`.
+**Example:**
+```zig
+var bytes: [4]u8 = undefined;
+std.mem.writeInt(u32, &bytes, 0x12345678, .little);
+// bytes = [0x78, 0x56, 0x34, 0x12]
+```
 
-`pub fn startsWith(comptime T: type, haystack: []const T, needle: []const T) bool`  
-Returns true if haystack starts with needle. Time complexity: O(needle.len)
+------
 
-`pub fn swap(comptime T: type, noalias a: *T, noalias b: *T) void`  
-Exchanges contents of two memory locations.
+### `pub fn nativeToBig(comptime T: type, x: T) T`
 
-`pub fn toBytes(value: anytype) [@sizeOf(@TypeOf(value))]u8`  
-Given any value, returns a copy of its bytes in an array.
+Converts from host endianness to big-endian.
 
-`pub fn toNative(comptime T: type, x: T, endianness_of_x: Endian) T`  
-Converts an integer from specified endianness to host endianness.
+**Example:**
+```zig
+const network_order = std.mem.nativeToBig(u32, 0x12345678);
+```
 
-`pub fn tokenizeAny(comptime T: type, buffer: []const T, delimiters: []const T) TokenIterator(T, .any)`  
-Returns an iterator that iterates over the slices of `buffer` that are not any of the items in `delimiters`.
+------
 
-`pub fn tokenizeScalar(comptime T: type, buffer: []const T, delimiter: T) TokenIterator(T, .scalar)`  
-Returns an iterator that iterates over the slices of `buffer` that are not `delimiter`.
+### `pub fn nativeToLittle(comptime T: type, x: T) T`
 
-`pub fn tokenizeSequence(comptime T: type, buffer: []const T, delimiter: []const T) TokenIterator(T, .sequence)`  
-Returns an iterator that iterates over the slices of `buffer` that are not the sequence in `delimiter`.
+Converts from host endianness to little-endian.
 
-`pub fn trim(comptime T: type, slice: []const T, values_to_strip: []const T) []const T`  
-Remove a set of values from the beginning and end of a slice.
+------
 
-`pub fn trimEnd(comptime T: type, slice: []const T, values_to_strip: []const T) []const T`  
-Remove a set of values from the end of a slice.
+### `pub fn bigToNative(comptime T: type, x: T) T`
 
-`pub fn trimStart(comptime T: type, slice: []const T, values_to_strip: []const T) []const T`  
-Remove a set of values from the beginning of a slice.
+Converts from big-endian to host endianness.
 
-`pub fn validationWrap(allocator: anytype) ValidationAllocator(@TypeOf(allocator))`  
-Wraps an allocator with basic validation checks. Asserts that allocation sizes are greater than zero and returned pointers have correct alignment.
+------
 
-`pub fn window(comptime T: type, buffer: []const T, size: usize, advance: usize) WindowIterator(T)`  
-Returns an iterator with a sliding window of slices for `buffer`. The sliding window has length `size` and on every iteration moves forward by `advance`.
+### `pub fn littleToNative(comptime T: type, x: T) T`
 
-`pub inline fn writeInt(comptime T: type, buffer: *[@divExact(@typeInfo(T).int.bits, 8)]u8, value: T, endian: Endian) void`  
-Writes an integer to memory, storing it in twos-complement. This function always succeeds, has defined behavior for all inputs, but the integer bit width must be divisible by 8.
+Converts from little-endian to host endianness.
 
-`pub fn writePackedInt(comptime T: type, bytes: []u8, bit_offset: usize, value: T, endian: Endian) void`  
-Stores an integer to packed memory. Asserts that buffer contains at least bit_offset + @bitSizeOf(T) bits.
+------
 
-`pub fn writeVarPackedInt(bytes: []u8, bit_offset: usize, bit_count: usize, value: anytype, endian: std.builtin.Endian) void`  
-Stores an integer to packed memory with provided bit_offset, bit_count, and signedness. If negative, the written value is sign-extended.
+### `pub fn byteSwapAllFields(comptime S: type, ptr: *S) void`
 
-`pub fn zeroInit(comptime T: type, init: anytype) T`  
-Initializes all fields of the struct with their default value, or zero values if no default value is present. If the field is present in the provided initial values, it will have that value instead. Structs are initialized recursively.
+Recursively swaps byte order of all fields in a struct.
 
-`pub fn zeroes(comptime T: type) T`  
-Generally, Zig users are encouraged to explicitly initialize all fields of a struct explicitly rather than using this function. However, it is recognized that there are sometimes use cases for initializing all fields to a "zero" value. For example, when interfacing with a C API where this practice is more common and relied upon. If you are performing code review and see this function used, examine closely - it may be a code smell. Zero initializes the type. This can be used to zero-initialize any type for which it makes sense. Structs will be initialized recursively.
+**Example:**
+```zig
+const Header = struct { magic: u32, version: u16, flags: u16 };
+var header = Header{ .magic = 0x12345678, .version = 1, .flags = 0 };
+std.mem.byteSwapAllFields(Header, &header);
+// All fields now reversed
+```
+
+------
+
+## Alignment Functions
+
+### `pub fn isAligned(addr: usize, alignment: usize) bool`
+
+Returns `true` if `addr` is aligned to `alignment` (must be power of 2).
+
+**Example:**
+```zig
+std.mem.isAligned(0x1000, 16); // true
+std.mem.isAligned(0x1001, 16); // false
+```
+
+------
+
+### `pub fn alignForward(comptime T: type, addr: T, alignment: T) T`
+
+Rounds an address up to the next aligned address.
+
+**Example:**
+```zig
+const aligned = std.mem.alignForward(usize, 0x1001, 16);
+// aligned = 0x1010
+```
+
+------
+
+### `pub fn alignBackward(comptime T: type, addr: T, alignment: T) T`
+
+Rounds an address down to the previous aligned address.
+
+**Example:**
+```zig
+const aligned = std.mem.alignBackward(usize, 0x1015, 16);
+// aligned = 0x1010
+```
+
+------
+
+## Min/Max Functions
+
+### `pub fn min(comptime T: type, slice: []const T) T`
+
+Returns the smallest value in a non-empty slice.
+
+**Example:**
+```zig
+const numbers = [_]i32{ 10, 5, 20, 3 };
+const smallest = std.mem.min(i32, &numbers); // 3
+```
+
+------
+
+### `pub fn max(comptime T: type, slice: []const T) T`
+
+Returns the largest value in a non-empty slice.
+
+**Example:**
+```zig
+const numbers = [_]i32{ 10, 5, 20, 3 };
+const largest = std.mem.max(i32, &numbers); // 20
+```
+
+------
+
+### `pub fn indexOfMin(comptime T: type, slice: []const T) usize`
+
+Returns the index of the smallest value.
+
+------
+
+### `pub fn indexOfMax(comptime T: type, slice: []const T) usize`
+
+Returns the index of the largest value.
+
+------
+
+## Type Conversion Functions
+
+### `pub fn asBytes(ptr: anytype) AsBytesReturnType(@TypeOf(ptr))`
+
+Given a pointer to a single item, returns a slice of its underlying bytes.
+
+**Example:**
+```zig
+const value: u32 = 0x12345678;
+const bytes = std.mem.asBytes(&value);
+// bytes.len = 4
+```
+
+------
+
+### `pub fn bytesAsSlice(comptime T: type, bytes: anytype) BytesAsSliceReturnType(T, @TypeOf(bytes))`
+
+Interprets a byte slice as a slice of another type.
+
+**Example:**
+```zig
+const bytes = [_]u8{ 1, 0, 2, 0, 3, 0 };
+const shorts = std.mem.bytesAsSlice(u16, &bytes);
+// shorts = [1, 2, 3] (assuming little-endian)
+```
+
+------
+
+### `pub fn bytesAsValue(comptime T: type, bytes: anytype) BytesAsValueReturnType(T, @TypeOf(bytes))`
+
+Interprets bytes as a pointer to a single value.
+
+**Example:**
+```zig
+const bytes = [_]u8{ 0x78, 0x56, 0x34, 0x12 };
+const value_ptr = std.mem.bytesAsValue(u32, &bytes);
+// value_ptr.* = 0x12345678 (little-endian)
+```
+
+------
+
+### `pub fn toBytes(value: anytype) [@sizeOf(@TypeOf(value))]u8`
+
+Returns a copy of a value's bytes as an array.
+
+**Example:**
+```zig
+const value: u32 = 0x12345678;
+const bytes = std.mem.toBytes(value);
+// bytes is [4]u8
+```
+
+------
+
+## Sorting Functions
+
+### `pub fn sort(comptime T: type, items: []T, context: anytype, comptime lessThan: fn (@TypeOf(context), T, T) bool) void`
+
+Stable in-place sort. Preserves relative order of equal elements.
+
+**Example:**
+```zig
+const numbers = [_]i32{ 3, 1, 4, 1, 5 };
+var sorted = numbers;
+std.mem.sort(i32, &sorted, {}, comptime std.sort.asc(i32));
+// sorted = [1, 1, 3, 4, 5]
+```
+
+------
+
+### `pub fn sortUnstable(comptime T: type, items: []T, context: anytype, comptime lessThan: fn (@TypeOf(context), T, T) bool) void`
+
+Unstable in-place sort. Faster but doesn't preserve order of equal elements.
+
+------
+
+## Utility Functions
+
+### `pub fn reverse(comptime T: type, items: []T) void`
+
+In-place reversal of a slice.
+
+**Example:**
+```zig
+var numbers = [_]i32{ 1, 2, 3, 4, 5 };
+std.mem.reverse(i32, &numbers);
+// numbers = [5, 4, 3, 2, 1]
+```
+
+------
+
+### `pub fn rotate(comptime T: type, items: []T, amount: usize) void`
+
+Rotates elements left by `amount` positions.
+
+**Example:**
+```zig
+var items = [_]u8{ 1, 2, 3, 4 };
+std.mem.rotate(u8, &items, 1);
+// items = [2, 3, 4, 1]
+```
+
+------
+
+### `pub fn swap(comptime T: type, a: *T, b: *T) void`
+
+Exchanges the contents of two memory locations.
+
+**Example:**
+```zig
+var x: i32 = 10;
+var y: i32 = 20;
+std.mem.swap(i32, &x, &y);
+// x = 20, y = 10
+```
+
+------
+
+### `pub fn len(value: anytype) usize`
+
+Finds the length of a sentinel-terminated pointer.
+
+**Example:**
+```zig
+const c_str: [*:0]const u8 = "hello";
+const length = std.mem.len(c_str); // 5
+```
+
+------
+
+### `pub fn zeroes(comptime T: type) T`
+
+Returns a zero-initialized value of type `T`.
+
+**Example:**
+```zig
+const Point = struct { x: i32, y: i32 };
+const origin = std.mem.zeroes(Point);
+// origin = Point{ .x = 0, .y = 0 }
+```
+
+------
+
+### `pub fn zeroInit(comptime T: type, init: anytype) T`
+
+Initializes a struct with specified fields, zeroing others.
+
+**Example:**
+```zig
+const Point = struct { x: i32 = 0, y: i32 = 0, z: i32 = 0 };
+const pt = std.mem.zeroInit(Point, .{ .x = 10 });
+// pt = Point{ .x = 10, .y = 0, .z = 0 }
+```
+
+------
+
+## Usage Patterns
+
+### Pattern 1: Parsing CSV Data
+
+```zig
+const std = @import("std");
+
+pub fn parseCsv(line: []const u8) void {
+    var iter = std.mem.splitScalar(u8, line, ',');
+    while (iter.next()) |field| {
+        const trimmed = std.mem.trim(u8, field, " \t");
+        std.debug.print("Field: '{s}'\n", .{trimmed});
+    }
+}
+
+pub fn main() void {
+    parseCsv("Alice, 30, Engineer");
+    // Outputs:
+    // Field: 'Alice'
+    // Field: '30'
+    // Field: 'Engineer'
+}
+```
+
+------
+
+### Pattern 2: Building Paths Safely
+
+```zig
+const std = @import("std");
+
+pub fn buildPath(allocator: std.mem.Allocator, parts: []const []const u8) ![]u8 {
+    return std.mem.join(allocator, "/", parts);
+}
+
+pub fn main() !void {
+    const allocator = std.heap.page_allocator;
+
+    const parts = [_][]const u8{ "home", "user", "documents", "file.txt" };
+    const path = try buildPath(allocator, &parts);
+    defer allocator.free(path);
+
+    std.debug.print("Path: {s}\n", .{path});
+    // Path: home/user/documents/file.txt
+}
+```
+
+------
+
+### Pattern 3: Network Byte Order Conversion
+
+```zig
+const std = @import("std");
+
+pub fn encodeHeader(magic: u32, version: u16, flags: u16) [8]u8 {
+    var buffer: [8]u8 = undefined;
+
+    // Write in network byte order (big-endian)
+    std.mem.writeInt(u32, buffer[0..4], magic, .big);
+    std.mem.writeInt(u16, buffer[4..6], version, .big);
+    std.mem.writeInt(u16, buffer[6..8], flags, .big);
+
+    return buffer;
+}
+
+pub fn decodeHeader(buffer: [8]u8) struct { magic: u32, version: u16, flags: u16 } {
+    return .{
+        .magic = std.mem.readInt(u32, buffer[0..4], .big),
+        .version = std.mem.readInt(u16, buffer[4..6], .big),
+        .flags = std.mem.readInt(u16, buffer[6..8], .big),
+    };
+}
+```
+
+------
+
+### Pattern 4: String Prefix/Suffix Handling
+
+```zig
+const std = @import("std");
+
+pub fn stripPrefix(str: []const u8, prefix: []const u8) []const u8 {
+    if (std.mem.startsWith(u8, str, prefix)) {
+        return str[prefix.len..];
+    }
+    return str;
+}
+
+pub fn stripSuffix(str: []const u8, suffix: []const u8) []const u8 {
+    if (std.mem.endsWith(u8, str, suffix)) {
+        return str[0 .. str.len - suffix.len];
+    }
+    return str;
+}
+
+pub fn main() void {
+    const url = "https://example.com/path";
+    const path = stripPrefix(url, "https://example.com");
+    std.debug.print("Path: {s}\n", .{path}); // /path
+
+    const file = "document.txt";
+    const name = stripSuffix(file, ".txt");
+    std.debug.print("Name: {s}\n", .{name}); // document
+}
+```
+
+------
+
+## Types and Constants
+
+### Iterator Types
+
+- **[std.mem.SplitIterator](std.mem.SplitIterator.md)** - Forward iteration over delimited sequences (preserves empty fields)
+- **[std.mem.SplitBackwardsIterator](std.mem.SplitBackwardsIterator.md)** - Backward iteration over delimited sequences
+- **[std.mem.TokenIterator](std.mem.TokenIterator.md)** - Forward iteration skipping empty fields
+- **[std.mem.WindowIterator](std.mem.WindowIterator.md)** - Sliding window iteration over slices
+
+### Core Types
+
+- **[std.mem.Allocator](std.mem.Allocator.md)** - Standard memory allocation interface
+- **[std.mem.Alignment](std.mem.Alignment.md)** - Alignment representation type
+- **[std.mem.DelimiterType](std.mem.DelimiterType.md)** - Delimiter interpretation mode (scalar/any/sequence)
+- **[std.mem.ValidationAllocator](std.mem.ValidationAllocator.md)** - Allocator wrapper with validation checks
+
+### Constants
+
+**`byte_size_in_bits: usize = 8`**
+
+Zig assumes 8-bit bytes. This constant documents that assumption and allows searching for platform-dependent code if Zig is ever ported to non-8-bit-byte platforms.
+
+------
+
+## Error Sets
+
+Most `std.mem` functions do not return errors. Functions that allocate memory return `Allocator.Error`.
+
+---
+
+## Debug Checklist
+
+✅ **Use @memcpy instead of copyForwards/copyBackwards** - The old functions are deprecated
+
+✅ **Check slice bounds** - Many functions assume slices are non-empty or properly sized
+
+✅ **Alignment must be power of 2** - Alignment functions require power-of-2 alignment values
+
+✅ **Endianness is explicit** - No implicit byte order conversions; always specify `.big` or `.little`
+
+✅ **indexOf returns ?usize** - Handle the `null` case when element not found
+
+✅ **Free allocated results** - Functions like `concat` and `join` return owned memory
+
+✅ **Split vs Tokenize** - `split` preserves empty fields; `tokenize` skips them
+
+✅ **Needle must not be empty** - Functions like `replace` and `count` require non-empty needle
+
+✅ **Output buffer sized correctly** - Functions like `replace` need properly sized output buffers
+
+✅ **Slices must not overlap** - Unless using @memcpy; functions like `replace` require non-overlapping input/output
+
+---
+
+## Performance Tips
+
+1. **Use @memcpy for copying** - It's a compiler builtin, optimized to use platform-specific instructions (like SIMD).
+
+2. **Prefer scalar functions for single elements** - `indexOfScalar` is faster than `indexOf` for single-element needles.
+
+3. **Use Boyer-Moore for large searches** - `indexOf` automatically uses it for large inputs; no need to call `indexOfPos` manually.
+
+4. **Pre-allocate for join/concat** - Calculate the total size first if you need to reuse the buffer:
+   ```zig
+   var total_size: usize = 0;
+   for (slices) |s| total_size += s.len;
+   const buffer = try allocator.alloc(u8, total_size);
+   ```
+
+5. **Sort is stable but slower** - Use `sortUnstable` if you don't care about preserving order of equal elements.
+
+6. **Reuse iterators when possible** - Create one iterator and reset it rather than creating new ones in a loop.
+
+7. **Avoid repeated searches** - Cache `indexOf` results if you'll search for the same thing multiple times.
+
+8. **Use span for C strings once** - Convert sentinel-terminated pointers to slices early, then work with slices.
+
+9. **Batch endianness conversions** - Convert multiple values in one pass rather than calling conversion functions repeatedly.
+
+10. **In-place operations are zero-copy** - Functions like `reverse`, `rotate`, and `replaceScalar` work in-place with no allocation.
+
+---
+
+## See Also
+
+- **std.fmt** - String formatting and parsing (higher-level text operations)
+- **std.heap** - Memory allocation strategies and allocators
+- **std.ArrayList** - Dynamic array with automatic growth
+- **std.io** - Buffered I/O and stream operations
+- **std.sort** - Additional sorting utilities and comparison helpers
+- **std.unicode** - UTF-8 and UTF-16 handling
