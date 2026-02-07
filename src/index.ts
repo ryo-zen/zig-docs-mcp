@@ -1140,15 +1140,14 @@ ${sampleExamples}
 
   async introspectType(typeExpression: string): Promise<string> {
     try {
-      // Create a temporary test file that uses @typeInfo to introspect the type
+      // Use @compileLog to dump type information at compile time
       const testCode = `
 const std = @import("std");
 
 test "introspect" {
     const T = ${typeExpression};
-    const info = @typeInfo(T);
-    std.debug.print("\\nType: {s}\\n", .{@typeName(T)});
-    std.debug.print("TypeInfo: {any}\\n", .{info});
+    @compileLog("Type:", @typeName(T));
+    @compileLog("TypeInfo:", @typeInfo(T));
 }
 `;
 
@@ -1156,25 +1155,54 @@ test "introspect" {
       fs.writeFileSync(tmpFile, testCode);
 
       try {
-        // Run zig test to get type information
-        const output = execSync(`zig test ${tmpFile} 2>&1`, {
+        // Run zig test - @compileLog outputs go to stderr
+        execSync(`zig test ${tmpFile} 2>&1`, {
           encoding: 'utf8',
           timeout: 5000,
         });
 
-        // Clean up temp file
+        // If we get here, compilation succeeded (shouldn't happen with @compileLog)
         fs.unlinkSync(tmpFile);
-
-        // Parse and format the output
         return `# Type Introspection: ${typeExpression}
 
-${output}
+Unexpected success - @compileLog should have triggered a compilation message.`;
 
-**Note:** This shows the compile-time type information. For methods and fields, check the standard library source.`;
       } catch (error: any) {
         // Clean up temp file
         if (fs.existsSync(tmpFile)) {
           fs.unlinkSync(tmpFile);
+        }
+
+        // @compileLog causes compilation to stop and output goes to stderr
+        const output = error.stdout || error.stderr || error.message;
+
+        // Parse the @compileLog output
+        if (output.includes('Compile Log Output:')) {
+          // Extract just the compile log section
+          const logMatch = output.match(/Compile Log Output:\s*([\s\S]*?)(?:\n\n|$)/);
+          const rawLog = logMatch ? logMatch[1] : output;
+
+          // Try to extract the type name and basic info
+          const typeNameMatch = rawLog.match(/\[28:\d+\]u8, "([^"]+)"/);
+          const typeName = typeNameMatch ? typeNameMatch[1] : typeExpression;
+
+          // Try to extract struct info
+          const structMatch = rawLog.match(/\.struct = \.{ \.layout = \.(\w+).*?\.fields = &\.\{.*?\}\[0\.\.(\d+)\].*?\.decls = &\.\{.*?\}\[0\.\.(\d+)\]/);
+
+          let result = `# Type Introspection: ${typeExpression}\n\n`;
+          result += `**Actual Type:** \`${typeName}\`\n\n`;
+
+          if (structMatch) {
+            result += `**Category:** Struct\n`;
+            result += `**Layout:** ${structMatch[1]}\n`;
+            result += `**Fields:** ${structMatch[2]}\n`;
+            result += `**Declarations:** ${structMatch[3]} (methods/constants/types)\n\n`;
+          }
+
+          result += `**Raw Compile Log:**\n\`\`\`\n${rawLog.trim()}\n\`\`\`\n\n`;
+          result += `**💡 Tip:** Use \`query_stdlib_source("array_list.zig", "Aligned")\` to see the actual source code and method signatures.`;
+
+          return result;
         }
 
         return `# Type Introspection Failed
@@ -1183,10 +1211,10 @@ ${output}
 
 **Error:**
 \`\`\`
-${error.stdout || error.message}
+${output}
 \`\`\`
 
-This type expression may be invalid or require additional context.`;
+This type expression may be invalid or requires additional context.`;
       }
     } catch (error: any) {
       return `Error introspecting type: ${error.message}`;
@@ -1257,12 +1285,21 @@ Fix the errors above to make the code compile.`;
   async queryStdlibSource(modulePath: string, searchTerm?: string): Promise<string> {
     try {
       // Find Zig stdlib installation
-      const zigLibPath = execSync('zig env', { encoding: 'utf8' });
-      const zigEnv = JSON.parse(zigLibPath);
-      const stdlibPath = path.join(zigEnv.lib_dir, 'std');
+      // Note: zig env outputs Zig syntax (.{...}), not JSON
+      const zigEnvOutput = execSync('zig env', { encoding: 'utf8' });
 
-      // Normalize module path
-      let fullPath = path.join(stdlibPath, modulePath);
+      // Extract std_dir using regex (it's in Zig struct format, not JSON)
+      const stdDirMatch = zigEnvOutput.match(/\.std_dir\s*=\s*"([^"]+)"/);
+      if (!stdDirMatch) {
+        throw new Error('Failed to find std_dir in zig env output');
+      }
+
+      const stdlibPath = stdDirMatch[1];
+
+      // Normalize module path - remove leading "std/" if present since stdlibPath already points to std/
+      let normalizedPath = modulePath.replace(/^std\//, '');
+
+      let fullPath = path.join(stdlibPath, normalizedPath);
       if (!fullPath.endsWith('.zig')) {
         fullPath += '.zig';
       }
