@@ -285,7 +285,9 @@ thread 3450495 panic: integer does not fit in destination type
       
 ### [Default Operations](#toc-Default-Operations) §
 
-      
+
+
+**Integer overflow validation and checking:** Zig automatically validates integer operations at compile-time and provides runtime safety checking in Debug and ReleaseSafe modes. This overflow detection prevents undefined behavior and security vulnerabilities.
 
 The following operators can cause integer overflow:
 

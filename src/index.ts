@@ -43,6 +43,86 @@ class ZigDocumentationServer {
   private readonly serverName = 'zig-documentation-server';
   private readonly serverVersion = '0.5.0';
 
+  // Synonym mapping for expanding search queries
+  private readonly synonymMap: Map<string, string[]> = new Map([
+    // Safety & Validation
+    ['checking', ['safety', 'check', 'checks', 'runtime safety', 'validation', 'verify']],
+    ['validation', ['safety', 'check', 'verification', 'verify', 'checking']],
+    ['overflow', ['overflow', 'wraparound', 'saturating', 'underflow']],
+
+    // Error Handling
+    ['error', ['error', 'errors', 'exception', 'failure', 'try', 'catch']],
+    ['panic', ['panic', 'crash', 'abort', 'fatal', 'unreachable']],
+
+    // Memory Management
+    ['memory', ['memory', 'allocator', 'allocation', 'heap', 'stack']],
+    ['allocator', ['allocator', 'malloc', 'free', 'allocation', 'memory', 'gpa']],
+    ['pointer', ['pointer', 'ptr', 'address', 'reference']],
+    ['slice', ['slice', 'array', 'view', 'span', 'subarray']],
+
+    // Data Structures
+    ['array', ['array', 'slice', 'list', 'arraylist', 'vector']],
+    ['string', ['string', 'str', 'text', 'bytes', 'buffer']],
+    ['hash', ['hash', 'map', 'hashmap', 'dict', 'dictionary', 'table']],
+    ['map', ['map', 'hashmap', 'hash', 'dict', 'dictionary', 'table']],
+
+    // Types & Structures
+    ['type', ['type', 'struct', 'enum', 'union', 'interface']],
+    ['struct', ['struct', 'class', 'object', 'record', 'type']],
+    ['enum', ['enum', 'enumeration', 'variant', 'tagged']],
+    ['union', ['union', 'tagged union', 'variant', 'sum type', 'adt']],
+
+    // Functions
+    ['function', ['function', 'fn', 'method', 'procedure']],
+    ['inline', ['inline', 'force inline', 'noinline']],
+
+    // Nullability & Optionals
+    ['optional', ['optional', 'null', 'nil', 'maybe', 'none', 'nullable']],
+    ['null', ['null', 'nil', 'optional', 'none', 'nullable', 'undefined']],
+
+    // Compile-Time
+    ['comptime', ['comptime', 'compiletime', 'static', 'constexpr', 'const']],
+    ['const', ['const', 'constant', 'immutable', 'readonly', 'final']],
+
+    // Control Flow
+    ['loop', ['loop', 'for', 'while', 'iterate', 'iteration', 'foreach']],
+    ['defer', ['defer', 'finally', 'cleanup', 'destructor', 'deinit', 'raii']],
+    ['branch', ['branch', 'if', 'conditional', 'switch', 'case']],
+
+    // Concurrency & Threading
+    ['async', ['async', 'asynchronous', 'await', 'future', 'promise']],
+    ['thread', ['thread', 'concurrent', 'parallel', 'threading', 'multithreading']],
+    ['atomic', ['atomic', 'atomics', 'lock', 'mutex', 'sync', 'synchronization']],
+
+    // Compilation & Build
+    ['build', ['build', 'compile', 'compilation', 'linking', 'transpile']],
+    ['import', ['import', 'include', 'require', 'use', 'module']],
+
+    // Testing
+    ['test', ['test', 'testing', 'unittest', 'assert', 'expect']],
+
+    // Casting & Conversion
+    ['cast', ['cast', 'casting', 'convert', 'coerce', 'transmute', 'as']],
+
+    // Unsafe & FFI
+    ['unsafe', ['unsafe', 'raw', 'unchecked', 'volatile']],
+    ['extern', ['extern', 'external', 'foreign', 'ffi', 'c', 'abi']],
+    ['builtin', ['builtin', 'intrinsic', 'compiler']],
+
+    // I/O & Formatting
+    ['io', ['io', 'input', 'output', 'file', 'stream', 'read', 'write']],
+    ['format', ['format', 'fmt', 'print', 'printf', 'sprintf']],
+
+    // Standard Library Namespaces
+    ['json', ['json', 'parse', 'serialize', 'deserialize', 'marshal', 'unmarshal']],
+    ['crypto', ['crypto', 'hash', 'encrypt', 'decrypt', 'cipher', 'cryptography']],
+    ['log', ['log', 'logging', 'debug', 'trace', 'warn', 'info', 'logger']],
+
+    // Common Operations
+    ['iterate', ['iterate', 'iteration', 'loop', 'for', 'foreach', 'iterator']],
+    ['mutable', ['mutable', 'var', 'variable', 'let']],
+  ]);
+
   constructor() {
     this.server = new Server({
       name: this.serverName,
@@ -589,7 +669,7 @@ class ZigDocumentationServer {
       }
 
       if (results.length === 0) {
-        return `No documentation found for "${query}". Try searching for language features, types, or concepts.`;
+        return this.suggestAlternativeQueries(query);
       }
 
       // Sort results by score (highest first)
@@ -603,6 +683,104 @@ class ZigDocumentationServer {
     }
   }
 
+  // Suggest alternative queries when no results found
+  suggestAlternativeQueries(originalQuery: string): string {
+    const queryWords = this.splitWords(originalQuery);
+    const suggestions: Array<{ query: string; count: number }> = [];
+
+    // Try searching with individual words
+    for (const word of queryWords) {
+      if (word.length < 3) continue; // Skip very short words
+
+      let count = 0;
+      for (const resource of this.resourceList) {
+        const content = this.docCache.get(resource._filePath);
+        if (!content) continue;
+        if (content.toLowerCase().includes(word.toLowerCase())) {
+          count++;
+        }
+      }
+
+      if (count > 0) {
+        suggestions.push({ query: word, count });
+      }
+    }
+
+    // Try searching with pairs of words
+    if (queryWords.length >= 2) {
+      for (let i = 0; i < queryWords.length - 1; i++) {
+        const pair = `${queryWords[i]} ${queryWords[i + 1]}`;
+        let count = 0;
+
+        for (const resource of this.resourceList) {
+          const content = this.docCache.get(resource._filePath);
+          if (!content) continue;
+          if (content.toLowerCase().includes(pair.toLowerCase())) {
+            count++;
+          }
+        }
+
+        if (count > 0) {
+          suggestions.push({ query: pair, count });
+        }
+      }
+    }
+
+    // Try synonyms
+    for (const word of queryWords) {
+      const synonyms = this.synonymMap.get(word.toLowerCase());
+      if (synonyms) {
+        for (const synonym of synonyms) {
+          let count = 0;
+          for (const resource of this.resourceList) {
+            const content = this.docCache.get(resource._filePath);
+            if (!content) continue;
+            if (content.toLowerCase().includes(synonym.toLowerCase())) {
+              count++;
+            }
+          }
+
+          if (count > 0) {
+            suggestions.push({ query: synonym, count });
+          }
+        }
+      }
+    }
+
+    // Sort by count (most results first) and deduplicate
+    const uniqueSuggestions = new Map<string, number>();
+    for (const { query, count } of suggestions) {
+      if (!uniqueSuggestions.has(query)) {
+        uniqueSuggestions.set(query, count);
+      }
+    }
+
+    const sortedSuggestions = Array.from(uniqueSuggestions.entries())
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 5);
+
+    if (sortedSuggestions.length > 0) {
+      const suggestionText = sortedSuggestions
+        .map(([query, count]) => `  - "${query}" (${count} results)`)
+        .join('\n');
+
+      return `No documentation found for "${originalQuery}".
+
+Did you mean:
+${suggestionText}
+
+Try searching for language features, types, or concepts with simpler terms.`;
+    }
+
+    return `No documentation found for "${originalQuery}".
+
+Try searching for:
+  - Language features: "comptime", "defer", "error handling"
+  - Data types: "array", "slice", "pointer", "struct"
+  - Standard library: "allocator", "arraylist", "hashmap"
+  - Operations: "overflow", "memory", "io", "formatting"`;
+  }
+
 
   // Calculate match score based on various criteria
   calculateMatchScore(query: string, fileName: string, resourceName: string, content: string): number {
@@ -611,59 +789,84 @@ class ZigDocumentationServer {
     const lowerFileName = fileName.toLowerCase();
     const lowerResourceName = resourceName.toLowerCase();
     const lowerContent = content.toLowerCase();
-    
+
     // Exact match in file name (highest priority)
     if (lowerFileName === lowerQuery) {
       score += 100;
     }
-    
+
     // Exact match in resource name
     if (lowerResourceName === lowerQuery) {
       score += 90;
     }
-    
+
     // File name contains query
     if (lowerFileName.includes(lowerQuery)) {
       score += 50;
     }
-    
+
     // Resource name contains query
     if (lowerResourceName.includes(lowerQuery)) {
       score += 45;
     }
-    
+
     // Split camelCase/PascalCase and check for matches
     const queryWords = this.splitWords(query);
     const fileWords = this.splitWords(fileName);
     const resourceWords = this.splitWords(resourceName);
-    
+
     // Check if all query words are in file name
     if (queryWords.every(qw => fileWords.some(fw => fw.toLowerCase().includes(qw.toLowerCase())))) {
       score += 40;
     }
-    
+
     // Check if all query words are in resource name
     if (queryWords.every(qw => resourceWords.some(rw => rw.toLowerCase().includes(qw.toLowerCase())))) {
       score += 35;
     }
-    
+
     // Content contains query
     if (lowerContent.includes(lowerQuery)) {
       score += 20;
     }
-    
-    // Check for word matches in content
-    if (queryWords.every(qw => lowerContent.includes(qw.toLowerCase()))) {
-      score += 15;
+
+    // IMPROVED: Partial word matching in content (proportional scoring)
+    const matchingWords = queryWords.filter(qw => lowerContent.includes(qw.toLowerCase()));
+    if (matchingWords.length > 0) {
+      const matchRatio = matchingWords.length / queryWords.length;
+      score += matchRatio * 25; // Up to 25 points for partial matches
     }
-    
+
+    // IMPROVED: Synonym-expanded word matching in content
+    const expandedWords = this.expandQueryWithSynonyms(queryWords);
+    const synonymMatches = expandedWords.filter(ew => lowerContent.includes(ew.toLowerCase()));
+    if (synonymMatches.length > 0) {
+      const synonymRatio = synonymMatches.length / expandedWords.length;
+      score += synonymRatio * 15; // Up to 15 points for synonym matches
+    }
+
     // Fuzzy matching with edit distance
     const editDistance = this.levenshteinDistance(lowerQuery, lowerFileName);
     if (editDistance <= 3) {
       score += (30 - editDistance * 10);
     }
-    
+
     return score;
+  }
+
+  // Expand query words with synonyms
+  expandQueryWithSynonyms(queryWords: string[]): string[] {
+    const expanded = new Set<string>();
+
+    for (const word of queryWords) {
+      expanded.add(word);
+      const synonyms = this.synonymMap.get(word.toLowerCase());
+      if (synonyms) {
+        synonyms.forEach(syn => expanded.add(syn));
+      }
+    }
+
+    return Array.from(expanded);
   }
 
   // Split camelCase/PascalCase into words
