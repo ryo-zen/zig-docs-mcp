@@ -1,8 +1,29 @@
 # std.testing.allocator_instance
 
-## Source Code
+**Type:** `std.heap.GeneralPurposeAllocator` (configured for testing)
 
-```
+**Module:** `std.testing`
+
+📚 **[See Complete Testing Documentation](./std.testing.md)** - Full std.testing namespace guide
+
+---
+
+## Overview
+
+The underlying `GeneralPurposeAllocator` instance that powers `std.testing.allocator`. Configured with leak detection, stack traces, and a unique canary value to prevent misuse.
+
+**Key Configuration:**
+- ✅ Stack trace frames: 10 (when platform supports stack traces)
+- ✅ Resize stack traces: enabled
+- ✅ Unique canary: prevents mixing with regular GPA instances
+
+⚠️ **Internal:** Most tests should use `std.testing.allocator` directly instead of accessing this instance.
+
+---
+
+## Source
+
+```zig
 pub var allocator_instance: std.heap.GeneralPurposeAllocator(.{
     .stack_trace_frames = if (std.debug.sys_can_stack_trace) 10 else 0,
     .resize_stack_traces = true,
@@ -13,5 +34,21 @@ pub var allocator_instance: std.heap.GeneralPurposeAllocator(.{
 }) = b: {
     if (!builtin.is_test) @compileError("testing allocator used when not testing");
     break :b .init;
-}
+};
 ```
+
+---
+
+## Related
+
+- **[std.testing.allocator](./std.testing.allocator.md)** - The public allocator interface (use this in tests)
+- **[std.heap.GeneralPurposeAllocator](../heap/std.heap.md)** - The underlying allocator type
+- **[std.testing main docs](./std.testing.md)** - Complete testing guide
+
+---
+
+## Best Practices
+
+✅ **Use std.testing.allocator** - Don't access this instance directly
+⚠️ **Test-only** - Compile error if used outside of test builds
+❌ **Don't create your own** - The unique canary prevents mixing instances

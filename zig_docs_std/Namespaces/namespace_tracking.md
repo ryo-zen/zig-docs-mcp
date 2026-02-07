@@ -7,7 +7,7 @@
 | `fmt` | String formatting, printing, parsing | Done |
 | `fs` | Path manipulation (0.16: file I/O moved to std.Io.Dir) | Done |
 | `heap` | Allocators (GeneralPurpose, page, arena, c) | Done |
-| `testing` | Test assertions, expect, allocator for tests | Not started |
+| `testing` | Test assertions, expect, allocator for tests | ✅ Done |
 | `log` | Structured logging | Not started |
 | `array_list` | Dynamic arrays (ArrayList) | Partial (Types) |
 | `hash_map` | Hash maps (HashMap, AutoHashMap) | Partial (Types) |
