@@ -21,7 +21,7 @@
 | `ascii` | ASCII character classification and manipulation | Not started |
 | `os` | OS-level interfaces (env, signals) | Not started |
 | `process` | Child processes, environment, args | Not started |
-| `debug` | Stack traces, assert, panic handling | Not started |
+| `debug` | Stack traces, assert, panic handling | ✅ Done |
 | `time` | Timers, timestamps, sleep | Not started |
 | `http` | HTTP client/server | Not started |
 
