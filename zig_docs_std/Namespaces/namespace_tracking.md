@@ -34,7 +34,7 @@
 | `crypto` | Hashing, encryption, random | ✅ Done |
 | `bit_set` | Bit set data structures | Not started |
 | `enums` | Enum utilities (from std.enums, not the language feature) | Not started |
-| `atomic` | Atomic operations for concurrency | Not started |
+| `atomic` | Atomic operations for concurrency | ✅ Done |
 | `array_hash_map` | Ordered hash maps (insertion-order preserving) | Partial (Types) |
 | `static_string_map` | Compile-time string lookup maps | Not started |
 
