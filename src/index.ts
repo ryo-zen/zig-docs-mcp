@@ -43,6 +43,36 @@ class ZigDocumentationServer {
   private readonly serverName = 'zig-documentation-server';
   private readonly serverVersion = '0.5.0';
 
+  // API migration mapping for Zig 0.16 changes
+  private readonly apiMigrationMap: Map<string, string> = new Map([
+    // Formatting functions (renamed in 0.16)
+    ['fmtSliceHexLower', 'hex (use std.fmt.fmtSliceHexLower or fmt.hex)'],
+    ['fmtSliceHexUpper', 'hex (use std.fmt.fmtSliceHexUpper or fmt.hex)'],
+    ['fmtIntSizeDec', 'formatInt or std.fmt'],
+    ['fmtIntSizeBin', 'formatInt or std.fmt'],
+
+    // ArrayList changes (managed → unmanaged)
+    ['ArrayList.init', 'ArrayList.empty (0.16 uses unmanaged ArrayList)'],
+    ['list.deinit()', 'list.deinit(allocator) (pass allocator in 0.16)'],
+    ['list.append(item)', 'list.append(allocator, item) (pass allocator in 0.16)'],
+
+    // MemoryPool changes
+    ['MemoryPool.init', 'MemoryPool.empty (0.16 uses unmanaged pools)'],
+    ['pool.create()', 'pool.create(allocator) (pass allocator in 0.16)'],
+
+    // Filesystem changes
+    ['fs.cwd().openFile', 'See migration_filesystem.md for 0.16 changes'],
+    ['Dir.openFile', 'See migration_filesystem.md for new patterns'],
+
+    // Networking changes
+    ['net.TcpServer', 'See migration_networking.md for 0.16 Io changes'],
+    ['net.StreamServer', 'Use std.Io.Threaded.listen in 0.16'],
+
+    // Time changes
+    ['time.timestamp', 'See migration_time.md for 0.16 monotonic time'],
+    ['time.milliTimestamp', 'Use std.time.nanoTimestamp() / ns_per_ms in 0.16'],
+  ]);
+
   // Synonym mapping for expanding search queries
   private readonly synonymMap: Map<string, string[]> = new Map([
     // Safety & Validation
@@ -642,6 +672,9 @@ class ZigDocumentationServer {
     const results: SearchResult[] = [];
 
     try {
+      // Check if this is a deprecated/migrated API
+      const migrationHint = this.checkApiMigration(query);
+
       // Search in cached documentation
       for (const resource of this.resourceList) {
         const content = this.docCache.get(resource._filePath);
@@ -668,19 +701,43 @@ class ZigDocumentationServer {
         }
       }
 
+      // Prepare response
+      let response = '';
+
+      // Show migration hint if found
+      if (migrationHint) {
+        response += `## ⚠️ API Migration Notice\n\n${migrationHint}\n\n---\n\n`;
+      }
+
       if (results.length === 0) {
-        return this.suggestAlternativeQueries(query);
+        const suggestions = this.suggestAlternativeQueries(query);
+        return migrationHint ? response + suggestions : suggestions;
       }
 
       // Sort results by score (highest first)
       results.sort((a, b) => b.score - a.score);
 
       // Format results
-      return results.slice(0, 10).map(r => r.text).join('\n\n');
+      response += results.slice(0, 10).map(r => r.text).join('\n\n');
+
+      return response;
 
     } catch (error: any) {
       return `Search error: ${error.message}`;
     }
+  }
+
+  // Check if query matches a deprecated/migrated API
+  checkApiMigration(query: string): string | null {
+    const lowerQuery = query.toLowerCase();
+
+    for (const [oldApi, newInfo] of this.apiMigrationMap.entries()) {
+      if (lowerQuery.includes(oldApi.toLowerCase())) {
+        return `**"${oldApi}"** → ${newInfo}\n\nYou may be looking for Zig 0.16 changes. Try searching for "migration" or see the migration guides.`;
+      }
+    }
+
+    return null;
   }
 
   // Suggest alternative queries when no results found
@@ -1007,35 +1064,112 @@ Try searching for:
   async explainConcept(concept: string): Promise<string> {
     try {
       const conceptMap: Record<string, string> = {
+        // Core language features
         'comptime': 'comptime.md',
+        'compile time': 'comptime.md',
+        'compiletime': 'comptime.md',
         'defer': 'defer.md',
+        'errdefer': 'defer.md',
         'optionals': 'optionals.md',
+        'optional': 'optionals.md',
+        'null': 'optionals.md',
         'errors': 'errors.md',
+        'error handling': 'errors.md',
+        'error sets': 'errors.md',
         'pointers': 'pointers.md',
+        'pointer': 'pointers.md',
         'slices': 'slices.md',
+        'slice': 'slices.md',
         'arrays': 'arrays.md',
+        'array': 'arrays.md',
+
+        // Data structures
         'struct': 'struct.md',
+        'structs': 'struct.md',
         'union': 'union.md',
+        'unions': 'union.md',
+        'tagged union': 'union.md',
         'enum': 'enum.md',
+        'enums': 'enum.md',
+        'enumeration': 'enum.md',
+
+        // Control flow
         'for': 'for.md',
+        'for loop': 'for.md',
+        'for loops': 'for.md',
         'while': 'while.md',
+        'while loop': 'while.md',
+        'while loops': 'while.md',
         'if': 'if.md',
+        'if statement': 'if.md',
         'switch': 'switch.md',
+        'switch statement': 'switch.md',
         'blocks': 'blocks.md',
+        'block': 'blocks.md',
+
+        // Functions and types
         'functions': 'functions.md',
-        'memory': 'memory.md',
-        'casting': 'casting.md',
-        'vectors': 'vectors.md',
-        'atomics': 'atomics.md',
-        'async': 'async_functions.md',
-        'assembly': 'assembly.md',
-        'c': 'c.md',
-        'build': 'zig_build_system.md',
-        'test': 'zig_test.md',
+        'function': 'functions.md',
+        'fn': 'functions.md',
         'variables': 'variables.md',
+        'var': 'variables.md',
+        'const': 'variables.md',
         'values': 'values.md',
         'operators': 'operators.md',
-        'comments': 'comments.md'
+        'operator': 'operators.md',
+        'comments': 'comments.md',
+
+        // Memory and performance
+        'memory': 'memory.md',
+        'allocator': 'memory.md',
+        'allocation': 'memory.md',
+        'memory management': 'memory.md',
+        'casting': 'casting.md',
+        'cast': 'casting.md',
+        'type conversion': 'casting.md',
+        'vectors': 'vectors.md',
+        'vector': 'vectors.md',
+        'simd': 'vectors.md',
+        'atomics': 'atomics.md',
+        'atomic': 'atomics.md',
+
+        // Advanced features
+        'async': 'async_functions.md',
+        'asynchronous': 'async_functions.md',
+        'await': 'async_functions.md',
+        'assembly': 'assembly.md',
+        'inline assembly': 'assembly.md',
+        'asm': 'assembly.md',
+
+        // C interop
+        'c': 'c.md',
+        'c interop': 'c.md',
+        'ffi': 'c.md',
+        'extern': 'c.md',
+
+        // Build system and testing
+        'build': 'zig_build_system.md',
+        'build system': 'zig_build_system.md',
+        'build.zig': 'zig_build_system.md',
+        'test': 'zig_test.md',
+        'testing': 'zig_test.md',
+        'tests': 'zig_test.md',
+
+        // Additional useful topics
+        'integers': 'integers.md',
+        'integer': 'integers.md',
+        'int': 'integers.md',
+        'floats': 'floats.md',
+        'float': 'floats.md',
+        'builtin': 'builtin_functions.md',
+        'builtins': 'builtin_functions.md',
+        'builtin functions': 'builtin_functions.md',
+        '@': 'builtin_functions.md',
+
+        // Migration guides
+        'migration': 'migration_016.md',
+        '0.16': 'migration_016.md',
+        'zig 0.16': 'migration_016.md',
       };
 
       const lowercaseConcept = concept.toLowerCase();
@@ -1108,6 +1242,7 @@ Try searching for:
         'enums': 'enum.md',
         'functions': 'functions.md',
         'function': 'functions.md',
+        'fn': 'functions.md',
         'arrays': 'arrays.md',
         'array': 'arrays.md',
         'slices': 'slices.md',
@@ -1116,18 +1251,43 @@ Try searching for:
         'pointer': 'pointers.md',
         'optionals': 'optionals.md',
         'optional': 'optionals.md',
+        'null': 'optionals.md',
         'errors': 'errors.md',
         'error': 'errors.md',
+        'error handling': 'errors.md',
+        'try': 'errors.md',
+        'catch': 'errors.md',
         'defer': 'defer.md',
+        'errdefer': 'defer.md',
         'comptime': 'comptime.md',
+        'compile time': 'comptime.md',
         'blocks': 'blocks.md',
-        'block': 'blocks.md'
+        'block': 'blocks.md',
+        'memory': 'memory.md',
+        'allocator': 'memory.md',
+        'allocation': 'memory.md',
+        'casting': 'casting.md',
+        'cast': 'casting.md',
+        'type conversion': 'casting.md',
+        'vectors': 'vectors.md',
+        'vector': 'vectors.md',
+        'simd': 'vectors.md',
+        'atomics': 'atomics.md',
+        'atomic': 'atomics.md',
+        'threading': 'atomics.md',
+        'variables': 'variables.md',
+        'var': 'variables.md',
+        'const': 'variables.md',
+        'values': 'values.md',
+        'operators': 'operators.md',
+        'operator': 'operators.md',
       };
 
       const lowercaseConstruct = construct.toLowerCase();
       const filename = constructMap[lowercaseConstruct];
 
       if (!filename) {
+        // Try partial matching with better fuzzy matching
         const partialMatch = Object.keys(constructMap).find(key =>
           key.includes(lowercaseConstruct) || lowercaseConstruct.includes(key)
         );
@@ -1135,24 +1295,52 @@ Try searching for:
         if (partialMatch) {
           const suggestedFilename = constructMap[partialMatch];
           const filePath = `zig_docs/${suggestedFilename}`;
-          const content = await this.readMarkdownFile(filePath);
 
-          const examples = this.extractCodeExamples(content);
-          return `Found syntax examples for "${partialMatch}":\n\n${examples}`;
+          try {
+            const content = await this.readMarkdownFile(filePath);
+            const examples = this.extractCodeExamples(content);
+            return `Found syntax examples for "${partialMatch}":\n\n${examples}`;
+          } catch (readError: any) {
+            console.error(`Failed to read ${filePath}:`, readError);
+            return `Found match "${partialMatch}" but failed to read documentation: ${readError.message}`;
+          }
         }
 
-        const availableConstructs = [...new Set(Object.keys(constructMap))].join(', ');
-        return `Construct "${construct}" not found. Available constructs: ${availableConstructs}`;
+        // Use fuzzy matching to suggest similar constructs
+        const availableConstructs = [...new Set(Object.keys(constructMap))];
+        const similar = this.findSimilarStrings(lowercaseConstruct, availableConstructs, 5);
+
+        let message = `Construct "${construct}" not found.`;
+
+        if (similar.length > 0) {
+          message += `\n\n**Did you mean one of these?**\n${similar.map(c => `  • ${c}`).join('\n')}`;
+        }
+
+        message += `\n\n**Tip:** Use search_zig_docs for broader searches across all documentation.`;
+
+        return message;
       }
 
       const filePath = `zig_docs/${filename}`;
-      const content = await this.readMarkdownFile(filePath);
 
-      const examples = this.extractCodeExamples(content);
-      return examples;
+      try {
+        const content = await this.readMarkdownFile(filePath);
+        const examples = this.extractCodeExamples(content);
+        return examples;
+      } catch (readError: any) {
+        // More detailed error handling
+        console.error(`Error reading ${filePath}:`, readError);
+        return `Error getting syntax examples: ${readError.message}
+
+**Troubleshooting:**
+  • File path: ${filePath}
+  • Ensure documentation files exist in zig_docs/
+  • Try server_diagnostics to check server health
+  • Use search_zig_docs as an alternative`;
+      }
 
     } catch (error: any) {
-      return `Error getting syntax examples: ${error.message}`;
+      return `Error getting syntax examples: ${error.message}\n\nUse search_zig_docs or explain_concept as alternatives.`;
     }
   }
 

@@ -448,7 +448,96 @@ This is comparable to doing `->` in C.
 
       
 
-      
+
+## [Null-Terminated Strings](#toc-Null-Terminated-Strings) §
+
+C functions require null-terminated strings (`[:0]const u8`), but Zig slices are not null-terminated by default.
+
+### Problem
+
+```zig
+const str = "hello";
+const dynamic_str = try std.fmt.allocPrint(allocator, "value: {}", .{42});
+c_function(dynamic_str);  // ERROR: expected [:0]const u8, found []const u8
+```
+
+### Solution 1: String Literals (Already Null-Terminated)
+
+String literals in Zig are automatically null-terminated:
+
+```zig
+const str = "hello";  // Type is [:0]const u8
+c_function(str);  // ✅ Works directly
+```
+
+### Solution 2: Dynamic Strings (Zig 0.16)
+
+For dynamically created strings, use `allocPrint` + `dupeZ`:
+
+```zig
+// Step 1: Create string
+const str = try std.fmt.allocPrint(allocator, "value: {}", .{42});
+defer allocator.free(str);
+
+// Step 2: Add null terminator
+const str_z = try allocator.dupeZ(u8, str);
+defer allocator.free(str_z);
+
+// Step 3: Pass to C
+c_function(str_z);  // ✅ Now works
+```
+
+**⚠️ Important:** `std.fmt.allocPrintZ` does NOT exist in Zig 0.16. Always use `allocPrint` + `dupeZ`.
+
+**One-step version** (if you don't need the non-null-terminated version):
+
+```zig
+const str = try std.fmt.allocPrint(allocator, "value: {}", .{42});
+const str_z = try allocator.dupeZ(u8, str);
+allocator.free(str);  // Free original immediately
+defer allocator.free(str_z);
+
+c_function(str_z);
+```
+
+### Solution 3: Fixed-Size Buffers
+
+For fixed-size buffers, reserve space for the null terminator:
+
+```zig
+var buffer: [256:0]u8 = undefined;  // ✅ Reserve space for null terminator
+const str = try std.fmt.bufPrint(&buffer, "value: {}", .{42});
+buffer[str.len] = 0;  // Add null terminator
+c_function(&buffer);
+```
+
+### Solution 4: Sentinel-Terminated Slices
+
+Convert slices to sentinel-terminated:
+
+```zig
+const slice: []const u8 = getData();
+const terminated: [:0]const u8 = try allocator.dupeZ(u8, slice);
+defer allocator.free(terminated);
+c_function(terminated);
+```
+
+### Common Errors
+
+**"expected type '[:0]const u8', found '[]const u8'"**
+- Cause: Passing regular slice to C function
+- Fix: Use `allocator.dupeZ()` to add null terminator
+
+**"no member named 'allocPrintZ' in struct 'std.fmt'"**
+- Cause: `allocPrintZ` was removed in Zig 0.16
+- Fix: Use `allocPrint()` + `dupeZ()`
+
+See also:
+
+- [common_errors.md](common_errors.md#string-and-c-interop-errors) - String and C interop error solutions
+- [C Type Primitives](#C-Type-Primitives)
+- [C Pointers](#C-Pointers)
+
 ## [C Variadic Functions](#toc-C-Variadic-Functions) §
 
       

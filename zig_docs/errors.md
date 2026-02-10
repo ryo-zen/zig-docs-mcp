@@ -906,6 +906,91 @@ duration of the error return bubbling.
       As for code size cost, 1 function call before a return statement is no big deal. Even so,
       I have [a plan](https://github.com/ziglang/zig/issues/690) to make the call to
       `__zig_return_error` a tail call, which brings the code
- size cost down to actually zero. What is a return statement in code 
-without error return tracing can become a jump instruction in code with 
+ size cost down to actually zero. What is a return statement in code
+without error return tracing can become a jump instruction in code with
 error return tracing.
+
+## Practical Error Capture Patterns
+
+Understanding capture syntax is critical for correct error handling.
+
+### Capture Syntax Reference
+
+**Const pointer capture:**
+```zig
+if (optional_value) |*val| {
+    // val is *const T
+    // Can read fields, cannot modify
+    std.debug.print("{}", .{val.field});  // ✅ OK
+    val.deinit();  // ❌ ERROR: cannot call mutating method on const pointer
+}
+```
+
+**Value capture (can make mutable):**
+```zig
+if (optional_value) |val| {
+    var mutable = val;  // Now can modify
+    mutable.field = 42;
+    mutable.deinit();  // ✅ OK
+}
+```
+
+**Error capture:**
+```zig
+func() catch |err| {
+    // err is the error value
+    if (err == error.Specific) { /* handle */ }
+}
+```
+
+### Common Pattern: Loop Until EOF
+
+Reading until end-of-stream:
+
+```zig
+while (true) {
+    const line = reader.readUntilDelimiter('\n') catch |err| {
+        if (err == error.EndOfStream) break;  // Expected - exit loop
+        return err;  // Unexpected - propagate
+    };
+    // process line...
+}
+```
+
+### Common Pattern: Optional Cleanup
+
+Clean up only if something was partially initialized:
+
+```zig
+var partial: ?Thing = null;
+errdefer if (partial) |val| {
+    var thing = val;  // Must assign to var for mutating methods
+    thing.deinit();
+};
+
+partial = try createThing();
+try partial.?.connect();  // If this fails, errdefer cleans up
+```
+
+### Common Mistake: Const Pointer in errdefer
+
+This is the most frequent error pattern:
+
+```zig
+// ❌ BAD: Creates *const pointer
+errdefer if (self.partial_result) |*result| {
+    result.deinit();  // ERROR: cannot modify *const
+}
+
+// ✅ GOOD: Capture value, assign to var
+errdefer if (self.partial_result) |val| {
+    var result = val;
+    result.deinit();  // OK
+}
+```
+
+See also:
+
+- [error_patterns.md](error_patterns.md) - More practical error handling examples
+- [common_errors.md](common_errors.md) - Error message solutions
+- [defer](#defer) - Defer statement details
