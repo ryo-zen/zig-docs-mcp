@@ -234,3 +234,77 @@ test "process.run - max output bytes" {
     std.debug.print("  Output: {s}", .{result.stdout});
     std.debug.print("  ✅ PASS\n\n", .{});
 }
+
+// Test 11: Environ.Map - advanced manipulation
+test "Environ.Map - iteration and removal" {
+    std.debug.print("\n=== Test: Environ.Map Advanced ===\n", .{});
+
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    defer _ = gpa.deinit();
+    const allocator = gpa.allocator();
+
+    var env_map = std.process.Environ.Map.init(allocator);
+    defer env_map.deinit();
+
+    try env_map.put("ZIG_TEST_KEY", "12345");
+    
+    // Test Iterator
+    var it = env_map.iterator();
+    var found = false;
+    while (it.next()) |entry| {
+        if (std.mem.eql(u8, entry.key_ptr.*, "ZIG_TEST_KEY")) {
+            found = true;
+            break;
+        }
+    }
+    try std.testing.expect(found);
+
+    // Test Removal
+    const removed = env_map.swapRemove("ZIG_TEST_KEY");
+    try std.testing.expect(removed);
+    try std.testing.expect(env_map.get("ZIG_TEST_KEY") == null);
+
+    std.debug.print("  Iteration and swapRemove verified\n", .{});
+    std.debug.print("  ✅ PASS\n\n", .{});
+}
+
+// Test 12: process.spawn - piping and collectOutput
+test "process.spawn - piping and collectOutput" {
+    std.debug.print("\n=== Test: process.spawn with Piping ===\n", .{});
+
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    defer _ = gpa.deinit();
+    const allocator = gpa.allocator();
+
+    var threaded = std.Io.Threaded.init(allocator, .{ .environ = .empty });
+    defer threaded.deinit();
+    const io = threaded.io();
+
+    var child = try std.process.spawn(io, .{
+        .argv = &[_][]const u8{ "cat" },
+        .stdin = .pipe,
+        .stdout = .pipe,
+        .stderr = .pipe,
+    });
+    
+    const input_text = "Standard Library 0.16 Test\n";
+    try child.stdin.?.writeStreamingAll(io, input_text);
+    child.stdin.?.close(io);
+    child.stdin = null;
+
+    var stdout_list: std.ArrayList(u8) = .empty;
+    defer stdout_list.deinit(allocator);
+    var stderr_list: std.ArrayList(u8) = .empty;
+    defer stderr_list.deinit(allocator);
+
+    try child.collectOutput(allocator, &stdout_list, &stderr_list, 1024);
+
+    const term = try child.wait(io);
+    try std.testing.expect(term == .exited);
+    try std.testing.expect(term.exited == 0);
+    try std.testing.expectEqualStrings(input_text, stdout_list.items);
+
+    std.debug.print("  Piping and collectOutput verified\n", .{});
+    std.debug.print("  ✅ PASS\n\n", .{});
+}
+

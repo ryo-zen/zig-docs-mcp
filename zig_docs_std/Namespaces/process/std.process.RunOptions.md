@@ -1,39 +1,60 @@
 # std.process.RunOptions
 
-### Fields
+📚 **[See Comprehensive Examples & Tests](../../Examples/)**
 
-    argv: []const []const u8
+## Overview
 
-    stderr_limit: Io.Limit = .unlimited
+`std.process.RunOptions` is the configuration structure used by the high-level `std.process.run()` function. It simplifies the process of spawning a child, capturing its output, and waiting for termination in a single call.
 
-    stdout_limit: Io.Limit = .unlimited
+---
 
-    reserve_amount: usize = 64
+## Fields
 
-How many bytes to initially allocate for stderr and stdout.
+`argv: []const []const u8`
+------
+**Mandatory.** The command and its arguments. `argv[0]` is the program to execute.
 
-    cwd: Child.Cwd = .inherit
+`max_output_bytes: usize = 51200` (50 KB)
+------
+The maximum number of bytes to capture from `stdout` and `stderr` combined. If the child process produces more output, `run()` will return `error.StdoutStreamTooLong` or `error.StderrStreamTooLong`.
 
-Set to change the current working directory when spawning the child process.
+`cwd: ?[]const u8 = null`
+------
+The current working directory for the child process.
 
-    environ_map: ?*const Environ.Map = null
+`cwd_dir: ?std.Io.Dir = null`
+------
+An alternative to `cwd` that uses an open directory handle.
 
-Replaces the child environment when provided. The PATH value from here is not used to resolve `argv[0]`; that resolution always uses parent environment.
+`environ_map: ?*const std.process.Environ.Map = null`
+------
+Custom environment variables for the child process.
 
-    expand_arg0: ArgExpansion = .no_expand
+`expand_arg0: std.process.ArgExpansion = .no_expand`
+------
+Controls whether `argv[0]` should be searched for in the `PATH`.
 
-    progress_node: std.Progress.Node = std.Progress.Node.none
+`create_no_window: bool = true`
+------
+**Windows-only.** If true, the child process is created without a console window.
 
-When populated, a pipe will be created for the child process to communicate progress back to the parent. The file descriptor of the write end of the pipe will be specified in the `ZIG_PROGRESS` environment variable inside the child process. The progress reported by the child will be attached to this progress node in the parent process.
+---
 
-The child's progress tree will be grafted into the parent's progress tree, by substituting this node with the child's root node.
+## Usage Example
 
-    create_no_window: bool = true
+```zig
+const result = try std.process.run(init.gpa, init.io, .{
+    .argv = &[_][]const u8{ "ls", "-l" },
+    .max_output_bytes = 10 * 1024 * 1024, // 10 MB
+});
+defer init.gpa.free(result.stdout);
+defer init.gpa.free(result.stderr);
+```
 
-Windows-only. Sets the CREATE_NO_WINDOW flag in CreateProcess.
+---
 
-    disable_aslr: bool = false
+## See Also
 
-Darwin-only. Disable ASLR for the child process.
-
-    timeout: Io.Timeout = .none
+- **std.process.run** - The function that consumes this struct.
+- **std.process.RunResult** - The result produced by `run()`.
+- **std.process.SpawnOptions** - Lower-level options for process creation.

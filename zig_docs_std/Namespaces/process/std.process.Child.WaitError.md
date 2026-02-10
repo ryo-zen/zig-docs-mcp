@@ -1,15 +1,30 @@
 # std.process.Child.WaitError
 
+📚 **[See Comprehensive Examples & Tests](../../Examples/)**
+
+## Overview
+
+`std.process.Child.WaitError` is the error set returned by `child.wait()`. It includes errors related to I/O cancellation and unexpected operating system responses.
+
+---
+
 ## Errors
 
-AccessDenied  
+`AccessDenied`
+------
+The caller does not have sufficient permissions to wait for the child process.
 
-Canceled Cancelable  
-Caller has requested the async operation to stop.
+`Canceled`
+------
+The wait operation was canceled via the `std.Io` interface.
 
-Unexpected UnexpectedError  
-The Operating System returned an undocumented error code.
+`Unexpected`
+------
+The operating system returned an undocumented or unexpected error code. This usually indicates a condition that the Zig standard library doesn't yet have a specific error for.
 
-This error is in theory not possible, but it would be better to handle this error than to invoke undefined behavior.
+---
 
-When this error code is observed, it usually means the Zig Standard Library needs a small patch to add the error code to the error set for the respective function.
+## See Also
+
+- **std.process.Child.wait** - The function that returns this error set.
+- **std.process.Child.Term** - The successful return type of `wait()`.

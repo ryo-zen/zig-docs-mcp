@@ -1,59 +1,87 @@
 # std.process.SpawnOptions
 
-### Fields
+📚 **[See Comprehensive Examples & Tests](../../Examples/)**
 
-    argv: []const []const u8
+## Overview
 
-    cwd: Child.Cwd = .inherit
+`std.process.SpawnOptions` is the configuration structure used by `std.process.spawn()` and `std.process.spawnPath()`. It provides fine-grained control over how a child process is created, its working directory, environment, and standard I/O redirection.
 
-Set to change the current working directory when spawning the child process.
+---
 
-    environ_map: ?*const Environ.Map = null
+## Fields
 
-Replaces the child environment when provided. The PATH value from here is not used to resolve `argv[0]`; that resolution always uses parent environment.
+`argv: []const []const u8`
+------
+**Mandatory.** The command and its arguments. `argv[0]` is the name of the program to execute.
 
-    expand_arg0: ArgExpansion = .no_expand
+`cwd: ?[]const u8 = null`
+------
+The current working directory for the child process. If `null`, it inherits the parent's current working directory.
 
-    progress_node: std.Progress.Node = std.Progress.Node.none
+`cwd_dir: ?std.Io.Dir = null`
+------
+An alternative to `cwd` that uses an open directory handle. This is more robust against race conditions and is required for WASI.
 
-When populated, a pipe will be created for the child process to communicate progress back to the parent. The file descriptor of the write end of the pipe will be specified in the `ZIG_PROGRESS` environment variable inside the child process. The progress reported by the child will be attached to this progress node in the parent process.
+`environ_map: ?*const std.process.Environ.Map = null`
+------
+If provided, replaces the child's environment variables. If `null`, the child inherits the parent's environment.
 
-The child's progress tree will be grafted into the parent's progress tree, by substituting this node with the child's root node.
+`expand_arg0: std.process.ArgExpansion = .no_expand`
+------
+Controls whether `argv[0]` should be expanded (e.g., searching the PATH).
 
-    stdin: StdIo = .inherit
+`stdin: StdIo = .inherit`
+------
+Redirection for the child's standard input.
 
-    stdout: StdIo = .inherit
+`stdout: StdIo = .inherit`
+------
+Redirection for the child's standard output.
 
-    stderr: StdIo = .inherit
+`stderr: StdIo = .inherit`
+------
+Redirection for the child's standard error.
 
-    request_resource_usage_statistics: bool = false
+`uid: ?std.posix.uid_t = null`
+------
+**POSIX-only.** The user ID to set for the child process.
 
-Set to true to obtain rusage information for the child process. Depending on the target platform and implementation status, the requested statistics may or may not be available. If they are available, then the `resource_usage_statistics` field will be populated after calling `wait`. On Linux and Darwin, this obtains rusage statistics from wait4().
+`gid: ?std.posix.gid_t = null`
+------
+**POSIX-only.** The group ID to set for the child process.
 
-    uid: ?posix.uid_t = null
+---
 
-Set to change the user id when spawning the child process.
+## Nested Types
 
-    gid: ?posix.gid_t = null
+### `StdIo` (union)
 
-Set to change the group id when spawning the child process.
+Controls standard stream redirection.
 
-    pgid: ?posix.pid_t = null
+- `.inherit` - Use the parent's stream.
+- `.pipe` - Create a pipe between parent and child.
+- `.ignore` - Redirect to `/dev/null` (or `NUL` on Windows).
+- `.file: std.Io.File` - Redirect to an already open file handle.
 
-Set to change the process group id when spawning the child process.
+---
 
-    start_suspended: bool = false
+## Usage Example
 
-Start child process in suspended state. For Posix systems it's started as if SIGSTOP was sent.
+```zig
+const options = std.process.SpawnOptions{
+    .argv = &[_][]const u8{ "git", "status" },
+    .cwd = "/home/user/repo",
+    .stdout = .pipe,
+    .stderr = .inherit,
+};
 
-    create_no_window: bool = false
+var child = try std.process.spawn(init.io, options);
+```
 
-Windows-only. Sets the CREATE_NO_WINDOW flag in CreateProcess.
+---
 
-    disable_aslr: bool = false
+## See Also
 
-Darwin-only. Disable ASLR for the child process.
-
-## Types
-
-- StdIo
+- **std.process.spawn** - The function that consumes this struct.
+- **std.process.StdIo** - Details on the redirection union.
+- **std.process.Environ.Map** - For setting custom environment variables.
