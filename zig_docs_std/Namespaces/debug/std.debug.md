@@ -101,26 +101,25 @@ if (x <= 0) @panic("x must be positive"); // ✅ Always checked
 
 ### `SourceLocation`
 
-Represents a location in source code, typically obtained via `@src()`.
+Represents a resolved runtime source location for an instruction pointer.
 
 **Fields:**
-- `file: []const u8` - Path to the source file
-- `fn_name: []const u8` - Name of the enclosing function
-- `line: u32` - Line number (1-indexed)
-- `column: u32` - Column number (1-indexed)
+- `line: u64` - Line number (1-indexed)
+- `column: u64` - Column number (1-indexed)
+- `file_name: []const u8` - Source file path/name
 
 **Example:**
 ```zig
 const std = @import("std");
 
-pub fn main() void {
-    const src = @src();
-    std.debug.print("Called from {s} at {s}:{d}:{d}\n", .{
-        src.fn_name,
-        src.file,
-        src.line,
-        src.column,
-    });
+pub fn printResolvedLocation(symbol: std.debug.Symbol) void {
+    if (symbol.source_location) |loc| {
+        std.debug.print("{s}:{d}:{d}\n", .{
+            loc.file_name,
+            loc.line,
+            loc.column,
+        });
+    }
 }
 ```
 
@@ -131,9 +130,9 @@ pub fn main() void {
 Debug information about a specific address, returned by `getSymbol()`.
 
 **Fields:**
-- `symbol_name: []const u8` - Function or symbol name
-- `compile_unit_name: []const u8` - Source file path
-- `line_info: ?SourceLocation` - Source location if available
+- `name: ?[]const u8` - Function or symbol name
+- `compile_unit_name: ?[]const u8` - Source/object context if available
+- `source_location: ?SourceLocation` - Source location if available
 
 **Example:**
 ```zig
@@ -143,7 +142,7 @@ pub fn example(gpa: std.mem.Allocator, io: std.Io) !void {
     const addr = @intFromPtr(&example);
     const self_info = try std.debug.getSelfDebugInfo();
     const symbol = try self_info.getSymbol(gpa, io, addr);
-    std.debug.print("Symbol: {s}\n", .{symbol.symbol_name});
+    std.debug.print("Symbol: {s}\n", .{symbol.name orelse "<unknown>"});
 }
 ```
 
@@ -168,12 +167,13 @@ Options for stack unwinding operations.
 **Fields:**
 - `first_address: ?usize = null` - Skip frames before this address
 - `context: ?CpuContextPtr = null` - Unwind from specific CPU context (for signal handlers)
-- `last_resort: bool = false` - Use potentially-crashy unwinding strategies as last resort
+- `allow_unsafe_unwind: bool = false` - Use potentially-crashy unwinding strategies as last resort
 
 **Example:**
 ```zig
 const options = std.debug.StackUnwindOptions{
     .first_address = @returnAddress(),
+    .allow_unsafe_unwind = false,
 };
 std.debug.dumpCurrentStackTrace(options);
 ```
@@ -570,9 +570,9 @@ pub fn printCurrentFunction(gpa: std.mem.Allocator, io: std.Io) !void {
     const debug_info = try std.debug.getSelfDebugInfo();
     const symbol = try debug_info.getSymbol(gpa, io, addr);
 
-    std.debug.print("Current function: {s}\n", .{symbol.symbol_name});
-    if (symbol.line_info) |li| {
-        std.debug.print("  at {s}:{d}\n", .{ li.file, li.line });
+    std.debug.print("Current function: {s}\n", .{symbol.name orelse "<unknown>"});
+    if (symbol.source_location) |loc| {
+        std.debug.print("  at {s}:{d}\n", .{ loc.file_name, loc.line });
     }
 }
 ```
@@ -886,22 +886,21 @@ pub fn main() !void {
 **`SourceLocation` (struct)**
 ```zig
 pub const SourceLocation = struct {
-    file: []const u8,
-    fn_name: []const u8,
-    line: u32,
-    column: u32,
+    line: u64,
+    column: u64,
+    file_name: []const u8,
 };
 ```
-Source code location information from `@src()`.
+Resolved source location from debug information.
 
 ------
 
 **`Symbol` (struct)**
 ```zig
 pub const Symbol = struct {
-    symbol_name: []const u8,
-    compile_unit_name: []const u8,
-    line_info: ?SourceLocation,
+    name: ?[]const u8,
+    compile_unit_name: ?[]const u8,
+    source_location: ?SourceLocation,
 };
 ```
 Debug symbol information for an address.
@@ -913,7 +912,7 @@ Debug symbol information for an address.
 pub const StackUnwindOptions = struct {
     first_address: ?usize = null,
     context: ?CpuContextPtr = null,
-    last_resort: bool = false,
+    allow_unsafe_unwind: bool = false,
 };
 ```
 Options for stack trace capture and unwinding.
@@ -965,7 +964,7 @@ Whether the current platform supports stack unwinding. When `false`, stack trace
 
 ------
 
-**`have_segfault_handling_support: bool`
+**`have_segfault_handling_support: bool`**
 
 Whether the platform supports installing segfault handlers. When `false`, `attachSegfaultHandler()` is a no-op.
 

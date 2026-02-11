@@ -2,6 +2,12 @@
 
 A helper type for loading an ELF file and collecting its DWARF debug information, unwind information, and symbol table.
 
+## Overview
+
+`std.debug.ElfFile` is the ELF-specific backend used by `std.debug.Info` and related symbolization paths.
+
+It memory-maps ELF inputs, locates debug/unwind sections, and exposes symbol lookup helpers.
+
 ### Fields
 
     is_64: bool
@@ -51,11 +57,20 @@ Sometimes, debug info is stored separately to the main ELF file. In that case, `
 ## Functions
 
 `pub fn deinit(ef: *ElfFile, gpa: Allocator) void`  
+Releases mapped files, arena state, and associated metadata.
 
 `pub fn load( gpa: Allocator, io: Io, elf_file: Io.File, opt_build_id: ?[]const u8, di_search_paths: *const DebugInfoSearchPaths, ) LoadError!ElfFile`  
+Loads ELF metadata and optional external debug-info mappings.
 
 `pub fn searchSymtab(ef: *ElfFile, gpa: Allocator, vaddr: u64) error{ NoSymtab, NoStrtab, BadSymtab, OutOfMemory, }!std.debug.Symbol`  
+Performs symbol-table lookup for a virtual address.
 
 ## Error Sets
 
 - LoadError
+
+## Usage Notes
+
+- `dwarf` may be `null` when required DWARF sections are absent; symbolization can still partially work via `symtab`.
+- `load` does not fully initialize DWARF decode state; callers handle deeper DWARF setup.
+- Always call `deinit` to unmap `mapped_file`/`mapped_debug_file`.

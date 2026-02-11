@@ -6,6 +6,12 @@ This API makes no assumptions about the relationship between the host and the ta
 
 For unopinionated types and bits, see `std.dwarf`.
 
+## Overview
+
+`std.debug.Dwarf` is the high-level DWARF integration layer used by `std.debug` symbolization and unwinding paths.
+
+It is target-agnostic and can consume DWARF data for binaries that differ from the current host architecture/OS.
+
 ### Fields
 
     sections: SectionArray = @splat(null)
@@ -87,3 +93,15 @@ Tells whether unwinding for this target is supported by the Dwarf standard.
 
 - OpenError
 - ScanError
+
+## Usage Notes
+
+- `open` initializes DWARF internals after required sections are wired into the struct.
+- Callers typically populate ranges/source-location caches before heavy lookup workloads.
+- Symbol and line-resolution helpers (`getSymbol`, `getLineNumberInfo`) are the common read paths once initialized.
+
+## Gotchas
+
+- On some targets/architectures, unwinding support is intentionally limited (`supportsUnwinding`).
+- Missing required sections can make symbolization partial even when some DWARF data exists.
+- Very large binaries may hit host-address-size limitations (notably 32-bit hosts).

@@ -6,6 +6,12 @@ Since Zig does not have interfaces, this file serves as an example template for 
 
 As an alternative, see `std.debug.FullPanic`.
 
+## Overview
+
+`std.debug.simple_panic` is the default low-overhead panic namespace used for safety panic lowering.
+
+It prints a concise message and traps, while still exposing the complete set of compiler-expected panic entry points.
+
 ## Functions
 
 `pub fn call(msg: []const u8, ra: ?usize) noreturn`  
@@ -60,3 +66,14 @@ Prints the message to stderr without a newline and then traps.
 `pub fn unwrapError(err: anyerror) noreturn`  
 
 `pub fn unwrapNull() noreturn`  
+
+## Usage Notes
+
+- Good default when you want basic panic visibility without full custom formatting infrastructure.
+- Use `FullPanic` for richer diagnostic formatting and deeper customization.
+- Keep function signatures unchanged if implementing your own compatible panic namespace.
+
+## Related APIs
+
+- `std.debug.FullPanic`
+- `std.debug.no_panic`

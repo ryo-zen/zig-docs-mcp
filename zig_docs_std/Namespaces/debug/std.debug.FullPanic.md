@@ -2,6 +2,12 @@
 
 A fully-featured panic handler namespace which lowers all panics to calls to `panicFn`. Safety panics will use formatted printing to provide a meaningful error message. The signature of `panicFn` should match that of `defaultPanic`.
 
+## Overview
+
+`std.debug.FullPanic` is the rich panic-handler adapter for applications that want detailed panic diagnostics while still centralizing termination behavior through a custom `panicFn`.
+
+It exposes per-safety-check entry points used by generated runtime checks.
+
 ## Parameters
 
     panicFn: fn ([]const u8, ?usize) noreturn
@@ -63,3 +69,14 @@ A fully-featured panic handler namespace which lowers all panics to calls to `pa
 `pub fn unwrapError(err: anyerror) noreturn`  
 
 `pub fn unwrapNull() noreturn`  
+
+## Usage Notes
+
+- Intended for use as `pub const panic = std.debug.FullPanic(myPanicFn).call;` (or equivalent root integration pattern).
+- Compared with `simple_panic`, this variant emphasizes diagnostic quality.
+- Compared with `no_panic`, this variant is for functional crash reporting rather than minimum code size.
+
+## Related APIs
+
+- `std.debug.simple_panic`
+- `std.debug.no_panic`
