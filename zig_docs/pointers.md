@@ -1,6 +1,40 @@
 # Pointers
 
 Zig has two kinds of pointers: single-item and many-item.
+
+📚 **Runnable Examples:** `zig_docs_std/Examples/pointers.tests.zig`
+
+## Overview
+
+Use pointer types to model exact memory intent:
+
+- `*T` for exactly one item.
+- `[*]T` for contiguous memory when length is not encoded.
+- `[]T` when you want pointer + length and bounds-checked indexing.
+
+Prefer `[]T` at API boundaries unless you have a concrete reason to require a raw pointer form.
+
+## Pointer Kind Selection
+
+Use this decision order:
+
+1. Need bounds and length in the value? Use `[]T`.
+2. Need exactly one object? Use `*T`.
+3. Need pointer arithmetic / unknown-length buffer walk? Use `[*]T`.
+4. Need C string or sentinel protocol? Use `[*:x]T`.
+
+When in doubt, start with slices and convert to pointer forms only at lower-level boundaries.
+
+## Unsafe Pointer Checklist
+
+Before pointer casts/arithmetic/dereference across boundaries:
+
+1. **Alignment:** Is the address aligned for the target type?
+2. **Lifetime:** Does backing memory outlive all uses?
+3. **Bounds:** Is index/range access within allocated region?
+4. **Sentinel contract:** If using sentinel types, is sentinel guaranteed?
+5. **Mutability:** Are `const` vs mutable guarantees preserved?
+6. **Concurrency:** Is there race-free ownership/synchronization for mutable access?
       
 
       
