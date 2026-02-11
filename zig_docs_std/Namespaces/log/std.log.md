@@ -1,6 +1,6 @@
 # std.log
 
-📚 **[See Comprehensive Examples & Tests](../../Examples/)** - Complete runnable code demonstrating all logging features
+📚 **[See Comprehensive Examples & Tests](../../Examples/log.tests.zig)** - Complete runnable code demonstrating all logging features
 
 ## Quick Start
 

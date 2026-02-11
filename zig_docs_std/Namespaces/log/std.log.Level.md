@@ -1,5 +1,11 @@
 # std.log.Level
 
+## Overview
+
+`std.log.Level` defines log severity and filtering priority.
+
+Higher-priority levels are always included when a lower-priority threshold is selected (for example, `.info` includes `.warn` and `.err`).
+
 ### Fields
 
     err
@@ -22,3 +28,8 @@ Debug: messages only useful for debugging.
 
 `pub fn asText(comptime self: Level) []const u8`  
 Returns a string literal of the given level in full text form.
+
+## Usage Notes
+
+- Typical ordering is `.err` > `.warn` > `.info` > `.debug`.
+- Used by `std.log.logEnabled` and custom `logFn` implementations.
