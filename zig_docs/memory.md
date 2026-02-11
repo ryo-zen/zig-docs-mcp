@@ -4,9 +4,21 @@ Zig performs no implicit memory allocations. There is no hidden runtime, no garb
 
 As a consequence, a Zig programmer must always be able to answer: **[Where are the bytes?](#where-are-the-bytes)**
 
-📚 **[See Memory Patterns & Examples](../../Examples/test_memory_patterns.zig)** - Complete working examples of all patterns discussed in this guide
+📚 **[See Memory Patterns & Examples](../zig_docs_std/Examples/test_memory_patterns.zig)** - Complete working examples of all patterns discussed in this guide
 
-📚 **[See Memory Safety Examples](../../Examples/test_memory_safety.zig)** - Tests demonstrating null safety, leak detection, and bounds checking
+📚 **[See Memory Safety Examples](../zig_docs_std/Examples/test_memory_safety.zig)** - Tests demonstrating null safety, leak detection, and bounds checking
+
+📚 **[See Allocator Strategy Tests](../zig_docs_std/Examples/memory_allocator_strategy.tests.zig)** - Practical allocator selection patterns and constraints
+
+📚 **[See OOM Handling Tests](../zig_docs_std/Examples/memory_oom_handling.tests.zig)** - Deterministic `OutOfMemory` error-path validation with failing allocators
+
+📚 **[See Ownership Contract Tests](../zig_docs_std/Examples/memory_ownership_contract.tests.zig)** - Caller ownership, cleanup, and `deinit` contract patterns
+
+## Overview
+
+This guide focuses on practical allocation strategy, ownership contracts, and failure-safe cleanup patterns for production Zig code.
+
+If you remember one rule, use this: every allocation site should have an explicit ownership decision and cleanup path.
 
 ## Quick Reference
 
@@ -18,6 +30,18 @@ As a consequence, a Zig programmer must always be able to answer: **[Where are t
 | `c_allocator` | Linking with C libraries | Variable | Variable | ❌ (depends on libc) |
 | `page_allocator` | Large allocations, OS pages | Good for large | High (page-aligned) | ❌ |
 | `testing.allocator` | Unit tests | Good | Medium | ✅ Automatic leak detection |
+
+## Allocator Selection Flow
+
+Use this in order:
+
+1. Need C ABI-compatible allocation behavior? Use `c_allocator`.
+2. Need strict memory budget/no heap? Use `FixedBufferAllocator`.
+3. Have phase-based lifetime (request/frame/job) with bulk cleanup? Use `ArenaAllocator`.
+4. Need general app allocator with safety diagnostics? Use `GeneralPurposeAllocator`.
+5. Need very large/page-granular allocations? Consider `page_allocator`.
+
+When unsure, start with `GeneralPurposeAllocator`, then optimize with measurement.
 
 ## Allocators
 
@@ -272,6 +296,19 @@ The `std.heap.GeneralPurposeAllocator` is not just for allocation; it is a safet
 ### 4. Undefined Memory
 In Debug builds, Zig often fills `undefined` memory with `0xaa` bytes. This ensures that logic errors involving uninitialized variables cause immediate, visible crashes (like segfaults) rather than silently corrupting data.
 
+## Unsafe Memory Boundary Checklist
+
+Before any pointer cast, manual copy, sentinel trick, or raw byte reinterpretation:
+
+1. **Alignment:** Is the pointer aligned for the target type?
+2. **Bounds:** Is the full accessed range within allocated memory?
+3. **Lifetime:** Will the backing allocation outlive all references?
+4. **Aliasing:** Are there overlapping mutable references that can race/corrupt?
+5. **Sentinel assumptions:** If sentinel-typed, is the sentinel guaranteed at `len`?
+6. **Cleanup path:** Is deallocation deterministic on both success and error paths?
+
+If any answer is unclear, encode the assumption with an assertion or redesign API boundaries.
+
 ## Debugging Memory Issues
 
 ### Finding Memory Leaks with GPA
@@ -363,6 +400,26 @@ Because there is no garbage collection, documentation and conventions define own
 *   **"Caller owns memory":** The function returns a pointer, and you (the caller) must free it.
 *   **"Arena managed":** The object lives in an arena and doesn't need individual freeing.
 *   **`std.ArrayList`:** The list owns the items array. When you call `list.deinit(allocator)`, the items array is freed (but complex items *inside* the list might need their own cleanup first).
+
+### Ownership Contract Template
+
+Use this wording pattern in public APIs:
+
+- **Allocation source:** "Allocated with caller-provided `allocator`."
+- **Owner after return:** "Caller owns returned memory."
+- **Cleanup API:** "Caller must call `deinit(allocator)`" or "caller must `allocator.free(...)`."
+- **Lifetime guarantees:** "Valid until X is deinitialized/reset."
+- **Error behavior:** "On error, no ownership is transferred" (or explicitly what is transferred).
+
+Example contract:
+
+```zig
+/// Allocates and returns UTF-8 bytes for `input`.
+/// Owner: caller.
+/// Cleanup: caller must `allocator.free(result)`.
+/// On error: no allocation is leaked and no ownership is transferred.
+pub fn transform(allocator: Allocator, input: []const u8) ![]u8 { ... }
+```
 
 ## Real-World Patterns
 
