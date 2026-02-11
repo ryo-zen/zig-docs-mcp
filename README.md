@@ -78,7 +78,7 @@ The server exposes three types of resources:
 
 ### Tools
 - `search_zig_docs` - Search across all documentation with smart scoring and fuzzy matching
-- `get_builtin_info` - Get details about builtin functions (e.g., @import, @sizeof) with suggestions
+- `get_builtin_info` - Get details about builtin functions (e.g., `@import`, `@sizeof`) with suggestions
 - `explain_concept` - Get explanations of Zig concepts (comptime, defer, optionals, etc.)
 - `get_syntax_examples` - Get code examples for language constructs
 - `get_example` - Retrieve working code examples by topic

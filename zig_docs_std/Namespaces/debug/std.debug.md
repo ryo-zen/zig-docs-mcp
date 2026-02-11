@@ -1,6 +1,6 @@
 # std.debug
 
-📚 **[See Comprehensive Examples & Tests](../../Examples/)** - Complete runnable code demonstrating all debug features
+📚 **[See Comprehensive Examples & Tests](../../Examples/debug_tests.zig)** - Complete runnable code demonstrating all debug features
 
 ## Quick Start
 
