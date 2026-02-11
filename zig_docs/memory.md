@@ -14,6 +14,8 @@ As a consequence, a Zig programmer must always be able to answer: **[Where are t
 
 📚 **[See Ownership Contract Tests](../zig_docs_std/Examples/memory_ownership_contract.tests.zig)** - Caller ownership, cleanup, and `deinit` contract patterns
 
+📘 **[Allocator Strategy Guide](memory_allocator_strategy.md)** - Decision matrix, ownership checklist, and anti-patterns
+
 ## Overview
 
 This guide focuses on practical allocation strategy, ownership contracts, and failure-safe cleanup patterns for production Zig code.

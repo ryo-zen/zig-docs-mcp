@@ -9,6 +9,8 @@ Unlike arrays, slice length is runtime-known. Arrays encode length in the type.
 
 📚 **Runnable Examples:** `zig_docs_std/Examples/slices.tests.zig`
 
+📘 **Related Guide:** [Memory Allocator Strategy](memory_allocator_strategy.md)
+
 ## Overview
 
 Use slices for most API boundaries where you pass buffers, strings, or variable-size views.

@@ -26,6 +26,7 @@ A document is "done" when it has:
 
 ### 1) Memory + Allocator Strategy
 - Why: This is the highest-impact systems topic in Zig.
+- Status: Done ✅ Completed
 - Deliverables:
   - New guide: `zig_docs/memory_allocator_strategy.md`
   - Upgrade existing: `zig_docs/memory.md`, `zig_docs/pointers.md`, `zig_docs/slices.md`
@@ -145,9 +146,9 @@ Use this checklist per document:
 
 ## Immediate Next Targets
 
-1. `zig_docs/memory.md`
-2. `zig_docs/pointers.md`
-3. `zig_docs/slices.md`
+1. `zig_docs/unsafe_boundaries.md`
+2. `zig_docs/casting.md`
+3. `zig_docs/illegal_behavior.md`
 4. `zig_docs/errors.md`
 5. `zig_docs/error_patterns.md`
 6. `zig_docs/atomics.md`

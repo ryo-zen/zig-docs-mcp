@@ -4,6 +4,8 @@ Zig has two kinds of pointers: single-item and many-item.
 
 📚 **Runnable Examples:** `zig_docs_std/Examples/pointers.tests.zig`
 
+📘 **Related Guide:** [Memory Allocator Strategy](memory_allocator_strategy.md)
+
 ## Overview
 
 Use pointer types to model exact memory intent:
