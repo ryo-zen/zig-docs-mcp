@@ -89,19 +89,19 @@ The server exposes three types of resources:
 - `zig_docs/` - Language documentation (syntax, features, concepts)
 - `zig_docs_std/` - Standard library documentation
   - `Types/` - Type documentation (ArrayList, ArrayHashMap, etc.)
-  - `Examples/` - Working Zig code examples (50+ examples)
+  - `Examples/` - Working Zig code examples (158 examples)
 - `templates/` - Documentation templates
 
 ## What's Included
 
-- **64 Language Documentation Files** - Covering all Zig language features
-- **55 Standard Library Docs** - Detailed type and namespace documentation
-- **88 Working Code Examples** - Runnable Zig code demonstrating features
-- **207 Total Cached Resources** - All loaded into memory at startup
+- **72 Language Documentation Files** - Covering Zig language features and migration notes
+- **345 Standard Library Docs** - Type and namespace documentation
+- **158 Working Code Examples** - Runnable Zig code demonstrating patterns and APIs
+- **589 Total Cached Resources** - Loaded into memory at startup
 
 ## Working Examples
 
-The server includes 88 working Zig examples covering:
+The server includes 158 working Zig examples covering:
 - Data structures (ArrayList, ArrayHashMap)
 - I/O operations (Reader, Writer, std.Io)
 - JSON parsing and serialization

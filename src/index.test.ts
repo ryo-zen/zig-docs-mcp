@@ -35,6 +35,11 @@ describe('ZigDocumentationServer', () => {
       expect(filePath).toBe('zig_docs_std/Examples/test_arraylist.zig');
     });
 
+    test('converts example URIs for non-test-prefixed files', () => {
+      const filePath = server['uriToFilePath']('zig://examples/arrays.tests');
+      expect(filePath).toBe('zig_docs_std/Examples/arrays.tests.zig');
+    });
+
     test('converts index URIs', () => {
       const filePath = server['uriToFilePath']('zig://std/index');
       expect(filePath).toBe('zig_docs_std/index.md');

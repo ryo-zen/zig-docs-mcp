@@ -20,6 +20,7 @@ import {
 import fs from 'fs';
 import path from 'path';
 import { execSync } from 'child_process';
+import { pathToFileURL } from 'url';
 
 // Interface for cached resource items
 interface ResourceEntry {
@@ -381,9 +382,26 @@ class ZigDocumentationServer {
       const topic = uri.replace('zig://doc/', '');
       return `zig_docs/${topic.replace(/-/g, '_')}.md`;
     } else if (uri.startsWith('zig://examples/')) {
+      const exactMatch = this.resourceList.find(
+        resource => resource.uri === uri && resource.uri.startsWith('zig://examples/')
+      );
+      if (exactMatch) {
+        return exactMatch._filePath;
+      }
+
       const exampleName = uri.replace('zig://examples/', '');
-      // Try to find the file (check both with and without test_ prefix)
-      return `zig_docs_std/Examples/test_${exampleName}.zig`;
+      const candidates = [
+        `zig_docs_std/Examples/${exampleName}.zig`,
+        `zig_docs_std/Examples/test_${exampleName}.zig`,
+      ];
+
+      for (const candidate of candidates) {
+        if (fs.existsSync(path.join(process.cwd(), candidate))) {
+          return candidate;
+        }
+      }
+
+      return candidates[0];
     } else if (uri.startsWith('zig://patterns/')) {
       const patternPath = uri.replace('zig://patterns/', '');
       return `zig_patterns/${patternPath}.md`;
@@ -562,59 +580,71 @@ class ZigDocumentationServer {
     });
 
     this.server.setRequestHandler(CallToolRequestSchema, async (request) => {
-      const { name, arguments: args } = request.params;
-      
-      if (!args) {
-          throw new McpError(ErrorCode.InvalidParams, "No arguments provided");
-      }
+      const { name } = request.params;
+      const args = (request.params.arguments ?? {}) as Record<string, unknown>;
 
       switch (name) {
         case 'search_zig_docs':
+          if (typeof args.query !== 'string') {
+            throw new McpError(ErrorCode.InvalidParams, 'search_zig_docs requires string argument "query"');
+          }
           return {
             content: [
               {
                 type: 'text',
-                text: this.searchDocumentation(args.query as string),
+                text: this.searchDocumentation(args.query),
               },
             ],
           };
 
         case 'get_builtin_info':
+          if (typeof args.builtin_name !== 'string') {
+            throw new McpError(ErrorCode.InvalidParams, 'get_builtin_info requires string argument "builtin_name"');
+          }
           return {
             content: [
               {
                 type: 'text',
-                text: await this.getBuiltinInfo(args.builtin_name as string),
+                text: await this.getBuiltinInfo(args.builtin_name),
               },
             ],
           };
 
         case 'explain_concept':
+          if (typeof args.concept !== 'string') {
+            throw new McpError(ErrorCode.InvalidParams, 'explain_concept requires string argument "concept"');
+          }
           return {
             content: [
               {
                 type: 'text',
-                text: await this.explainConcept(args.concept as string),
+                text: await this.explainConcept(args.concept),
               },
             ],
           };
 
         case 'get_syntax_examples':
+          if (typeof args.construct !== 'string') {
+            throw new McpError(ErrorCode.InvalidParams, 'get_syntax_examples requires string argument "construct"');
+          }
           return {
             content: [
               {
                 type: 'text',
-                text: await this.getSyntaxExamples(args.construct as string),
+                text: await this.getSyntaxExamples(args.construct),
               },
             ],
           };
 
         case 'get_example':
+          if (typeof args.topic !== 'string') {
+            throw new McpError(ErrorCode.InvalidParams, 'get_example requires string argument "topic"');
+          }
           return {
             content: [
               {
                 type: 'text',
-                text: await this.getExample(args.topic as string),
+                text: await this.getExample(args.topic),
               },
             ],
           };
@@ -624,37 +654,52 @@ class ZigDocumentationServer {
             content: [
               {
                 type: 'text',
-                text: this.getDiagnostics(args.include_samples as boolean ?? false),
+                text: this.getDiagnostics((args.include_samples as boolean | undefined) ?? false),
               },
             ],
           };
 
         case 'introspect_type':
+          if (typeof args.type_expression !== 'string') {
+            throw new McpError(ErrorCode.InvalidParams, 'introspect_type requires string argument "type_expression"');
+          }
           return {
             content: [
               {
                 type: 'text',
-                text: await this.introspectType(args.type_expression as string),
+                text: await this.introspectType(args.type_expression),
               },
             ],
           };
 
         case 'validate_code':
+          if (typeof args.code !== 'string') {
+            throw new McpError(ErrorCode.InvalidParams, 'validate_code requires string argument "code"');
+          }
           return {
             content: [
               {
                 type: 'text',
-                text: await this.validateCode(args.code as string, args.code_type as string),
+                text: await this.validateCode(
+                  args.code,
+                  (args.code_type as string | undefined) ?? 'test'
+                ),
               },
             ],
           };
 
         case 'query_stdlib_source':
+          if (typeof args.module_path !== 'string') {
+            throw new McpError(ErrorCode.InvalidParams, 'query_stdlib_source requires string argument "module_path"');
+          }
           return {
             content: [
               {
                 type: 'text',
-                text: await this.queryStdlibSource(args.module_path as string, args.search_term as string),
+                text: await this.queryStdlibSource(
+                  args.module_path,
+                  args.search_term as string | undefined
+                ),
               },
             ],
           };
@@ -931,7 +976,7 @@ Try searching for:
     return str
       .replace(/([a-z])([A-Z])/g, '$1 $2')
       .replace(/([A-Z])([A-Z][a-z])/g, '$1 $2')
-      .split(/[ -- -⁯⸀-⹿\s\-_]+/)
+      .split(/[\s\-_]+/)
       .filter(w => w.length > 0);
   }
 
@@ -1782,7 +1827,12 @@ ${lines.length > 100 ? `\n*(File has ${lines.length} total lines)*` : ''}
   }
 }
 
-const server = new ZigDocumentationServer();
-server.run().catch(console.error);
+const isMainModule = process.argv[1]
+  && import.meta.url === pathToFileURL(process.argv[1]).href;
+
+if (isMainModule) {
+  const server = new ZigDocumentationServer();
+  server.run().catch(console.error);
+}
 
 export { ZigDocumentationServer };
