@@ -24,9 +24,9 @@ const ResultUnion = std.Io.SelectUnion(Operations);
 
 pub fn useSelectUnion() !void {
     var futures: Operations = .{
-        .network = &network_future,
-        .database = &db_future,
-        .cache = &cache_future,
+  .network = &network_future,
+  .database = &db_future,
+  .cache = &cache_future,
     };
 
     var buffer: [3]ResultUnion = undefined;
@@ -67,7 +67,7 @@ pub fn selectFromFutures(futures: Futures, io: std.Io) !Response {
     sel.cancel();
 
     return switch (first) {
-        inline else => |result| try result,
+  inline else => |result| try result,
     };
 }
 ```
@@ -154,14 +154,14 @@ pub fn SelectUnion(S: type) type {
     // Prepare arrays for union field names and types
 
     for (struct_fields, &names, &types) |struct_field, *union_field_name, *UnionFieldType| {
-        const FieldFuture = @typeInfo(struct_field.type).pointer.child;
-        // Unwrap *Future to get Future
+  const FieldFuture = @typeInfo(struct_field.type).pointer.child;
+  // Unwrap *Future to get Future
 
-        union_field_name.* = struct_field.name;
-        // Preserve field name
+  union_field_name.* = struct_field.name;
+  // Preserve field name
 
-        UnionFieldType.* = @FieldType(FieldFuture, "result");
-        // Extract Future's result type
+  UnionFieldType.* = @FieldType(FieldFuture, "result");
+  // Extract Future's result type
     }
 
     return @Union(.auto, std.meta.FieldEnum(S), &names, &types, &@splat(.{}));
@@ -206,8 +206,8 @@ pub fn raceWithTimeout(
     sel.cancel();
 
     return switch (first) {
-        .network => |data| data,
-        .timer => error.Timeout,
+  .network => |data| data,
+  .timer => error.Timeout,
     };
 }
 ```
@@ -236,9 +236,9 @@ pub fn loadDashboard(futures: TaskFutures, io: std.Io) !void {
     // Process results as they complete
     const first = try sel.await();
     switch (first) {
-        .fetch_user => |user_result| handleUser(try user_result),
-        .fetch_posts => |posts_result| handlePosts(try posts_result),
-        .check_cache => |cache| if (cache) |entry| handleCache(entry),
+  .fetch_user => |user_result| handleUser(try user_result),
+  .fetch_posts => |posts_result| handlePosts(try posts_result),
+  .check_cache => |cache| if (cache) |entry| handleCache(entry),
     }
 }
 ```

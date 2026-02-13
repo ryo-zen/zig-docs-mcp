@@ -23,7 +23,7 @@ pub fn main() void {
     var it: std.fs.path.NativeComponentIterator = std.fs.path.componentIterator(path);
 
     while (it.next()) |component| {
-        std.debug.print("Component: {s}\n", .{component.name});
+  std.debug.print("Component: {s}\n", .{component.name});
     }
 }
 ```

@@ -25,18 +25,18 @@ pub fn main() !void {
     std.debug.print("Listening on {}\n", .{addr});
 
     while (true) {
-        var stream = try server.accept(io);
-        defer stream.close(io);
+  var stream = try server.accept(io);
+  defer stream.close(io);
 
-        // Echo back whatever we receive
-        var buf: [1024]u8 = undefined;
-        var reader = stream.reader(io, &buf);
-        const data = try reader.interface.takeDelimiterInclusive('\n');
+  // Echo back whatever we receive
+  var buf: [1024]u8 = undefined;
+  var reader = stream.reader(io, &buf);
+  const data = try reader.interface.takeDelimiterInclusive('\n');
 
-        var wbuf: [1024]u8 = undefined;
-        var writer = stream.writer(io, &wbuf);
-        try writer.interface.writeAll(data);
-        try writer.interface.flush();
+  var wbuf: [1024]u8 = undefined;
+  var writer = stream.writer(io, &wbuf);
+  try writer.interface.writeAll(data);
+  try writer.interface.flush();
     }
 }
 ```
@@ -79,9 +79,9 @@ shutdown.store(true, .release);
 // Main accept loop:
 while (!shutdown.load(.acquire)) {
     const stream = server.accept(io) catch |err| {
-        if (shutdown.load(.acquire)) break;
-        std.debug.print("Accept error: {}\n", .{err});
-        continue;
+  if (shutdown.load(.acquire)) break;
+  std.debug.print("Accept error: {}\n", .{err});
+  continue;
     };
     // Handle connection...
 }
@@ -207,35 +207,35 @@ pub fn main() !void {
 
     const addr = try std.Io.net.IpAddress.parse("127.0.0.1", 8080);
     var server = try addr.listen(io, .{
-        .reuse_address = true,
-        .kernel_backlog = 64,
+  .reuse_address = true,
+  .kernel_backlog = 64,
     });
     defer server.deinit(io);
 
     std.debug.print("Echo server listening on 127.0.0.1:8080\n", .{});
 
     while (true) {
-        var stream = try server.accept(io);
-        defer stream.close(io);
+  var stream = try server.accept(io);
+  defer stream.close(io);
 
-        // Read and echo back lines
-        var buf: [1024]u8 = undefined;
-        var reader = stream.reader(io, &buf);
+  // Read and echo back lines
+  var buf: [1024]u8 = undefined;
+  var reader = stream.reader(io, &buf);
 
-        while (true) {
-            const line = reader.interface.takeDelimiterInclusive('\n') catch |err| {
-                if (err == error.EndOfStream) break;
-                return err;
-            };
+  while (true) {
+      const line = reader.interface.takeDelimiterInclusive('\n') catch |err| {
+          if (err == error.EndOfStream) break;
+          return err;
+      };
 
-            var wbuf: [1024]u8 = undefined;
-            var writer = stream.writer(io, &wbuf);
-            try writer.interface.writeAll("Echo: ");
-            try writer.interface.writeAll(line);
-            try writer.interface.flush();
-        }
+      var wbuf: [1024]u8 = undefined;
+      var writer = stream.writer(io, &wbuf);
+      try writer.interface.writeAll("Echo: ");
+      try writer.interface.writeAll(line);
+      try writer.interface.flush();
+  }
 
-        std.debug.print("Client disconnected.\n", .{});
+  std.debug.print("Client disconnected.\n", .{});
     }
 }
 ```
@@ -252,16 +252,16 @@ fn handleConnection(io: std.Io, stream: std.Io.net.Stream) void {
     var reader = stream.reader(io, &buf);
 
     while (true) {
-        const data = reader.interface.takeDelimiterInclusive('\n') catch |err| {
-            if (err == error.EndOfStream) break;
-            std.debug.print("Read error: {}\n", .{err});
-            return;
-        };
+  const data = reader.interface.takeDelimiterInclusive('\n') catch |err| {
+      if (err == error.EndOfStream) break;
+      std.debug.print("Read error: {}\n", .{err});
+      return;
+  };
 
-        var wbuf: [1024]u8 = undefined;
-        var writer = stream.writer(io, &wbuf);
-        writer.interface.writeAll(data) catch return;
-        writer.interface.flush() catch return;
+  var wbuf: [1024]u8 = undefined;
+  var writer = stream.writer(io, &wbuf);
+  writer.interface.writeAll(data) catch return;
+  writer.interface.flush() catch return;
     }
 }
 
@@ -275,19 +275,19 @@ pub fn main() !void {
 
     const addr = try std.Io.net.IpAddress.parse("0.0.0.0", 8080);
     var server = try addr.listen(io, .{
-        .reuse_address = true,
-        .kernel_backlog = 128,
+  .reuse_address = true,
+  .kernel_backlog = 128,
     });
     defer server.deinit(io);
 
     std.debug.print("Multi-threaded server on 0.0.0.0:8080\n", .{});
 
     while (true) {
-        const stream = try server.accept(io);
+  const stream = try server.accept(io);
 
-        // Spawn a thread to handle this connection concurrently
-        const thread = try std.Thread.spawn(.{}, handleConnection, .{ io, stream });
-        thread.detach(); // Don't wait for thread to finish
+  // Spawn a thread to handle this connection concurrently
+  const thread = try std.Thread.spawn(.{}, handleConnection, .{ io, stream });
+  thread.detach(); // Don't wait for thread to finish
     }
 }
 ```
@@ -419,8 +419,8 @@ std.debug.print("Accepted connection from client\n", .{});
 ```zig
 while (true) {
     const stream = server.accept(io) catch |err| {
-        std.debug.print("Accept failed: {}\n", .{err});
-        continue; // Keep accepting other connections
+  std.debug.print("Accept failed: {}\n", .{err});
+  continue; // Keep accepting other connections
     };
 
     // Handle connection (often spawn a thread here)
@@ -473,7 +473,7 @@ while (true) {
 
     // Process this connection completely before accepting the next
     handleConnection(io, stream) catch |err| {
-        std.debug.print("Handler error: {}\n", .{err});
+  std.debug.print("Handler error: {}\n", .{err});
     };
 }
 ```
@@ -515,12 +515,12 @@ const WorkQueue = std.atomic.Queue(std.Io.net.Stream);
 
 fn worker(io: std.Io, queue: *WorkQueue) void {
     while (true) {
-        const node = queue.get() orelse continue;
-        const stream = node.data;
-        defer stream.close(io);
-        defer queue.allocator.destroy(node);
+  const node = queue.get() orelse continue;
+  const stream = node.data;
+  defer stream.close(io);
+  defer queue.allocator.destroy(node);
 
-        handleConnection(io, stream) catch {};
+  handleConnection(io, stream) catch {};
     }
 }
 
@@ -532,15 +532,15 @@ pub fn main() !void {
     // Spawn worker threads
     var workers: [8]std.Thread = undefined;
     for (&workers) |*w| {
-        w.* = try std.Thread.spawn(.{}, worker, .{ io, &queue });
+  w.* = try std.Thread.spawn(.{}, worker, .{ io, &queue });
     }
 
     // Accept and enqueue
     while (true) {
-        const stream = try server.accept(io);
-        const node = try gpa.allocator().create(WorkQueue.Node);
-        node.* = .{ .data = stream };
-        queue.put(node);
+  const stream = try server.accept(io);
+  const node = try gpa.allocator().create(WorkQueue.Node);
+  node.* = .{ .data = stream };
+  queue.put(node);
     }
 }
 ```
@@ -582,8 +582,8 @@ var active_connections = std.atomic.Value(usize).init(0);
 fn handleConnection(io: std.Io, stream: std.Io.net.Stream) void {
     _ = active_connections.fetchAdd(1, .acquire);
     defer {
-        stream.close(io);
-        _ = active_connections.fetchSub(1, .release);
+  stream.close(io);
+  _ = active_connections.fetchSub(1, .release);
     }
 
     // Handle connection...
@@ -594,14 +594,14 @@ pub fn main() !void {
 
     // Accept loop with shutdown check
     while (!shutdown_flag.load(.acquire)) {
-        const stream = server.accept(io) catch |err| {
-            if (shutdown_flag.load(.acquire)) break;
-            std.debug.print("Accept error: {}\n", .{err});
-            continue;
-        };
+  const stream = server.accept(io) catch |err| {
+      if (shutdown_flag.load(.acquire)) break;
+      std.debug.print("Accept error: {}\n", .{err});
+      continue;
+  };
 
-        const thread = try std.Thread.spawn(.{}, handleConnection, .{ io, stream });
-        thread.detach();
+  const thread = try std.Thread.spawn(.{}, handleConnection, .{ io, stream });
+  thread.detach();
     }
 
     // Shutdown sequence
@@ -609,7 +609,7 @@ pub fn main() !void {
 
     // Wait for existing connections to finish
     while (active_connections.load(.acquire) > 0) {
-        std.time.sleep(100 * std.time.ns_per_ms);
+  std.time.sleep(100 * std.time.ns_per_ms);
     }
 
     std.debug.print("Server shutdown complete.\n", .{});
@@ -634,16 +634,16 @@ fn handleConnection(io: std.Io, stream: std.Io.net.Stream) void {
 
     // Simple health check: respond to any GET request
     if (std.mem.startsWith(u8, line, "GET")) {
-        var wbuf: [512]u8 = undefined;
-        var writer = stream.writer(io, &wbuf);
-        writer.interface.writeAll(
-            \\HTTP/1.1 200 OK
-            \\Content-Length: 3
-            \\
-            \\OK
-            \\
-        ) catch return;
-        writer.interface.flush() catch return;
+  var wbuf: [512]u8 = undefined;
+  var writer = stream.writer(io, &wbuf);
+  writer.interface.writeAll(
+      \\HTTP/1.1 200 OK
+      \\Content-Length: 3
+      \\
+      \\OK
+      \\
+  ) catch return;
+  writer.interface.flush() catch return;
     }
 }
 ```
@@ -662,28 +662,28 @@ fn handleConnection(io: std.Io, stream: std.Io.net.Stream) !void {
     var reader = stream.reader(io, &rbuf);
 
     while (true) {
-        const command = reader.interface.takeDelimiterInclusive('\n') catch |err| {
-            if (err == error.EndOfStream) break;
-            return err;
-        };
+  const command = reader.interface.takeDelimiterInclusive('\n') catch |err| {
+      if (err == error.EndOfStream) break;
+      return err;
+  };
 
-        // Parse command (strip newline)
-        const cmd = command[0 .. command.len - 1];
+  // Parse command (strip newline)
+  const cmd = command[0 .. command.len - 1];
 
-        var wbuf: [1024]u8 = undefined;
-        var writer = stream.writer(io, &wbuf);
+  var wbuf: [1024]u8 = undefined;
+  var writer = stream.writer(io, &wbuf);
 
-        if (std.mem.eql(u8, cmd, "PING")) {
-            try writer.interface.writeAll("PONG\n");
-        } else if (std.mem.eql(u8, cmd, "QUIT")) {
-            try writer.interface.writeAll("BYE\n");
-            try writer.interface.flush();
-            break;
-        } else {
-            try writer.interface.writeAll("ERROR: Unknown command\n");
-        }
+  if (std.mem.eql(u8, cmd, "PING")) {
+      try writer.interface.writeAll("PONG\n");
+  } else if (std.mem.eql(u8, cmd, "QUIT")) {
+      try writer.interface.writeAll("BYE\n");
+      try writer.interface.flush();
+      break;
+  } else {
+      try writer.interface.writeAll("ERROR: Unknown command\n");
+  }
 
-        try writer.interface.flush();
+  try writer.interface.flush();
     }
 }
 ```
@@ -875,10 +875,10 @@ test "server accepts connection" {
 
     // Client thread
     const client_thread = try std.Thread.spawn(.{}, struct {
-        fn connect(io2: std.Io, sa: std.Io.net.IpAddress) !void {
-            const stream = try sa.connect(io2, .{});
-            stream.close(io2);
-        }
+  fn connect(io2: std.Io, sa: std.Io.net.IpAddress) !void {
+      const stream = try sa.connect(io2, .{});
+      stream.close(io2);
+  }
     }.connect, .{ io, server_addr });
 
     // Server accepts
@@ -905,8 +905,8 @@ fn handleHttp(io: std.Io, stream: std.Io.net.Stream) !void {
 
     // Skip headers until empty line
     while (true) {
-        const header = try reader.interface.takeDelimiterInclusive('\n');
-        if (header.len <= 2) break; // Empty line (just \r\n)
+  const header = try reader.interface.takeDelimiterInclusive('\n');
+  if (header.len <= 2) break; // Empty line (just \r\n)
     }
 
     // Send response

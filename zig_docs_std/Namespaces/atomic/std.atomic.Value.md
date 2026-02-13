@@ -32,7 +32,7 @@ pub fn main() void {
     // Atomic compare-and-swap
     const result = counter.cmpxchgStrong(1, 100, .seq_cst, .seq_cst);
     if (result == null) {
-        std.debug.print("Successfully changed to 100\n", .{});
+  std.debug.print("Successfully changed to 100\n", .{});
     }
 }
 ```
@@ -318,19 +318,19 @@ const RefCount = struct {
     count: std.atomic.Value(usize),
 
     fn init() RefCount {
-        return .{ .count = std.atomic.Value(usize).init(1) };
+  return .{ .count = std.atomic.Value(usize).init(1) };
     }
 
     fn retain(self: *RefCount) void {
-        _ = self.count.fetchAdd(1, .monotonic);
+  _ = self.count.fetchAdd(1, .monotonic);
     }
 
     fn release(self: *RefCount) bool {
-        if (self.count.fetchSub(1, .release) == 1) {
-            _ = self.count.load(.acquire);  // Sync with other releases
-            return true;  // Last reference
-        }
-        return false;
+  if (self.count.fetchSub(1, .release) == 1) {
+      _ = self.count.load(.acquire);  // Sync with other releases
+      return true;  // Last reference
+  }
+  return false;
     }
 };
 ```
@@ -358,13 +358,13 @@ var shared_max = std.atomic.Value(i32).init(0);
 
 fn updateMax(new_value: i32) void {
     while (true) {
-        const current = shared_max.load(.monotonic);
-        if (new_value <= current) return;  // Already larger
+  const current = shared_max.load(.monotonic);
+  if (new_value <= current) return;  // Already larger
 
-        if (shared_max.cmpxchgWeak(current, new_value, .release, .monotonic) == null) {
-            return;  // Success
-        }
-        // Retry - another thread updated it
+  if (shared_max.cmpxchgWeak(current, new_value, .release, .monotonic) == null) {
+      return;  // Success
+  }
+  // Retry - another thread updated it
     }
 }
 ```

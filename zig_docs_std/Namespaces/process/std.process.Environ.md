@@ -14,18 +14,18 @@ const std = @import("std");
 pub fn main(init: std.process.Init) !void {
     // 1. Check for existence (case-insensitive on Windows)
     if (init.environ_map.contains("PATH")) {
-        // ...
+  // ...
     }
 
     // 2. Get a value (returns ?[]const u8)
     if (init.environ_map.get("HOME")) |home| {
-        std.debug.print("Home: {s}\n", .{home});
+  std.debug.print("Home: {s}\n", .{home});
     }
 
     // 3. Iterate through all variables
     var it = init.environ_map.iterator();
     while (it.next()) |entry| {
-        std.debug.print("{s}={s}\n", .{entry.key_ptr.*, entry.value_ptr.*});
+  std.debug.print("{s}={s}\n", .{entry.key_ptr.*, entry.value_ptr.*});
     }
 }
 ```

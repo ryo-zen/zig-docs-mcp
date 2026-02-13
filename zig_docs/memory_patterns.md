@@ -46,8 +46,8 @@ fn example(allocator: std.mem.Allocator) !void {
 
     // Initialize
     ptr.* = MyStruct{
-        .field1 = 42,
-        .field2 = "hello",
+  .field1 = 42,
+  .field2 = "hello",
     };
 
     // Use ptr...
@@ -169,36 +169,36 @@ const Database = struct {
     allocator: std.mem.Allocator,
 
     fn init(allocator: std.mem.Allocator, pool_size: usize) !Database {
-        // Allocate connection pool
-        const pool = try allocator.alloc(Connection, pool_size);
-        errdefer allocator.free(pool);  // Cleanup if cache alloc fails
+  // Allocate connection pool
+  const pool = try allocator.alloc(Connection, pool_size);
+  errdefer allocator.free(pool);  // Cleanup if cache alloc fails
 
-        // Allocate cache
-        const cache = try allocator.alloc(CacheEntry, 1000);
-        errdefer allocator.free(cache);  // Cleanup if init fails
+  // Allocate cache
+  const cache = try allocator.alloc(CacheEntry, 1000);
+  errdefer allocator.free(cache);  // Cleanup if init fails
 
-        // Initialize connections
-        for (pool) |*conn| {
-            conn.* = try Connection.init(allocator);
-        }
-        // Note: If this fails, errdefer above frees pool memory
-        // but doesn't deinit the successfully initialized connections
-        // For production code, you'd need more sophisticated cleanup
+  // Initialize connections
+  for (pool) |*conn| {
+      conn.* = try Connection.init(allocator);
+  }
+  // Note: If this fails, errdefer above frees pool memory
+  // but doesn't deinit the successfully initialized connections
+  // For production code, you'd need more sophisticated cleanup
 
-        return Database{
-            .connection_pool = pool,
-            .cache = cache,
-            .allocator = allocator,
-        };
+  return Database{
+      .connection_pool = pool,
+      .cache = cache,
+      .allocator = allocator,
+  };
     }
 
     fn deinit(self: *Database) void {
-        // Clean up in reverse order
-        for (self.connection_pool) |*conn| {
-            conn.deinit();
-        }
-        self.allocator.free(self.cache);
-        self.allocator.free(self.connection_pool);
+  // Clean up in reverse order
+  for (self.connection_pool) |*conn| {
+      conn.deinit();
+  }
+  self.allocator.free(self.cache);
+  self.allocator.free(self.connection_pool);
     }
 };
 
@@ -220,10 +220,10 @@ fn init(allocator: std.mem.Allocator) !Database {
 
     var initialized: usize = 0;
     errdefer {
-        // Deinit all successfully initialized connections
-        for (pool[0..initialized]) |*conn| {
-            conn.deinit();
-        }
+  // Deinit all successfully initialized connections
+  for (pool[0..initialized]) |*conn| {
+      conn.deinit();
+  }
     }
 
     // Allocate
@@ -231,8 +231,8 @@ fn init(allocator: std.mem.Allocator) !Database {
 
     // Initialize one by one
     for (pool) |*conn| {
-        conn.* = try Connection.init(allocator);
-        initialized += 1;  // Track successful inits
+  conn.* = try Connection.init(allocator);
+  initialized += 1;  // Track successful inits
     }
 
     return Database{ .connection_pool = pool, .allocator = allocator };
@@ -287,11 +287,11 @@ const Server = struct {
     gpa: std.heap.GeneralPurposeAllocator(.{}),
 
     fn handleRequest(self: *Server, request: Request) !Response {
-        // Arena for this request only
-        var arena = std.heap.ArenaAllocator.init(self.gpa.allocator());
-        defer arena.deinit();
+  // Arena for this request only
+  var arena = std.heap.ArenaAllocator.init(self.gpa.allocator());
+  defer arena.deinit();
 
-        return try processRequest(arena.allocator(), request);
+  return try processRequest(arena.allocator(), request);
     }
 };
 ```
@@ -362,28 +362,28 @@ const Server = struct {
     allocator: std.mem.Allocator,
 
     fn init(allocator: std.mem.Allocator) Server {
-        return Server{
-            .connection_pool = std.heap.MemoryPool(Connection).empty,  // ✅ 0.16
-            .allocator = allocator,
-        };
+  return Server{
+      .connection_pool = std.heap.MemoryPool(Connection).empty,  // ✅ 0.16
+      .allocator = allocator,
+  };
     }
 
     fn deinit(self: *Server) void {
-        self.connection_pool.deinit(self.allocator);  // ✅ Pass allocator (0.16)
+  self.connection_pool.deinit(self.allocator);  // ✅ Pass allocator (0.16)
     }
 
     fn getConnection(self: *Server) !*Connection {
-        // Get from pool (or allocate new)
-        const conn = try self.connection_pool.create(self.allocator);  // ✅ 0.16
-        errdefer self.connection_pool.destroy(conn);
+  // Get from pool (or allocate new)
+  const conn = try self.connection_pool.create(self.allocator);  // ✅ 0.16
+  errdefer self.connection_pool.destroy(conn);
 
-        try conn.init();
-        return conn;
+  try conn.init();
+  return conn;
     }
 
     fn releaseConnection(self: *Server, conn: *Connection) void {
-        conn.deinit();
-        self.connection_pool.destroy(conn);  // Returns to pool
+  conn.deinit();
+  self.connection_pool.destroy(conn);  // Returns to pool
     }
 };
 ```

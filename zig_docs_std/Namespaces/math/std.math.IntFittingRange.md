@@ -66,12 +66,12 @@ pub fn IntFittingRange(comptime from: comptime_int, comptime to: comptime_int) t
     assert(from <= to);
     const signedness: std.builtin.Signedness = if (from < 0) .signed else .unsigned;
     return @Int(
-        signedness,
-        @as(u16, @intFromBool(signedness == .signed)) +
-            switch (if (from < 0) @max(@abs(from) - 1, to) else to) {
-                0 => 0,
-                else => |pos_max| 1 + log2(pos_max),
-            },
+  signedness,
+  @as(u16, @intFromBool(signedness == .signed)) +
+      switch (if (from < 0) @max(@abs(from) - 1, to) else to) {
+          0 => 0,
+          else => |pos_max| 1 + log2(pos_max),
+      },
     );
 }
 ```

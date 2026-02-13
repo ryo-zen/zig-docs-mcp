@@ -77,15 +77,15 @@ const std = @import("std");
 
 pub fn main() void {
     const paths = [_][]const u8{
-        "/usr/local/bin/zig",
-        "src/main.zig",
-        "C:\\Windows\\notepad.exe",
-        "document.txt",
+  "/usr/local/bin/zig",
+  "src/main.zig",
+  "C:\\Windows\\notepad.exe",
+  "document.txt",
     };
 
     for (paths) |path| {
-        const filename = std.fs.path.basename(path);
-        std.debug.print("{s} -> {s}\n", .{ path, filename });
+  const filename = std.fs.path.basename(path);
+  std.debug.print("{s} -> {s}\n", .{ path, filename });
     }
 }
 ```
@@ -125,10 +125,10 @@ pub fn main() !void {
 
     // Works correctly on both POSIX and Windows
     const path = try std.fs.path.join(allocator, &.{
-        "projects",
-        "myapp",
-        "src",
-        "main.zig",
+  "projects",
+  "myapp",
+  "src",
+  "main.zig",
     });
     defer allocator.free(path);
 
@@ -148,11 +148,11 @@ pub fn printPathStructure(path: []const u8) void {
     var depth: usize = 0;
 
     while (it.next()) |component| {
-        // In Zig 0.16, component is a struct with .name field
-        var i: usize = 0;
-        while (i < depth * 2) : (i += 1) std.debug.print(" ", .{});
-        std.debug.print("{s}\n", .{component.name});
-        depth += 1;
+  // In Zig 0.16, component is a struct with .name field
+  var i: usize = 0;
+  while (i < depth * 2) : (i += 1) std.debug.print(" ", .{});
+  std.debug.print("{s}\n", .{component.name});
+  depth += 1;
     }
 }
 

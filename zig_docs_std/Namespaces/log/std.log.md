@@ -38,17 +38,17 @@ if (std.log.logEnabled(.debug, .default)) {
 // In build configuration or std.options
 pub const std_options = struct {
     pub fn logFn(
-        comptime level: std.log.Level,
-        comptime scope: @TypeOf(.enum_literal),
-        comptime format: []const u8,
-        args: anytype,
+  comptime level: std.log.Level,
+  comptime scope: @TypeOf(.enum_literal),
+  comptime format: []const u8,
+  args: anytype,
     ) void {
-        // Custom implementation: write to file, send to network, etc.
-        const prefix = comptime "[{s}] {s}: ";
-        std.debug.print(prefix ++ format ++ "\n", .{
-            @tagName(level),
-            @tagName(scope),
-        } ++ args);
+  // Custom implementation: write to file, send to network, etc.
+  const prefix = comptime "[{s}] {s}: ";
+  std.debug.print(prefix ++ format ++ "\n", .{
+      @tagName(level),
+      @tagName(scope),
+  } ++ args);
     }
 };
 ```
@@ -190,8 +190,8 @@ const std = @import("std");
 
 pub fn loadConfig(path: []const u8) !Config {
     const file = std.fs.cwd().openFile(path, .{}) catch {
-        std.log.warn("Config file not found, using defaults", .{});
-        return Config.default();
+  std.log.warn("Config file not found, using defaults", .{});
+  return Config.default();
     };
     defer file.close();
     // ... load config
@@ -212,8 +212,8 @@ const std = @import("std");
 
 pub fn connectDatabase(url: []const u8) !Database {
     const db = Database.connect(url) catch |e| {
-        std.log.err("Failed to connect to database: {s}", .{@errorName(e)});
-        return e;
+  std.log.err("Failed to connect to database: {s}", .{@errorName(e)});
+  return e;
     };
     return db;
 }
@@ -275,8 +275,8 @@ const std = @import("std");
 pub fn analyzeData(data: []const u8) void {
     // Only compute expensive statistics if debug logging is enabled
     if (std.log.logEnabled(.debug, .default)) {
-        const stats = computeExpensiveStatistics(data);
-        std.log.debug("Analysis: {any}", .{stats});
+  const stats = computeExpensiveStatistics(data);
+  std.log.debug("Analysis: {any}", .{stats});
     }
 }
 
@@ -297,12 +297,12 @@ You can customize logging behavior by providing a custom `logFn` in `std.options
 // In root.zig or build.zig configuration
 pub const std_options = struct {
     pub fn logFn(
-        comptime level: std.log.Level,
-        comptime scope: @TypeOf(.enum_literal),
-        comptime format: []const u8,
-        args: anytype,
+  comptime level: std.log.Level,
+  comptime scope: @TypeOf(.enum_literal),
+  comptime format: []const u8,
+  args: anytype,
     ) void {
-        // Your custom implementation
+  // Your custom implementation
     }
 };
 ```
@@ -331,31 +331,31 @@ pub const MyLib = struct {
     initialized: bool = false,
 
     pub fn init() !MyLib {
-        log.info("Initializing library", .{});
-        log.debug("Performing initialization checks", .{});
+  log.info("Initializing library", .{});
+  log.debug("Performing initialization checks", .{});
 
-        // ... initialization logic
+  // ... initialization logic
 
-        log.info("Library initialized successfully", .{});
-        return MyLib{ .initialized = true };
+  log.info("Library initialized successfully", .{});
+  return MyLib{ .initialized = true };
     }
 
     pub fn process(self: *MyLib, data: []const u8) !void {
-        if (!self.initialized) {
-            log.err("Attempted to process data before initialization", .{});
-            return error.NotInitialized;
-        }
+  if (!self.initialized) {
+      log.err("Attempted to process data before initialization", .{});
+      return error.NotInitialized;
+  }
 
-        log.debug("Processing {d} bytes", .{data.len});
+  log.debug("Processing {d} bytes", .{data.len});
 
-        // ... processing logic
+  // ... processing logic
 
-        log.info("Processed data successfully", .{});
+  log.info("Processed data successfully", .{});
     }
 
     pub fn deinit(self: *MyLib) void {
-        log.info("Shutting down library", .{});
-        self.initialized = false;
+  log.info("Shutting down library", .{});
+  self.initialized = false;
     }
 };
 ```
@@ -373,9 +373,9 @@ pub const std_options = struct {
 
     // Per-scope log levels
     pub const log_scope_levels = &[_]std.log.ScopeLevel{
-        .{ .scope = .http, .level = .debug },     // HTTP module gets debug logs
-        .{ .scope = .database, .level = .warn },  // Database only warns/errors
-        .{ .scope = .auth, .level = .info },      // Auth gets info and above
+  .{ .scope = .http, .level = .debug },     // HTTP module gets debug logs
+  .{ .scope = .database, .level = .warn },  // Database only warns/errors
+  .{ .scope = .auth, .level = .info },      // Auth gets info and above
     };
 };
 
@@ -403,28 +403,28 @@ var log_mutex: std.Thread.Mutex = .{};
 
 pub const std_options = struct {
     pub fn logFn(
-        comptime level: std.log.Level,
-        comptime scope: @TypeOf(.enum_literal),
-        comptime format: []const u8,
-        args: anytype,
+  comptime level: std.log.Level,
+  comptime scope: @TypeOf(.enum_literal),
+  comptime format: []const u8,
+  args: anytype,
     ) void {
-        // Thread-safe file logging
-        log_mutex.lock();
-        defer log_mutex.unlock();
+  // Thread-safe file logging
+  log_mutex.lock();
+  defer log_mutex.unlock();
 
-        if (log_file) |file| {
-            var buffer: [4096]u8 = undefined;
-            var writer = std.Io.Writer.fixed(&buffer);
+  if (log_file) |file| {
+      var buffer: [4096]u8 = undefined;
+      var writer = std.Io.Writer.fixed(&buffer);
 
-            // Format: [LEVEL] scope: message
-            writer.print("[{s}] {s}: ", .{ @tagName(level), @tagName(scope) }) catch return;
-            writer.print(format, args) catch return;
-            writer.writeAll("\n") catch return;
-            writer.flush() catch return;
+      // Format: [LEVEL] scope: message
+      writer.print("[{s}] {s}: ", .{ @tagName(level), @tagName(scope) }) catch return;
+      writer.print(format, args) catch return;
+      writer.writeAll("\n") catch return;
+      writer.flush() catch return;
 
-            const msg = writer.buffered();
-            _ = file.writeAll(std.Io.getStdIo(), msg) catch {};
-        }
+      const msg = writer.buffered();
+      _ = file.writeAll(std.Io.getStdIo(), msg) catch {};
+  }
     }
 };
 
@@ -452,15 +452,15 @@ pub fn processLargeDataset(items: []const Item) !void {
     std.log.info("Processing {d} items", .{items.len});
 
     for (items, 0..) |item, i| {
-        // Expensive operation
-        try processItem(item);
+  // Expensive operation
+  try processItem(item);
 
-        // Only log progress if debug is enabled
-        if (std.log.logEnabled(.debug, .default)) {
-            if (i % 1000 == 0) {
-                std.log.debug("Processed {d}/{d} items", .{ i, items.len });
-            }
-        }
+  // Only log progress if debug is enabled
+  if (std.log.logEnabled(.debug, .default)) {
+      if (i % 1000 == 0) {
+          std.log.debug("Processed {d}/{d} items", .{ i, items.len });
+      }
+  }
     }
 
     std.log.info("Completed processing {d} items", .{items.len});
@@ -469,9 +469,9 @@ pub fn processLargeDataset(items: []const Item) !void {
 fn processItem(item: Item) !void {
     // Avoid expensive formatting if logging is disabled
     if (std.log.logEnabled(.debug, .default)) {
-        const item_info = try formatItemInfo(item);  // Expensive
-        defer item_info.deinit();
-        std.log.debug("Processing item: {s}", .{item_info.slice()});
+  const item_info = try formatItemInfo(item);  // Expensive
+  defer item_info.deinit();
+  std.log.debug("Processing item: {s}", .{item_info.slice()});
     }
 
     // Actual processing logic...
@@ -489,21 +489,21 @@ pub fn loadAndParseConfig(path: []const u8) !Config {
     std.log.debug("Loading config from: {s}", .{path});
 
     const file = std.fs.cwd().openFile(path, .{}) catch |err| {
-        std.log.err("Failed to open config file '{s}': {s}", .{ path, @errorName(err) });
-        return err;
+  std.log.err("Failed to open config file '{s}': {s}", .{ path, @errorName(err) });
+  return err;
     };
     defer file.close();
 
     const contents = file.readToEndAlloc(allocator, 1024 * 1024) catch |err| {
-        std.log.err("Failed to read config file: {s}", .{@errorName(err)});
-        return err;
+  std.log.err("Failed to read config file: {s}", .{@errorName(err)});
+  return err;
     };
     defer allocator.free(contents);
 
     const config = parseConfig(contents) catch |err| {
-        std.log.err("Failed to parse config: {s}", .{@errorName(err)});
-        std.log.warn("Falling back to default configuration", .{});
-        return Config.default();
+  std.log.err("Failed to parse config: {s}", .{@errorName(err)});
+  std.log.warn("Falling back to default configuration", .{});
+  return Config.default();
     };
 
     std.log.info("Config loaded successfully from '{s}'", .{path});
@@ -543,8 +543,8 @@ Maps a specific scope to a log level, allowing per-scope level configuration.
 ```zig
 pub const std_options = struct {
     pub const log_scope_levels = &[_]std.log.ScopeLevel{
-        .{ .scope = .network, .level = .debug },
-        .{ .scope = .parser, .level = .warn },
+  .{ .scope = .network, .level = .debug },
+  .{ .scope = .parser, .level = .warn },
     };
 };
 ```
@@ -646,17 +646,17 @@ std.log functions do not return errors - they are designed to never fail. If the
 
    // Good: only runs formatComplexObject() if debug is enabled
    if (std.log.logEnabled(.debug, .default)) {
-       std.log.debug("Object: {s}", .{formatComplexObject(obj)});
+ std.log.debug("Object: {s}", .{formatComplexObject(obj)});
    }
    ```
 
 3. **Use scoped logging for granular control** - Enable debug logs only for specific modules:
    ```zig
    pub const std_options = struct {
-       pub const log_level = .info;  // Global: info
-       pub const log_scope_levels = &[_]std.log.ScopeLevel{
-           .{ .scope = .problematic_module, .level = .debug },  // This module: debug
-       };
+ pub const log_level = .info;  // Global: info
+ pub const log_scope_levels = &[_]std.log.ScopeLevel{
+     .{ .scope = .problematic_module, .level = .debug },  // This module: debug
+ };
    };
    ```
 
@@ -674,11 +674,11 @@ std.log functions do not return errors - they are designed to never fail. If the
 5. **Batch log output in custom logFn** - If writing to file/network, buffer multiple log messages:
    ```zig
    pub fn logFn(...) void {
-       // Buffer multiple messages, flush periodically
-       buffer.append(formatted_message);
-       if (buffer.len > threshold) {
-           flush_to_destination(buffer);
-       }
+ // Buffer multiple messages, flush periodically
+ buffer.append(formatted_message);
+ if (buffer.len > threshold) {
+     flush_to_destination(buffer);
+ }
    }
    ```
 
@@ -692,8 +692,8 @@ std.log functions do not return errors - they are designed to never fail. If the
 7. **Consider structured logging for analysis** - In custom `logFn`, emit JSON for easy parsing:
    ```zig
    pub fn logFn(...) void {
-       // {"level":"info","scope":"app","msg":"Server started","timestamp":1234567890}
-       writeJsonLogEntry(level, scope, format, args);
+ // {"level":"info","scope":"app","msg":"Server started","timestamp":1234567890}
+ writeJsonLogEntry(level, scope, format, args);
    }
    ```
 

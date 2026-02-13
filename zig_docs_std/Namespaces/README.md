@@ -187,8 +187,8 @@ pub fn main() !void {
     defer std.process.argsFree(std.heap.page_allocator, args);
 
     if (args.len < 2) {
-        std.debug.print("Usage: program <number>\n", .{});
-        return;
+  std.debug.print("Usage: program <number>\n", .{});
+  return;
     }
 
     const num = try std.fmt.parseInt(i32, args[1], 10);

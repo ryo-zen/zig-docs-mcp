@@ -16,7 +16,7 @@ pub fn main(init: std.process.Init) !void {
     defer args.deinit();
 
     while (args.next()) |arg| {
-        std.debug.print("Arg: {s}\n", .{arg});
+  std.debug.print("Arg: {s}\n", .{arg});
     }
 }
 ```
@@ -165,9 +165,9 @@ const std = @import("std");
 
 pub fn main(init: std.process.Init) !void {
     var child = try std.process.spawn(init.io, .{
-        .argv = &[_][]const u8{ "echo", "Hello, World!" },
-        .stdout = .pipe,
-        .stderr = .pipe,
+  .argv = &[_][]const u8{ "echo", "Hello, World!" },
+  .stdout = .pipe,
+  .stderr = .pipe,
     });
 
     var stdout_list: std.ArrayList(u8) = .empty;
@@ -238,7 +238,7 @@ pub fn main(init: std.process.Init) !void {
     _ = args.skip();
 
     while (args.next()) |arg| {
-        std.debug.print("Argument: {s}\n", .{arg});
+  std.debug.print("Argument: {s}\n", .{arg});
     }
 }
 ```
@@ -282,24 +282,24 @@ const std = @import("std");
 
 pub fn main(init: std.process.Init) !void {
     const result = try std.process.run(init.gpa, init.io, .{
-        .argv = &[_][]const u8{ "git", "status", "--short" },
+  .argv = &[_][]const u8{ "git", "status", "--short" },
     });
     defer init.gpa.free(result.stdout);
     defer init.gpa.free(result.stderr);
 
     switch (result.term) {
-        .exited => |code| {
-            if (code == 0) {
-                std.debug.print("Git status:\n{s}\n", .{result.stdout});
-            } else {
-                std.debug.print("Git failed with code {}\n", .{code});
-                std.debug.print("Error: {s}\n", .{result.stderr});
-            }
-        },
-        .signal => |sig| {
-            std.debug.print("Process killed by signal {}\n", .{sig});
-        },
-        else => {},
+  .exited => |code| {
+      if (code == 0) {
+          std.debug.print("Git status:\n{s}\n", .{result.stdout});
+      } else {
+          std.debug.print("Git failed with code {}\n", .{code});
+          std.debug.print("Error: {s}\n", .{result.stderr});
+      }
+  },
+  .signal => |sig| {
+      std.debug.print("Process killed by signal {}\n", .{sig});
+  },
+  else => {},
     }
 }
 ```
@@ -384,10 +384,10 @@ const std = @import("std");
 
 pub fn main(init: std.process.Init) !void {
     if (try std.process.getEnvVarOwned(init.gpa, "HOME")) |home| {
-        defer init.gpa.free(home);
-        std.debug.print("Home directory: {s}\n", .{home});
+  defer init.gpa.free(home);
+  std.debug.print("Home directory: {s}\n", .{home});
     } else {
-        std.debug.print("HOME not set\n", .{});
+  std.debug.print("HOME not set\n", .{});
     }
 }
 ```
@@ -515,13 +515,13 @@ pub fn main(init: std.process.Init) !void {
     _ = args.skip();
 
     const input_file = args.next() orelse {
-        std.debug.print("Usage: program <input-file> <output-file>\n", .{});
-        std.process.exit(1);
+  std.debug.print("Usage: program <input-file> <output-file>\n", .{});
+  std.process.exit(1);
     };
 
     const output_file = args.next() orelse {
-        std.debug.print("Usage: program <input-file> <output-file>\n", .{});
-        std.process.exit(1);
+  std.debug.print("Usage: program <input-file> <output-file>\n", .{});
+  std.process.exit(1);
     };
 
     std.debug.print("Processing {s} -> {s}\n", .{input_file, output_file});
@@ -539,14 +539,14 @@ const std = @import("std");
 
 fn runGitCommand(init: std.process.Init) !void {
     const result = try std.process.run(init.gpa, init.io, .{
-        .argv = &[_][]const u8{ "git", "rev-parse", "HEAD" },
+  .argv = &[_][]const u8{ "git", "rev-parse", "HEAD" },
     });
     defer init.gpa.free(result.stdout);
     defer init.gpa.free(result.stderr);
 
     if (result.term != .exited or result.term.exited != 0) {
-        std.debug.print("Git command failed: {s}\n", .{result.stderr});
-        return error.GitFailed;
+  std.debug.print("Git command failed: {s}\n", .{result.stderr});
+  return error.GitFailed;
     }
 
     const commit_hash = std.mem.trim(u8, result.stdout, &std.ascii.whitespace);
@@ -563,10 +563,10 @@ const std = @import("std");
 
 pub fn compressData(init: std.process.Init, data: []const u8) ![]u8 {
     var child = try std.process.spawn(init.io, .{
-        .argv = &[_][]const u8{ "gzip", "-c" },
-        .stdin = .pipe,
-        .stdout = .pipe,
-        .stderr = .pipe,
+  .argv = &[_][]const u8{ "gzip", "-c" },
+  .stdin = .pipe,
+  .stdout = .pipe,
+  .stderr = .pipe,
     });
     errdefer child.kill(init.io);
 
@@ -585,7 +585,7 @@ pub fn compressData(init: std.process.Init, data: []const u8) ![]u8 {
 
     const term = try child.wait(init.io);
     if (term != .exited or term.exited != 0) {
-        return error.CompressionFailed;
+  return error.CompressionFailed;
     }
 
     return try stdout_list.toOwnedSlice(init.gpa);
@@ -609,8 +609,8 @@ pub fn runWithCustomEnv(init: std.process.Init) !void {
     try env_map.put("LOG_LEVEL", "debug");
 
     var child = try std.process.spawn(init.io, .{
-        .argv = &[_][]const u8{"./my_program"},
-        .environ_map = &env_map,
+  .argv = &[_][]const u8{"./my_program"},
+  .environ_map = &env_map,
     });
 
     const term = try child.wait(init.io);
@@ -628,18 +628,18 @@ const std = @import("std");
 pub fn runPipeline(init: std.process.Init) ![]u8 {
     // First command: cat file.txt
     var cat = try std.process.spawn(init.io, .{
-        .argv = &[_][]const u8{ "cat", "file.txt" },
-        .stdout = .pipe,
-        .stderr = .pipe,
+  .argv = &[_][]const u8{ "cat", "file.txt" },
+  .stdout = .pipe,
+  .stderr = .pipe,
     });
     defer _ = cat.wait(init.io) catch {};
 
     // Second command: grep pattern
     var grep = try std.process.spawn(init.io, .{
-        .argv = &[_][]const u8{ "grep", "pattern" },
-        .stdin = .pipe,
-        .stdout = .pipe,
-        .stderr = .pipe,
+  .argv = &[_][]const u8{ "grep", "pattern" },
+  .stdin = .pipe,
+  .stdout = .pipe,
+  .stderr = .pipe,
     });
     defer _ = grep.wait(init.io) catch {};
 
@@ -662,7 +662,7 @@ pub fn runPipeline(init: std.process.Init) ![]u8 {
     defer grep_stderr.deinit(init.gpa);
 
     try grep.collectOutput(init.gpa, &grep_stdout, &grep_stderr, 10 * 1024 * 1024);
-    
+
     _ = try grep.wait(init.io);
 
     return try grep_stdout.toOwnedSlice(init.gpa);
@@ -710,14 +710,14 @@ Describes how a process terminated.
 const term = try child.wait(io);
 switch (term) {
     .exited => |code| {
-        if (code == 0) {
-            std.debug.print("Success!\n", .{});
-        } else {
-            std.debug.print("Failed with code {}\n", .{code});
-        }
+  if (code == 0) {
+      std.debug.print("Success!\n", .{});
+  } else {
+      std.debug.print("Failed with code {}\n", .{code});
+  }
     },
     .signal => |sig| {
-        std.debug.print("Killed by signal {}\n", .{sig});
+  std.debug.print("Killed by signal {}\n", .{sig});
     },
     else => {},
 }

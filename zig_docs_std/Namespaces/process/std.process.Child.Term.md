@@ -34,14 +34,14 @@ The process terminated for an unknown or platform-specific reason that does not 
 const term = try child.wait(io);
 switch (term) {
     .exited => |code| {
-        if (code == 0) {
-            std.debug.print("Success\n", .{});
-        } else {
-            std.debug.print("Failed with code {d}\n", .{code});
-        }
+  if (code == 0) {
+      std.debug.print("Success\n", .{});
+  } else {
+      std.debug.print("Failed with code {d}\n", .{code});
+  }
     },
     .signal => |sig| {
-        std.debug.print("Terminated by signal: {s} ({d})\n", .{ @tagName(sig), @intFromEnum(sig) });
+  std.debug.print("Terminated by signal: {s} ({d})\n", .{ @tagName(sig), @intFromEnum(sig) });
     },
     .stopped => |s| std.debug.print("Stopped by signal {d}\n", .{s}),
     .unknown => |u| std.debug.print("Unknown termination: {d}\n", .{u}),

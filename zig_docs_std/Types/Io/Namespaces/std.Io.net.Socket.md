@@ -109,8 +109,8 @@ Same as `receive`, but fails with `error.Timeout` if no data is received within 
 ```zig
 const timeout = std.Io.Timeout{
     .duration = .{
-        .raw = std.Io.Duration.fromMilliseconds(100),
-        .clock = .awake,
+  .raw = std.Io.Duration.fromMilliseconds(100),
+  .clock = .awake,
     },
 };
 const msg = try socket.receiveTimeout(io, &buf, timeout);

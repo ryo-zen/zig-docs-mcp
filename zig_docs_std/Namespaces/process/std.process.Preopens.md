@@ -42,9 +42,9 @@ const std = @import("std");
 pub fn main(init: std.process.Init) !void {
     // Attempt to get a pre-opened directory named "data"
     if (init.preopens.get("data")) |resource| {
-        const dir = resource.dir;
-        // Use the directory...
-        _ = dir;
+  const dir = resource.dir;
+  // Use the directory...
+  _ = dir;
     }
 }
 ```

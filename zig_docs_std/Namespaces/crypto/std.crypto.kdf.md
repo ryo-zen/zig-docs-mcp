@@ -68,10 +68,10 @@ pub fn deriveSessionKeys(shared_secret: [32]u8) struct {
     Hkdf.expand(&server_iv, prk, "server-write-iv", .{});
 
     return .{
-        .client_write_key = client_key,
-        .server_write_key = server_key,
-        .client_write_iv = client_iv,
-        .server_write_iv = server_iv,
+  .client_write_key = client_key,
+  .server_write_key = server_key,
+  .client_write_iv = client_iv,
+  .server_write_iv = server_iv,
     };
 }
 ```

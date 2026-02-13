@@ -22,13 +22,13 @@ pub fn main(init: std.process.Init) !void {
 
     // 3. Use the provided Io interface
     var child = try std.process.spawn(init.io, .{
-        .argv = &[_][]const u8{"ls"},
+  .argv = &[_][]const u8{"ls"},
     });
     _ = try child.wait(init.io);
 
     // 4. Access pre-parsed environment variables
     if (init.environ_map.get("USER")) |user| {
-        std.debug.print("Hello, {s}!\n", .{user});
+  std.debug.print("Hello, {s}!\n", .{user});
     }
 }
 ```
@@ -37,7 +37,7 @@ pub fn main(init: std.process.Init) !void {
 
 ## Overview
 
-`std.process.Init` is a structure provided by the Zig runtime to your `main` function. It encapsulates the most common resources a program needs, pre-initialized and ready for use. 
+`std.process.Init` is a structure provided by the Zig runtime to your `main` function. It encapsulates the most common resources a program needs, pre-initialized and ready for use.
 
 This pattern replaces the manual initialization of allocators and fetching of arguments/environment variables that was common in previous Zig versions.
 

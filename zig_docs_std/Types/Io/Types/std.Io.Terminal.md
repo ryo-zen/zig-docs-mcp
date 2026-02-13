@@ -181,18 +181,18 @@ const std = @import("std");
 
 pub fn printStatus(term: *std.Io.Terminal, status: enum { success, warning, error_ }) !void {
     switch (status) {
-        .success => {
-            try term.setColor(.green);
-            try term.writer.writeAll("✓ ");
-        },
-        .warning => {
-            try term.setColor(.yellow);
-            try term.writer.writeAll("⚠ ");
-        },
-        .error_ => {
-            try term.setColor(.red);
-            try term.writer.writeAll("✗ ");
-        },
+  .success => {
+      try term.setColor(.green);
+      try term.writer.writeAll("✓ ");
+  },
+  .warning => {
+      try term.setColor(.yellow);
+      try term.writer.writeAll("⚠ ");
+  },
+  .error_ => {
+      try term.setColor(.red);
+      try term.writer.writeAll("✗ ");
+  },
     }
     try term.setColor(.reset);
 }
@@ -247,8 +247,8 @@ If your color output doesn't work, check:
    ```zig
    // setColor doesn't error on no_color mode - it just skips color output
    term.setColor(.red) catch |err| {
-       // Handle WriteFailed or Unexpected errors
-       std.debug.print("Color error: {s}\n", .{@errorName(err)});
+ // Handle WriteFailed or Unexpected errors
+ std.debug.print("Color error: {s}\n", .{@errorName(err)});
    };
    ```
 
@@ -262,15 +262,15 @@ If your color output doesn't work, check:
    ```zig
    // ❌ DON'T: Set color for each line
    for (errors) |err| {
-       try term.setColor(.red);
-       try term.writer.print("{s}\n", .{err});
-       try term.setColor(.reset);
+ try term.setColor(.red);
+ try term.writer.print("{s}\n", .{err});
+ try term.setColor(.reset);
    }
 
    // ✅ DO: Set color once for all lines
    try term.setColor(.red);
    for (errors) |err| {
-       try term.writer.print("{s}\n", .{err});
+ try term.writer.print("{s}\n", .{err});
    }
    try term.setColor(.reset);
    ```
@@ -278,11 +278,11 @@ If your color output doesn't work, check:
 2. **Check mode before coloring**: Skip color operations if terminal doesn't support them
    ```zig
    if (term.mode != .no_color) {
-       try term.setColor(.green);
+ try term.setColor(.green);
    }
    try term.writer.writeAll("Message\n");
    if (term.mode != .no_color) {
-       try term.setColor(.reset);
+ try term.setColor(.reset);
    }
    ```
 

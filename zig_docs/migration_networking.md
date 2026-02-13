@@ -62,10 +62,10 @@ pub fn main() !void {
     defer listener.deinit();
 
     while (true) {
-        const conn = try listener.accept();
-        defer conn.stream.close();
+  const conn = try listener.accept();
+  defer conn.stream.close();
 
-        // Handle connection
+  // Handle connection
     }
 }
 ```
@@ -89,10 +89,10 @@ pub fn main() !void {
     defer listener.close(io);
 
     while (true) {
-        const conn = try listener.accept(io);
-        defer conn.close(io);
+  const conn = try listener.accept(io);
+  defer conn.close(io);
 
-        // Handle connection
+  // Handle connection
     }
 }
 ```
@@ -149,9 +149,9 @@ const std = @import("std");
 pub fn main() !void {
     const addr = try std.net.Address.parseIp4("0.0.0.0", 9000);
     const socket = try std.posix.socket(
-        std.posix.AF.INET,
-        std.posix.SOCK.DGRAM,
-        0
+  std.posix.AF.INET,
+  std.posix.SOCK.DGRAM,
+  0
     );
     defer std.posix.close(socket);
 
@@ -202,15 +202,15 @@ pub fn main() !void {
     defer listener.close(io);
 
     while (true) {
-        const conn = try listener.accept(io);
-        defer conn.close(io);
+  const conn = try listener.accept(io);
+  defer conn.close(io);
 
-        std.debug.print("Client connected\n", .{});
+  std.debug.print("Client connected\n", .{});
 
-        var buffer: [1024]u8 = undefined;
-        const bytes_read = try conn.read(io, &buffer);
+  var buffer: [1024]u8 = undefined;
+  const bytes_read = try conn.read(io, &buffer);
 
-        try conn.writeAll(io, buffer[0..bytes_read]);
+  try conn.writeAll(io, buffer[0..bytes_read]);
     }
 }
 ```

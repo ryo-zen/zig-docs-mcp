@@ -2,6 +2,6 @@
 
 ## Errors
 
-NegativeIntoUnsigned  
+NegativeIntoUnsigned
 
-TargetTooSmall  
+TargetTooSmall

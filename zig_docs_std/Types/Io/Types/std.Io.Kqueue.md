@@ -288,10 +288,10 @@ pub fn main() !void {
     defer server.close(io);
 
     while (true) {
-        const client = try server.accept(io);
-        defer client.stream.close(io);
+  const client = try server.accept(io);
+  defer client.stream.close(io);
 
-        // Handle client...
+  // Handle client...
     }
 }
 ```

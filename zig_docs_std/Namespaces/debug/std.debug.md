@@ -114,11 +114,11 @@ const std = @import("std");
 
 pub fn printResolvedLocation(symbol: std.debug.Symbol) void {
     if (symbol.source_location) |loc| {
-        std.debug.print("{s}:{d}:{d}\n", .{
-            loc.file_name,
-            loc.line,
-            loc.column,
-        });
+  std.debug.print("{s}:{d}:{d}\n", .{
+      loc.file_name,
+      loc.line,
+      loc.column,
+  });
     }
 }
 ```
@@ -238,7 +238,7 @@ pub fn find(items: []const i32, target: i32) ?usize {
     std.debug.assert(items.len > 0); // Catch empty array during development
 
     for (items, 0..) |item, i| {
-        if (item == target) return i;
+  if (item == target) return i;
     }
     return null;
 }
@@ -319,7 +319,7 @@ const std = @import("std");
 pub fn captureTrace() std.builtin.StackTrace {
     var addrs: [32]usize = undefined;
     const trace = std.debug.captureCurrentStackTrace(.{
-        .first_address = @returnAddress(),
+  .first_address = @returnAddress(),
     }, &addrs);
     return trace;
 }
@@ -417,8 +417,8 @@ pub fn saveTrace() void {
 
 pub fn printSavedTrace() void {
     if (saved_trace) |*trace| {
-        std.debug.print("Saved stack trace:\n", .{});
-        std.debug.dumpStackTrace(trace);
+  std.debug.print("Saved stack trace:\n", .{});
+  std.debug.dumpStackTrace(trace);
     }
 }
 
@@ -447,7 +447,7 @@ const std = @import("std");
 
 pub fn safeDivide(a: i32, b: i32) i32 {
     if (b == 0) {
-        std.debug.panic("Division by zero: {d} / {d}", .{ a, b });
+  std.debug.panic("Division by zero: {d} / {d}", .{ a, b });
     }
     return @divExact(a, b);
 }
@@ -475,8 +475,8 @@ const std = @import("std");
 
 pub fn validateInput(value: i32) void {
     if (value < 0) {
-        // Stack trace will start from caller, not this function
-        std.debug.panicExtra(@returnAddress(), "Invalid value: {d}", .{value});
+  // Stack trace will start from caller, not this function
+  std.debug.panicExtra(@returnAddress(), "Invalid value: {d}", .{value});
     }
 }
 ```
@@ -510,9 +510,9 @@ const std = @import("std");
 
 pub fn main() void {
     const packet = [_]u8{
-        0x00, 0x01, 0x02, 0x03,
-        0xDE, 0xAD, 0xBE, 0xEF,
-        0x48, 0x65, 0x6C, 0x6C, 0x6F, // "Hello"
+  0x00, 0x01, 0x02, 0x03,
+  0xDE, 0xAD, 0xBE, 0xEF,
+  0x48, 0x65, 0x6C, 0x6C, 0x6F, // "Hello"
     };
 
     std.debug.print("Packet dump:\n", .{});
@@ -572,7 +572,7 @@ pub fn printCurrentFunction(gpa: std.mem.Allocator, io: std.Io) !void {
 
     std.debug.print("Current function: {s}\n", .{symbol.name orelse "<unknown>"});
     if (symbol.source_location) |loc| {
-        std.debug.print("  at {s}:{d}\n", .{ loc.file_name, loc.line });
+  std.debug.print("  at {s}:{d}\n", .{ loc.file_name, loc.line });
     }
 }
 ```
@@ -639,9 +639,9 @@ const std = @import("std");
 
 pub fn main() void {
     if (std.debug.inValgrind()) {
-        std.debug.print("Running under Valgrind\n", .{});
+  std.debug.print("Running under Valgrind\n", .{});
     } else {
-        std.debug.print("Running natively\n", .{});
+  std.debug.print("Running natively\n", .{});
     }
 }
 ```
@@ -703,9 +703,9 @@ pub fn processData(data: []const u8) !void {
     std.debug.print("Processing {d} bytes\n", .{data.len});
 
     for (data, 0..) |byte, i| {
-        if (byte == 0) {
-            std.debug.print("Found null byte at index {d}\n", .{i});
-        }
+  if (byte == 0) {
+      std.debug.print("Found null byte at index {d}\n", .{i});
+  }
     }
 
     std.debug.print("Processing complete\n", .{});
@@ -739,10 +739,10 @@ fn riskyOperation(value: i32) MyError!i32 {
 
 pub fn main() void {
     const result = riskyOperation(-5) catch |err| {
-        std.debug.print("Error occurred: {s}\n", .{@errorName(err)});
-        std.debug.print("Stack trace:\n", .{});
-        std.debug.dumpCurrentStackTrace(.{});
-        return;
+  std.debug.print("Error occurred: {s}\n", .{@errorName(err)});
+  std.debug.print("Stack trace:\n", .{});
+  std.debug.dumpCurrentStackTrace(.{});
+  return;
     };
 
     std.debug.print("Result: {d}\n", .{result});
@@ -772,9 +772,9 @@ fn customPanicHandler(msg: []const u8, trace: ?*std.builtin.StackTrace, ret_addr
     term.reset() catch {};
 
     if (trace) |t| {
-        std.debug.dumpStackTrace(t);
+  std.debug.dumpStackTrace(t);
     } else {
-        std.debug.dumpCurrentStackTrace(.{});
+  std.debug.dumpCurrentStackTrace(.{});
     }
 
     // Could write to log file here...
@@ -802,28 +802,28 @@ pub const LinkedList = struct {
     len: usize = 0,
 
     pub const Node = struct {
-        data: i32,
-        next: ?*Node = null,
+  data: i32,
+  next: ?*Node = null,
     };
 
     pub fn append(self: *LinkedList, node: *Node) void {
-        // Validate invariants
-        std.debug.assert(node.next == null);
-        std.debug.assert(if (self.head == null) self.tail == null else true);
-        std.debug.assert(if (self.len == 0) self.head == null else true);
+  // Validate invariants
+  std.debug.assert(node.next == null);
+  std.debug.assert(if (self.head == null) self.tail == null else true);
+  std.debug.assert(if (self.len == 0) self.head == null else true);
 
-        if (self.tail) |tail| {
-            tail.next = node;
-            self.tail = node;
-        } else {
-            self.head = node;
-            self.tail = node;
-        }
-        self.len += 1;
+  if (self.tail) |tail| {
+      tail.next = node;
+      self.tail = node;
+  } else {
+      self.head = node;
+      self.tail = node;
+  }
+  self.len += 1;
 
-        // Validate postconditions
-        std.debug.assert(self.tail == node);
-        std.debug.assert(self.len > 0);
+  // Validate postconditions
+  std.debug.assert(self.tail == node);
+  std.debug.assert(self.len > 0);
     }
 };
 
@@ -851,11 +851,11 @@ pub fn parsePacket(data: []const u8) !void {
 
     const magic = std.mem.readInt(u32, data[0..4], .big);
     if (magic != 0xDEADBEEF) {
-        std.debug.print("Invalid magic number: 0x{x}\n", .{magic});
-        std.debug.print("Expected: 0xDEADBEEF\n", .{});
-        std.debug.print("Full packet:\n", .{});
-        std.debug.dumpHex(data);
-        return error.InvalidMagic;
+  std.debug.print("Invalid magic number: 0x{x}\n", .{magic});
+  std.debug.print("Expected: 0xDEADBEEF\n", .{});
+  std.debug.print("Full packet:\n", .{});
+  std.debug.dumpHex(data);
+  return error.InvalidMagic;
     }
 
     std.debug.print("Valid packet\n", .{});
@@ -870,7 +870,7 @@ pub fn main() !void {
 
     std.debug.print("\n=== Parsing invalid packet ===\n", .{});
     parsePacket(&invalid) catch |err| {
-        std.debug.print("Caught error: {s}\n", .{@errorName(err)});
+  std.debug.print("Caught error: {s}\n", .{@errorName(err)});
     };
 }
 ```
@@ -1019,7 +1019,7 @@ Whether segfault handlers are enabled by default. Can be overridden in root modu
    ```zig
    // Conditionally compile debug code
    if (builtin.mode == .Debug) {
-       std.debug.print("Debug info: {}\n", .{value});
+ std.debug.print("Debug info: {}\n", .{value});
    }
    ```
 
@@ -1042,16 +1042,16 @@ Whether segfault handlers are enabled by default. Can be overridden in root modu
    ```zig
    // BAD: Capturing trace in tight loop
    for (items) |item| {
-       std.debug.dumpCurrentStackTrace(.{});
-       process(item);
+ std.debug.dumpCurrentStackTrace(.{});
+ process(item);
    }
 
    // GOOD: Only on error paths
    for (items) |item| {
-       process(item) catch |err| {
-           std.debug.dumpCurrentStackTrace(.{});
-           return err;
-       };
+ process(item) catch |err| {
+     std.debug.dumpCurrentStackTrace(.{});
+     return err;
+ };
    }
    ```
 
@@ -1059,8 +1059,8 @@ Whether segfault handlers are enabled by default. Can be overridden in root modu
    ```zig
    var trace_buf: [64]usize = undefined;
    for (checkpoints) |cp| {
-       const trace = std.debug.captureCurrentStackTrace(.{}, &trace_buf);
-       logCheckpoint(cp, trace);
+ const trace = std.debug.captureCurrentStackTrace(.{}, &trace_buf);
+ logCheckpoint(cp, trace);
    }
    ```
 

@@ -12,15 +12,12 @@ Shell$ zig build-exe hello.zig
 $ ./hello
 Hello, World!
 
-      
+Most of the time, it is more appropriate to write to stderr rather than stdout, and
+whether or not the message is successfully written to the stream is irrelevant.
+Also, formatted printing often comes in handy. For this common case,
+there is a simpler API:
 
-      Most of the time, it is more appropriate to write to stderr rather than stdout, and
-      whether or not the message is successfully written to the stream is irrelevant.
-      Also, formatted printing often comes in handy. For this common case,
-      there is a simpler API:
-      
-
-      hello_again.zig
+hello_again.zig
 ```zig
 const std = @import("std");
 
@@ -32,13 +29,8 @@ Shell$ zig build-exe hello_again.zig
 $ ./hello_again
 Hello, World!
 
-      
-
-      In this case, the `!` may be omitted from the return
-      type of `main` because no errors are returned from the function.
-      
-
-      
+In this case, the `!` may be omitted from the return
+type of `main` because no errors are returned from the function.
 
 See also:
 

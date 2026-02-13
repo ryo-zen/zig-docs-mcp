@@ -24,11 +24,11 @@ pub fn main() !void {
     defer allocator.free(cwd);
 
     const rel = try std.fs.path.relative(
-        allocator,
-        cwd,
-        null, // No environment map needed for simple case
-        "/usr/local/bin",
-        "/usr/local/share/doc",
+  allocator,
+  cwd,
+  null, // No environment map needed for simple case
+  "/usr/local/bin",
+  "/usr/local/share/doc",
     );
     defer allocator.free(rel); // Must free!
 
@@ -54,22 +54,22 @@ pub fn main() !void {
 
     // From project root to src file
     const path1 = try std.fs.path.relative(
-        allocator,
-        cwd,
-        null,
-        "/home/user/projects",
-        "/home/user/projects/src/main.zig",
+  allocator,
+  cwd,
+  null,
+  "/home/user/projects",
+  "/home/user/projects/src/main.zig",
     );
     defer allocator.free(path1);
     std.debug.print("{s}\n", .{path1}); // "src/main.zig"
 
     // Between sibling directories
     const path2 = try std.fs.path.relative(
-        allocator,
-        cwd,
-        null,
-        "/home/user/projects/src",
-        "/home/user/projects/tests",
+  allocator,
+  cwd,
+  null,
+  "/home/user/projects/src",
+  "/home/user/projects/tests",
     );
     defer allocator.free(path2);
     std.debug.print("{s}\n", .{path2}); // "../tests"

@@ -2,4 +2,4 @@
 
 ## Errors
 
-UnknownTotalSystemMemory  
+UnknownTotalSystemMemory

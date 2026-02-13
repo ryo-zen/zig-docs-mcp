@@ -71,16 +71,16 @@ Extension:
 
 ## Functions
 
-`pub fn array( comptime Len: type, comptime Elem: type, elems: anytype, ) [@divExact(@bitSizeOf(Len), 8) + @divExact(@bitSizeOf(Elem), 8) * elems.len]u8`  
+`pub fn array( comptime Len: type, comptime Elem: type, elems: anytype, ) [@divExact(@bitSizeOf(Len), 8) + @divExact(@bitSizeOf(Elem), 8) * elems.len]u8`
 
-`pub fn emptyHash(comptime Hash: type) [Hash.digest_length]u8`  
+`pub fn emptyHash(comptime Hash: type) [Hash.digest_length]u8`
 
-`pub fn extension(et: ExtensionType, bytes: anytype) [2 + 2 + bytes.len]u8`  
+`pub fn extension(et: ExtensionType, bytes: anytype) [2 + 2 + bytes.len]u8`
 
-`pub fn hkdfExpandLabel( comptime Hkdf: type, key: [Hkdf.prk_length]u8, label: []const u8, context: []const u8, comptime len: usize, ) [len]u8`  
+`pub fn hkdfExpandLabel( comptime Hkdf: type, key: [Hkdf.prk_length]u8, label: []const u8, context: []const u8, comptime len: usize, ) [len]u8`
 
-`pub fn hmac(comptime Hmac: type, message: []const u8, key: [Hmac.key_length]u8) [Hmac.mac_length]u8`  
+`pub fn hmac(comptime Hmac: type, message: []const u8, key: [Hmac.key_length]u8) [Hmac.mac_length]u8`
 
-`pub fn hmacExpandLabel( comptime Hmac: type, secret: []const u8, label_then_seed: []const []const u8, comptime len: usize, ) [len]u8`  
+`pub fn hmacExpandLabel( comptime Hmac: type, secret: []const u8, label_then_seed: []const []const u8, comptime len: usize, ) [len]u8`
 
-`pub fn int(comptime Int: type, val: Int) [@divExact(@bitSizeOf(Int), 8)]u8`  
+`pub fn int(comptime Int: type, val: Int) [@divExact(@bitSizeOf(Int), 8)]u8`

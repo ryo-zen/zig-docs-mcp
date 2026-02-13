@@ -2,64 +2,64 @@
 
 ## Errors
 
-AccessDenied  
+AccessDenied
 
-AntivirusInterference  
+AntivirusInterference
 On Windows, antivirus software is enabled by default. It can be disabled, but Windows Update sometimes ignores the user's preference and re-enables it. When enabled, antivirus software on Windows intercepts file system operations and makes them significantly slower in addition to possibly failing with this error code.
 
-BadPathName  
+BadPathName
 
-Canceled Cancelable  
+Canceled Cancelable
 Caller has requested the async operation to stop.
 
-DeviceBusy  
+DeviceBusy
 
-FileNotFound  
+FileNotFound
 
-FileSystem  
+FileSystem
 
-FileTooBig  
+FileTooBig
 
-InputOutput  
+InputOutput
 
-IsDir  
+IsDir
 
-NetworkNotFound  
+NetworkNotFound
 On Windows, `\\server` or `\\server\share` was not found.
 
-NoDevice  
+NoDevice
 
-NoSpaceLeft  
+NoSpaceLeft
 
-NotDir  
+NotDir
 
-NotLink  
+NotLink
 
-OperationUnsupported  
+OperationUnsupported
 The operating system does not support an executable learning its own path.
 
-PathAlreadyExists  
+PathAlreadyExists
 
-PermissionDenied  
+PermissionDenied
 
-PipeBusy  
+PipeBusy
 
-ProcessFdQuotaExceeded  
+ProcessFdQuotaExceeded
 
-ProcessNotFound  
+ProcessNotFound
 
-SymLinkLoop  
+SymLinkLoop
 
-SystemFdQuotaExceeded  
+SystemFdQuotaExceeded
 
-SystemResources  
+SystemResources
 
-Unexpected UnexpectedError  
+Unexpected UnexpectedError
 The Operating System returned an undocumented error code.
 
 This error is in theory not possible, but it would be better to handle this error than to invoke undefined behavior.
 
 When this error code is observed, it usually means the Zig Standard Library needs a small patch to add the error code to the error set for the respective function.
 
-UnrecognizedVolume  
+UnrecognizedVolume
 On Windows, the volume does not contain a recognized file system. File system drivers might not be loaded, or the volume may be corrupt.

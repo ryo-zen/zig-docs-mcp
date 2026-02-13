@@ -17,20 +17,20 @@ while (running.load(.acquire)) {
 
     // Check every 30 seconds
     if (now - last_status_time >= 30 and running.load(.acquire)) {
-        printStatus(&components);
-        last_status_time = now;
+  printStatus(&components);
+  last_status_time = now;
     }
 
     // Check every 10 seconds
     if (now - last_reconnection_check >= 10) {
-        last_reconnection_check = now;
-        components.network_manager.maintenance();
+  last_reconnection_check = now;
+  components.network_manager.maintenance();
     }
 
     // Check every 5 seconds
     if (now - last_sync_retry_check >= 5) {
-        last_sync_retry_check = now;
-        components.sync_manager.checkTimeout();
+  last_sync_retry_check = now;
+  components.sync_manager.checkTimeout();
     }
 
     std.time.sleep(100 * std.time.ns_per_ms);
@@ -56,25 +56,25 @@ try io.checkCancel(); // Blocks until SIGINT/SIGTERM
 ```zig
 fn periodicStatus(io: std.Io, components: *NodeComponents) !void {
     while (true) {
-        try io.checkCancel();
-        try io.sleep(std.Io.Duration.fromSeconds(30), std.Io.Clock.monotonic);
-        printStatus(components);
+  try io.checkCancel();
+  try io.sleep(std.Io.Duration.fromSeconds(30), std.Io.Clock.monotonic);
+  printStatus(components);
     }
 }
 
 fn periodicMaintenance(io: std.Io, components: *NodeComponents) !void {
     while (true) {
-        try io.checkCancel();
-        try io.sleep(std.Io.Duration.fromSeconds(10), std.Io.Clock.monotonic);
-        components.network_manager.maintenance();
+  try io.checkCancel();
+  try io.sleep(std.Io.Duration.fromSeconds(10), std.Io.Clock.monotonic);
+  components.network_manager.maintenance();
     }
 }
 
 fn periodicSyncCheck(io: std.Io, components: *NodeComponents) !void {
     while (true) {
-        try io.checkCancel();
-        try io.sleep(std.Io.Duration.fromSeconds(5), std.Io.Clock.monotonic);
-        components.sync_manager.checkTimeout();
+  try io.checkCancel();
+  try io.sleep(std.Io.Duration.fromSeconds(5), std.Io.Clock.monotonic);
+  components.sync_manager.checkTimeout();
     }
 }
 ```
@@ -192,30 +192,30 @@ var initial_sync_done = false;
 // Inside main loop:
 if (!mining_started and components.blockchain.mining_manager != null) {
     const should_start_mining = blk: {
-        const peer_stats = components.network_manager.getPeerStats();
-        if (peer_stats.connected == 0) {
-            if (!initial_sync_done) {
-                const startup_time = 5;
-                std.time.sleep(startup_time * std.time.ns_per_s);
-                initial_sync_done = true;
-                std.log.info("No peers found - starting mining on local chain", .{});
-                break :blk true;
-            } else {
-                break :blk false;
-            }
-        }
+  const peer_stats = components.network_manager.getPeerStats();
+  if (peer_stats.connected == 0) {
+      if (!initial_sync_done) {
+          const startup_time = 5;
+          std.time.sleep(startup_time * std.time.ns_per_s);
+          initial_sync_done = true;
+          std.log.info("No peers found - starting mining on local chain", .{});
+          break :blk true;
+      } else {
+          break :blk false;
+      }
+  }
 
-        if (components.sync_manager.isActive()) {
-            break :blk false;
-        }
+  if (components.sync_manager.isActive()) {
+      break :blk false;
+  }
 
-        break :blk true;
+  break :blk true;
     };
 
     if (should_start_mining) {
-        if (startMiningAfterSync(&components)) {
-            mining_started = true;
-        }
+  if (startMiningAfterSync(&components)) {
+      mining_started = true;
+  }
     }
 }
 ```
@@ -225,32 +225,32 @@ if (!mining_started and components.blockchain.mining_manager != null) {
 fn miningStartupTask(io: std.Io, components: *NodeComponents) !void {
     // Wait for sync to complete or timeout
     const result = io.select(.{
-        .sync_done = waitForSyncComplete(io, components.sync_manager),
-        .timeout = io.async(sleepAndReturn, .{io, 5}),
+  .sync_done = waitForSyncComplete(io, components.sync_manager),
+  .timeout = io.async(sleepAndReturn, .{io, 5}),
     });
 
     switch (result) {
-        .sync_done => |_| {
-            std.log.info("Sync complete, starting mining", .{});
-        },
-        .timeout => |_| {
-            const peer_stats = components.network_manager.getPeerStats();
-            if (peer_stats.connected == 0) {
-                std.log.info("No peers found - starting mining on local chain", .{});
-            }
-        },
+  .sync_done => |_| {
+      std.log.info("Sync complete, starting mining", .{});
+  },
+  .timeout => |_| {
+      const peer_stats = components.network_manager.getPeerStats();
+      if (peer_stats.connected == 0) {
+          std.log.info("No peers found - starting mining on local chain", .{});
+      }
+  },
     }
 
     // Start mining
     if (components.blockchain.mining_manager) |manager| {
-        try manager.startMiningDeferred();
+  try manager.startMiningDeferred();
     }
 }
 
 fn waitForSyncComplete(io: std.Io, sync_manager: *SyncManager) !void {
     while (sync_manager.isActive()) {
-        try io.checkCancel();
-        try io.sleep(std.Io.Duration.fromSeconds(1), std.Io.Clock.monotonic);
+  try io.checkCancel();
+  try io.sleep(std.Io.Duration.fromSeconds(1), std.Io.Clock.monotonic);
     }
 }
 ```
@@ -310,13 +310,13 @@ pub fn main(init: std.process.Init) !void {
 
     // Servers
     if (!config.client_api_disabled) {
-        try tasks.append(try io.concurrent(runClientApi, .{io, allocator, &components, config}));
+  try tasks.append(try io.concurrent(runClientApi, .{io, allocator, &components, config}));
     }
     try tasks.append(try io.concurrent(runRpcServer, .{io, allocator, &components}));
 
     // Mining startup
     if (components.blockchain.mining_manager != null) {
-        try tasks.append(try io.concurrent(miningStartupTask, .{io, &components}));
+  try tasks.append(try io.concurrent(miningStartupTask, .{io, &components}));
     }
 
     std.log.info("✅ ZeiCoin node started successfully", .{});
@@ -332,37 +332,37 @@ pub fn main(init: std.process.Init) !void {
 
 fn periodicStatus(io: std.Io, components: *NodeComponents) !void {
     while (true) {
-        try io.checkCancel();
-        try io.sleep(std.Io.Duration.fromSeconds(30), std.Io.Clock.monotonic);
-        printStatus(components);
+  try io.checkCancel();
+  try io.sleep(std.Io.Duration.fromSeconds(30), std.Io.Clock.monotonic);
+  printStatus(components);
     }
 }
 
 fn periodicMaintenance(io: std.Io, components: *NodeComponents) !void {
     while (true) {
-        try io.checkCancel();
-        try io.sleep(std.Io.Duration.fromSeconds(10), std.Io.Clock.monotonic);
-        components.network_manager.maintenance();
+  try io.checkCancel();
+  try io.sleep(std.Io.Duration.fromSeconds(10), std.Io.Clock.monotonic);
+  components.network_manager.maintenance();
     }
 }
 
 fn periodicSyncCheck(io: std.Io, components: *NodeComponents) !void {
     while (true) {
-        try io.checkCancel();
-        try io.sleep(std.Io.Duration.fromSeconds(5), std.Io.Clock.monotonic);
-        components.sync_manager.checkTimeout();
+  try io.checkCancel();
+  try io.sleep(std.Io.Duration.fromSeconds(5), std.Io.Clock.monotonic);
+  components.sync_manager.checkTimeout();
 
-        const sync_state = components.sync_manager.getSyncState();
-        if (sync_state == .idle or sync_state == .failed) {
-            const our_height = components.blockchain.getHeight() catch 0;
-            const highest = components.network_manager.getHighestPeerHeight();
+  const sync_state = components.sync_manager.getSyncState();
+  if (sync_state == .idle or sync_state == .failed) {
+      const our_height = components.blockchain.getHeight() catch 0;
+      const highest = components.network_manager.getHighestPeerHeight();
 
-            if (highest > our_height) {
-                std.log.info("Auto sync retry: {} blocks behind", .{highest - our_height});
-                // Spawn recovery as sub-task
-                _ = try io.concurrent(syncRecovery, .{components.sync_manager});
-            }
-        }
+      if (highest > our_height) {
+          std.log.info("Auto sync retry: {} blocks behind", .{highest - our_height});
+          // Spawn recovery as sub-task
+          _ = try io.concurrent(syncRecovery, .{components.sync_manager});
+      }
+  }
     }
 }
 

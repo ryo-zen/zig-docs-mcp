@@ -7,6 +7,6 @@ The parsing errors are divided into two categories:
 
 ## Errors
 
-SyntaxError  
+SyntaxError
 
-UnexpectedEndOfInput  
+UnexpectedEndOfInput

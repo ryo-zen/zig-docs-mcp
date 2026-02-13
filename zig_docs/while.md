@@ -1,17 +1,16 @@
 # while
 
 A while loop is used to repeatedly execute an expression until
-      some condition is no longer true.
-      
+some condition is no longer true.
 
-      test_while.zig
+test_while.zig
 ```zig
 const expect = @import("std").testing.expect;
 
 test "while basic" {
     var i: usize = 0;
     while (i 10) {
-        i += 1;
+  i += 1;
     }
     try expect(i == 10);
 }
@@ -20,21 +19,18 @@ Shell$ zig test test_while.zig
 1/1 test_while.test.while basic...OK
 All 1 tests passed.
 
-      
+Use `break` to exit a while loop early.
 
-      Use `break` to exit a while loop early.
-      
-
-      test_while_break.zig
+test_while_break.zig
 ```zig
 const expect = @import("std").testing.expect;
 
 test "while break" {
     var i: usize = 0;
     while (true) {
-        if (i == 10)
-            break;
-        i += 1;
+  if (i == 10)
+      break;
+  i += 1;
     }
     try expect(i == 10);
 }
@@ -43,22 +39,19 @@ Shell$ zig test test_while_break.zig
 1/1 test_while_break.test.while break...OK
 All 1 tests passed.
 
-      
+Use `continue` to jump back to the beginning of the loop.
 
-      Use `continue` to jump back to the beginning of the loop.
-      
-
-      test_while_continue.zig
+test_while_continue.zig
 ```zig
 const expect = @import("std").testing.expect;
 
 test "while continue" {
     var i: usize = 0;
     while (true) {
-        i += 1;
-        if (i 10)
-            continue;
-        break;
+  i += 1;
+  if (i 10)
+      continue;
+  break;
     }
     try expect(i == 10);
 }
@@ -67,13 +60,10 @@ Shell$ zig test test_while_continue.zig
 1/1 test_while_continue.test.while continue...OK
 All 1 tests passed.
 
-      
+While loops support a continue expression which is executed when the loop
+is continued. The `continue` keyword respects this expression.
 
-      While loops support a continue expression which is executed when the loop
-      is continued. The `continue` keyword respects this expression.
-      
-
-      test_while_continue_expression.zig
+test_while_continue_expression.zig
 ```zig
 const expect = @import("std").testing.expect;
 
@@ -87,11 +77,11 @@ test "while loop continue expression, more complicated" {
     var i: usize = 1;
     var j: usize = 1;
     while (i * j 2000) : ({
-        i *= 2;
-        j *= 3;
+  i *= 2;
+  j *= 3;
     }) {
-        const my_ij = i * j;
-        try expect(my_ij 2000);
+  const my_ij = i * j;
+  try expect(my_ij 2000);
     }
 }
 ```
@@ -100,22 +90,16 @@ Shell$ zig test test_while_continue_expression.zig
 2/2 test_while_continue_expression.test.while loop continue expression, more complicated...OK
 All 2 tests passed.
 
-      
+While loops are expressions. The result of the expression is the
+result of the `else` clause of a while loop, which is executed when
+the condition of the while loop is tested as false.
 
-      While loops are expressions. The result of the expression is the
-      result of the `else` clause of a while loop, which is executed when
-      the condition of the while loop is tested as false.
-      
+`break`, like `return`, accepts a value
+        parameter. This is the result of the `while` expression.
+            When you `break` from a while loop, the `else` branch is not
+evaluated.
 
-      
-
-      `break`, like `return`, accepts a value
-              parameter. This is the result of the `while` expression.
-                  When you `break` from a while loop, the `else` branch is not
-      evaluated.
-      
-
-      test_while_else.zig
+test_while_else.zig
 ```zig
 const expect = @import("std").testing.expect;
 
@@ -127,9 +111,9 @@ test "while else" {
 fn rangeHasNumber(begin: usize, end: usize, number: usize) bool {
     var i = begin;
     return while (i 1) {
-        if (i == number) {
-            break true;
-        }
+  if (i == number) {
+      break true;
+  }
     } else false;
 }
 ```
@@ -137,30 +121,27 @@ Shell$ zig test test_while_else.zig
 1/1 test_while_else.test.while else...OK
 All 1 tests passed.
 
-      
 ## [Labeled while](#toc-Labeled-while) §
 
-      
-
 When a `while` loop is labeled, it can be referenced from a `break`
-              or `continue` from within a nested loop:
+        or `continue` from within a nested loop:
 
-      test_while_nested_break.zig
+test_while_nested_break.zig
 ```zig
 test "nested break" {
     outer: while (true) {
-        while (true) {
-            break :outer;
-        }
+  while (true) {
+      break :outer;
+  }
     }
 }
 
 test "nested continue" {
     var i: usize = 0;
     outer: while (i 10) : (i += 1) {
-        while (true) {
-            continue :outer;
-        }
+  while (true) {
+      continue :outer;
+  }
     }
 }
 ```
@@ -169,30 +150,19 @@ Shell$ zig test test_while_nested_break.zig
 2/2 test_while_nested_break.test.nested continue...OK
 All 2 tests passed.
 
-      
-      
 ## [while with Optionals](#toc-while-with-Optionals) §
 
-      
+Just like [if](#if) expressions, while loops can take an optional as the
+condition and capture the payload. When [null](#null) is encountered the loop
+exits.
 
-      Just like [if](#if) expressions, while loops can take an optional as the
-      condition and capture the payload. When [null](#null) is encountered the loop
-      exits.
-      
+When the `|x|` syntax is present on a `while` expression,
+the while condition must have an [Optional Type](#Optional-Type).
 
-      
+The `else` branch is allowed on optional iteration. In this case, it will
+be executed on the first null value encountered.
 
-      When the `|x|` syntax is present on a `while` expression,
-      the while condition must have an [Optional Type](#Optional-Type).
-      
-
-      
-
-      The `else` branch is allowed on optional iteration. In this case, it will
-      be executed on the first null value encountered.
-      
-
-      test_while_null_capture.zig
+test_while_null_capture.zig
 ```zig
 const expect = @import("std").testing.expect;
 
@@ -200,7 +170,7 @@ test "while null capture" {
     var sum1: u32 = 0;
     numbers_left = 3;
     while (eventuallyNullSequence()) |value| {
-        sum1 += value;
+  sum1 += value;
     }
     try expect(sum1 == 3);
 
@@ -208,9 +178,9 @@ test "while null capture" {
     var sum2: u32 = 0;
     numbers_left = 3;
     while (eventuallyNullSequence()) |value| {
-        sum2 += value;
+  sum2 += value;
     } else {
-        try expect(sum2 == 3);
+  try expect(sum2 == 3);
     }
 
     // null capture with a continue expression
@@ -218,7 +188,7 @@ test "while null capture" {
     var sum3: u32 = 0;
     numbers_left = 3;
     while (eventuallyNullSequence()) |value| : (i += 1) {
-        sum3 += value;
+  sum3 += value;
     }
     try expect(i == 3);
 }
@@ -226,8 +196,8 @@ test "while null capture" {
 var numbers_left: u32 = undefined;
 fn eventuallyNullSequence() ?u32 {
     return if (numbers_left == 0) null else blk: {
-        numbers_left -= 1;
-        break :blk numbers_left;
+  numbers_left -= 1;
+  break :blk numbers_left;
     };
 }
 ```
@@ -235,26 +205,17 @@ Shell$ zig test test_while_null_capture.zig
 1/1 test_while_null_capture.test.while null capture...OK
 All 1 tests passed.
 
-      
-
-      
 ## [while with Error Unions](#toc-while-with-Error-Unions) §
 
-      
+Just like [if](#if) expressions, while loops can take an error union as
+the condition and capture the payload or the error code. When the
+condition results in an error code the else branch is evaluated and
+the loop is finished.
 
-      Just like [if](#if) expressions, while loops can take an error union as
-      the condition and capture the payload or the error code. When the
-      condition results in an error code the else branch is evaluated and
-      the loop is finished.
-      
+When the `else |x|` syntax is present on a `while` expression,
+the while condition must have an [Error Union Type](#Error-Union-Type).
 
-      
-
-      When the `else |x|` syntax is present on a `while` expression,
-      the while condition must have an [Error Union Type](#Error-Union-Type).
-      
-
-      test_while_error_capture.zig
+test_while_error_capture.zig
 ```zig
 const expect = @import("std").testing.expect;
 
@@ -262,9 +223,9 @@ test "while error union capture" {
     var sum1: u32 = 0;
     numbers_left = 3;
     while (eventuallyErrorSequence()) |value| {
-        sum1 += value;
+  sum1 += value;
     } else |err| {
-        try expect(err == error.ReachedZero);
+  try expect(err == error.ReachedZero);
     }
 }
 
@@ -272,8 +233,8 @@ var numbers_left: u32 = undefined;
 
 fn eventuallyErrorSequence() anyerror!u32 {
     return if (numbers_left == 0) error.ReachedZero else blk: {
-        numbers_left -= 1;
-        break :blk numbers_left;
+  numbers_left -= 1;
+  break :blk numbers_left;
     };
 }
 ```
@@ -281,19 +242,13 @@ Shell$ zig test test_while_error_capture.zig
 1/1 test_while_error_capture.test.while error union capture...OK
 All 1 tests passed.
 
-      
-
-      
 ## [inline while](#toc-inline-while) §
 
-      
+While loops can be inlined. This causes the loop to be unrolled, which
+allows the code to do some things which only work at compile time,
+such as use types as first class values.
 
-      While loops can be inlined. This causes the loop to be unrolled, which
-      allows the code to do some things which only work at compile time,
-      such as use types as first class values.
-      
-
-      test_inline_while.zig
+test_inline_while.zig
 ```zig
 const expect = @import("std").testing.expect;
 
@@ -301,13 +256,13 @@ test "inline while loop" {
     comptime var i = 0;
     var sum: usize = 0;
     inline while (i 3) : (i += 1) {
-        const T = switch (i) {
-            0 => f32,
-            1 => i8,
-            2 => bool,
-            else => unreachable,
-        };
-        sum += typeNameLength(T);
+  const T = switch (i) {
+      0 => f32,
+      1 => i8,
+      2 => bool,
+      else => unreachable,
+  };
+  sum += typeNameLength(T);
     }
     try expect(sum == 9);
 }
@@ -320,20 +275,11 @@ Shell$ zig test test_inline_while.zig
 1/1 test_inline_while.test.inline while loop...OK
 All 1 tests passed.
 
-      
+It is recommended to use `inline` loops only for one of these reasons:
 
-      It is recommended to use `inline` loops only for one of these reasons:
-      
-
-      
-        
 - You need the loop to execute at [comptime](#comptime) for the semantics to work.
-        
-        You have a benchmark to prove that forcibly unrolling the loop in this way is measurably faster.
-        
-      
-      
-      
+
+  You have a benchmark to prove that forcibly unrolling the loop in this way is measurably faster.
 
 See also:
 

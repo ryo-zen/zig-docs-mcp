@@ -15,19 +15,19 @@ const std = @import("std");
 pub fn main() void {
     // With directory
     if (std.fs.path.dirname("src/utils/parser.zig")) |dir| {
-        std.debug.print("Directory: {s}\n", .{dir}); // "src/utils"
+  std.debug.print("Directory: {s}\n", .{dir}); // "src/utils"
     }
 
     // Root path
     if (std.fs.path.dirname("/etc/passwd")) |dir| {
-        std.debug.print("Directory: {s}\n", .{dir}); // "/etc"
+  std.debug.print("Directory: {s}\n", .{dir}); // "/etc"
     }
 
     // No directory - returns null
     if (std.fs.path.dirname("file.txt")) |dir| {
-        std.debug.print("Directory: {s}\n", .{dir});
+  std.debug.print("Directory: {s}\n", .{dir});
     } else {
-        std.debug.print("No directory component\n", .{}); // ← This executes
+  std.debug.print("No directory component\n", .{}); // ← This executes
     }
 }
 ```

@@ -2,13 +2,13 @@
 
 ## Errors
 
-OutOfMemory  
+OutOfMemory
 
-PermissionDenied  
+PermissionDenied
 
-SystemResources  
+SystemResources
 
-Unexpected UnexpectedError  
+Unexpected UnexpectedError
 The Operating System returned an undocumented error code.
 
 This error is in theory not possible, but it would be better to handle this error than to invoke undefined behavior.

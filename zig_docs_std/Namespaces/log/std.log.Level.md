@@ -26,7 +26,7 @@ Debug: messages only useful for debugging.
 
 ## Functions
 
-`pub fn asText(comptime self: Level) []const u8`  
+`pub fn asText(comptime self: Level) []const u8`
 Returns a string literal of the given level in full text form.
 
 ## Usage Notes

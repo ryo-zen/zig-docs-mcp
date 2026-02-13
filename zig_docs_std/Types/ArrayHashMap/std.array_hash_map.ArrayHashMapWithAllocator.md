@@ -17,13 +17,13 @@ const allocator = gpa.allocator();
 // Define custom hash context
 const StringContext = struct {
     pub fn hash(ctx: @This(), key: []const u8) u32 {
-        _ = ctx;
-        return std.array_hash_map.hashString(key);
+  _ = ctx;
+  return std.array_hash_map.hashString(key);
     }
     pub fn eql(ctx: @This(), a: []const u8, b: []const u8, b_index: usize) bool {
-        _ = ctx;
-        _ = b_index;
-        return std.mem.eql(u8, a, b);
+  _ = ctx;
+  _ = b_index;
+  return std.mem.eql(u8, a, b);
     }
 };
 
@@ -47,15 +47,15 @@ const MyContext = struct {
     seed: u64,
 
     pub fn hash(ctx: @This(), key: u64) u32 {
-        var hasher = std.hash.Wyhash.init(ctx.seed);
-        std.hash.autoHash(&hasher, key);
-        return @truncate(hasher.final());
+  var hasher = std.hash.Wyhash.init(ctx.seed);
+  std.hash.autoHash(&hasher, key);
+  return @truncate(hasher.final());
     }
 
     pub fn eql(ctx: @This(), a: u64, b: u64, b_index: usize) bool {
-        _ = ctx;
-        _ = b_index;
-        return a == b;
+  _ = ctx;
+  _ = b_index;
+  return a == b;
     }
 };
 
@@ -136,13 +136,13 @@ const MyContext = struct {
     seed: u64,
 
     pub fn hash(self: @This(), key: K) u32 {
-        // Return u32 hash of key
-        // Can use self.seed or other state
+  // Return u32 hash of key
+  // Can use self.seed or other state
     }
 
     pub fn eql(self: @This(), a: K, b: K, b_index: usize) bool {
-        // Return true if a equals b
-        // b_index is the position of b in the map
+  // Return true if a equals b
+  // b_index is the position of b in the map
     }
 };
 ```
@@ -153,13 +153,13 @@ const MyContext = struct {
 // Stateless context for strings
 const StringContext = struct {
     pub fn hash(ctx: @This(), key: []const u8) u32 {
-        _ = ctx;
-        return std.array_hash_map.hashString(key);
+  _ = ctx;
+  return std.array_hash_map.hashString(key);
     }
     pub fn eql(ctx: @This(), a: []const u8, b: []const u8, b_index: usize) bool {
-        _ = ctx;
-        _ = b_index;
-        return std.mem.eql(u8, a, b);
+  _ = ctx;
+  _ = b_index;
+  return std.mem.eql(u8, a, b);
     }
 };
 
@@ -168,33 +168,33 @@ const SeededIntContext = struct {
     seed: u64,
 
     pub fn hash(ctx: @This(), key: u64) u32 {
-        var hasher = std.hash.Wyhash.init(ctx.seed);
-        std.hash.autoHash(&hasher, key);
-        return @truncate(hasher.final());
+  var hasher = std.hash.Wyhash.init(ctx.seed);
+  std.hash.autoHash(&hasher, key);
+  return @truncate(hasher.final());
     }
 
     pub fn eql(ctx: @This(), a: u64, b: u64, b_index: usize) bool {
-        _ = ctx;
-        _ = b_index;
-        return a == b;
+  _ = ctx;
+  _ = b_index;
+  return a == b;
     }
 };
 
 // Case-insensitive string context
 const CaseInsensitiveContext = struct {
     pub fn hash(ctx: @This(), key: []const u8) u32 {
-        _ = ctx;
-        var hasher = std.hash.Wyhash.init(0);
-        for (key) |c| {
-            std.hash.autoHash(&hasher, std.ascii.toLower(c));
-        }
-        return @truncate(hasher.final());
+  _ = ctx;
+  var hasher = std.hash.Wyhash.init(0);
+  for (key) |c| {
+      std.hash.autoHash(&hasher, std.ascii.toLower(c));
+  }
+  return @truncate(hasher.final());
     }
 
     pub fn eql(ctx: @This(), a: []const u8, b: []const u8, b_index: usize) bool {
-        _ = ctx;
-        _ = b_index;
-        return std.ascii.eqlIgnoreCase(a, b);
+  _ = ctx;
+  _ = b_index;
+  return std.ascii.eqlIgnoreCase(a, b);
     }
 };
 ```
@@ -452,13 +452,13 @@ These accept a key-like value of a different type with its own context.
 ```zig
 const AdaptCtx = struct {
     pub fn hash(ctx: @This(), key: []const u8) u32 {
-        _ = ctx;
-        return std.array_hash_map.hashString(key);
+  _ = ctx;
+  return std.array_hash_map.hashString(key);
     }
     pub fn eql(ctx: @This(), a: []const u8, b: []const u8, b_index: usize) bool {
-        _ = ctx;
-        _ = b_index;
-        return std.mem.eql(u8, a, b);
+  _ = ctx;
+  _ = b_index;
+  return std.mem.eql(u8, a, b);
     }
 };
 
@@ -733,7 +733,7 @@ Sort entries by custom comparison (stable).
 const SortCtx = struct {
     keys: []const K,
     pub fn lessThan(ctx: @This(), a_idx: usize, b_idx: usize) bool {
-        return ctx.keys[a_idx] < ctx.keys[b_idx];
+  return ctx.keys[a_idx] < ctx.keys[b_idx];
     }
 };
 
@@ -792,18 +792,18 @@ const std = @import("std");
 
 const CaseInsensitiveContext = struct {
     pub fn hash(ctx: @This(), key: []const u8) u32 {
-        _ = ctx;
-        var hasher = std.hash.Wyhash.init(0);
-        for (key) |c| {
-            std.hash.autoHash(&hasher, std.ascii.toLower(c));
-        }
-        return @truncate(hasher.final());
+  _ = ctx;
+  var hasher = std.hash.Wyhash.init(0);
+  for (key) |c| {
+      std.hash.autoHash(&hasher, std.ascii.toLower(c));
+  }
+  return @truncate(hasher.final());
     }
 
     pub fn eql(ctx: @This(), a: []const u8, b: []const u8, b_index: usize) bool {
-        _ = ctx;
-        _ = b_index;
-        return std.ascii.eqlIgnoreCase(a, b);
+  _ = ctx;
+  _ = b_index;
+  return std.ascii.eqlIgnoreCase(a, b);
     }
 };
 
@@ -812,10 +812,10 @@ pub fn main() !void {
     defer _ = gpa.deinit();
 
     var map = std.array_hash_map.ArrayHashMap(
-        []const u8,
-        i32,
-        CaseInsensitiveContext,
-        true
+  []const u8,
+  i32,
+  CaseInsensitiveContext,
+  true
     ).init(gpa.allocator());
     defer map.deinit();
 
@@ -835,15 +835,15 @@ const SeededStringContext = struct {
     seed: u64,
 
     pub fn hash(ctx: @This(), key: []const u8) u32 {
-        var hasher = std.hash.Wyhash.init(ctx.seed);
-        hasher.update(key);
-        return @truncate(hasher.final());
+  var hasher = std.hash.Wyhash.init(ctx.seed);
+  hasher.update(key);
+  return @truncate(hasher.final());
     }
 
     pub fn eql(ctx: @This(), a: []const u8, b: []const u8, b_index: usize) bool {
-        _ = ctx;
-        _ = b_index;
-        return std.mem.eql(u8, a, b);
+  _ = ctx;
+  _ = b_index;
+  return std.mem.eql(u8, a, b);
     }
 };
 
@@ -854,10 +854,10 @@ pub fn createSecureMap(allocator: std.mem.Allocator) !std.array_hash_map.ArrayHa
 
     const ctx = SeededStringContext{ .seed = seed };
     return std.array_hash_map.ArrayHashMap(
-        []const u8,
-        []const u8,
-        SeededStringContext,
-        true
+  []const u8,
+  []const u8,
+  SeededStringContext,
+  true
     ).initContext(allocator, ctx);
 }
 ```
@@ -874,17 +874,17 @@ const Point = struct {
 
 const PointContext = struct {
     pub fn hash(ctx: @This(), p: Point) u32 {
-        _ = ctx;
-        var hasher = std.hash.Wyhash.init(0);
-        std.hash.autoHash(&hasher, p.x);
-        std.hash.autoHash(&hasher, p.y);
-        return @truncate(hasher.final());
+  _ = ctx;
+  var hasher = std.hash.Wyhash.init(0);
+  std.hash.autoHash(&hasher, p.x);
+  std.hash.autoHash(&hasher, p.y);
+  return @truncate(hasher.final());
     }
 
     pub fn eql(ctx: @This(), a: Point, b: Point, b_index: usize) bool {
-        _ = ctx;
-        _ = b_index;
-        return a.x == b.x and a.y == b.y;
+  _ = ctx;
+  _ = b_index;
+  return a.x == b.x and a.y == b.y;
     }
 };
 
@@ -893,10 +893,10 @@ pub fn main() !void {
     defer _ = gpa.deinit();
 
     var map = std.array_hash_map.ArrayHashMap(
-        Point,
-        []const u8,
-        PointContext,
-        false
+  Point,
+  []const u8,
+  PointContext,
+  false
     ).init(gpa.allocator());
     defer map.deinit();
 
@@ -904,7 +904,7 @@ pub fn main() !void {
     try map.put(Point{ .x = 30, .y = 40 }, "B");
 
     if (map.get(Point{ .x = 10, .y = 20 })) |label| {
-        std.debug.print("Point labeled: {s}\n", .{label});
+  std.debug.print("Point labeled: {s}\n", .{label});
     }
 }
 ```
@@ -947,7 +947,7 @@ When debugging ArrayHashMap issues:
    ```zig
    try map.ensureTotalCapacity(expected_size);
    for (items) |item| {
-       map.putAssumeCapacity(item.key, item.value);
+ map.putAssumeCapacity(item.key, item.value);
    }
    ```
 
@@ -971,7 +971,7 @@ When debugging ArrayHashMap issues:
 6. **Use getPtr for in-place modification**
    ```zig
    if (map.getPtr(key)) |ptr| {
-       ptr.* = new_value;
+ ptr.* = new_value;
    }
    ```
 
@@ -979,7 +979,7 @@ When debugging ArrayHashMap issues:
    ```zig
    try map.ensureUnusedCapacity(batch.len);
    for (batch) |item| {
-       map.putAssumeCapacity(item.key, item.value);
+ map.putAssumeCapacity(item.key, item.value);
    }
    ```
 

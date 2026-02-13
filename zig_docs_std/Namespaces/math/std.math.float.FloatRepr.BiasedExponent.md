@@ -22,6 +22,6 @@
 
 ## Functions
 
-`pub fn bias(unbiased: Exponent) BiasedExponent`  
+`pub fn bias(unbiased: Exponent) BiasedExponent`
 
-`pub fn unbias(biased: BiasedExponent) Exponent`  
+`pub fn unbias(biased: BiasedExponent) Exponent`

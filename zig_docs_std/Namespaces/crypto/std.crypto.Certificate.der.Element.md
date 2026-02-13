@@ -12,7 +12,7 @@
 
 ## Functions
 
-`pub fn parse(bytes: []const u8, index: u32) Element.ParseError!Element`  
+`pub fn parse(bytes: []const u8, index: u32) Element.ParseError!Element`
 
 ## Error Sets
 

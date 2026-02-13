@@ -18,8 +18,8 @@ pub const max_name_bytes = switch (native_os) {
     // TODO determine if this is a reasonable approach
     .wasi => std.os.windows.NAME_MAX * 3,
     else => if (@hasDecl(root, "os") and @hasDecl(root.os, "NAME_MAX"))
-        root.os.NAME_MAX
+  root.os.NAME_MAX
     else
-        @compileError("NAME_MAX not implemented for " ++ @tagName(native_os)),
+  @compileError("NAME_MAX not implemented for " ++ @tagName(native_os)),
 }
 ```

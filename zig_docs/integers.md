@@ -2,7 +2,7 @@
 
 ## [Integer Literals](#toc-Integer-Literals) §
 
-      integer_literals.zig
+integer_literals.zig
 ```zig
 const decimal_int = 98222;
 const hex_int = 0xff;
@@ -17,54 +17,35 @@ const permissions = 0o7_5_5;
 const big_address = 0xFF80_0000_0000_0000;
 ```
 
-      
-      
 ## [Runtime Integer Values](#toc-Runtime-Integer-Values) §
 
-      
+Integer literals have no size limitation, and if any Illegal Behavior occurs,
+the compiler catches it.
 
-      Integer literals have no size limitation, and if any Illegal Behavior occurs,
-      the compiler catches it.
-      
+However, once an integer value is no longer known at compile-time, it must have a
+known size, and is vulnerable to safety-checked [Illegal Behavior](#Illegal-Behavior).
 
-      
-
-      However, once an integer value is no longer known at compile-time, it must have a
-      known size, and is vulnerable to safety-checked [Illegal Behavior](#Illegal-Behavior).
-      
-
-      runtime_vs_comptime.zig
+runtime_vs_comptime.zig
 ```zig
 fn divide(a: i32, b: i32) i32 {
     return a / b;
 }
 ```
 
-      
+In this function, values `a` and `b` are known only at runtime,
+and thus this division operation is vulnerable to both [Integer Overflow](#Integer-Overflow) and
+[Division by Zero](#Division-by-Zero).
 
-      In this function, values `a` and `b` are known only at runtime,
-      and thus this division operation is vulnerable to both [Integer Overflow](#Integer-Overflow) and
-      [Division by Zero](#Division-by-Zero).
-      
+Operators such as `+` and `-` cause [Illegal Behavior](#Illegal-Behavior) on
+integer overflow. Alternative operators are provided for wrapping and saturating arithmetic on all targets.
+`+%` and `-%` perform wrapping arithmetic
+while `+|` and `-|` perform saturating arithmetic.
 
-      
-
-      Operators such as `+` and `-` cause [Illegal Behavior](#Illegal-Behavior) on
-      integer overflow. Alternative operators are provided for wrapping and saturating arithmetic on all targets.
-      `+%` and `-%` perform wrapping arithmetic
-      while `+|` and `-|` perform saturating arithmetic.
-      
-
-      
-
-      Zig supports arbitrary bit-width integers, referenced by using
-      an identifier of `i` or `u` followed by digits. For example, the identifier
-      `i7` refers to a signed 7-bit integer. The maximum allowed bit-width of an
-      integer type is `65535`. For signed integer types, Zig uses a
-      [two's complement](https://en.wikipedia.org/wiki/Two's_complement) representation.
-      
-
-      
+Zig supports arbitrary bit-width integers, referenced by using
+an identifier of `i` or `u` followed by digits. For example, the identifier
+`i7` refers to a signed 7-bit integer. The maximum allowed bit-width of an
+integer type is `65535`. For signed integer types, Zig uses a
+[two's complement](https://en.wikipedia.org/wiki/Two's_complement) representation.
 
 See also:
 
@@ -77,7 +58,7 @@ Zig provides comprehensive **runtime safety checking** and **compile-time valida
 
 By default in Debug and ReleaseSafe modes, Zig automatically inserts runtime safety checks for integer overflow. When overflow is detected, the program panics with a clear error message:
 
-      overflow_detection.zig
+overflow_detection.zig
 ```zig
 const std = @import("std");
 
@@ -97,7 +78,7 @@ pub fn main() void {
 
 At compile-time, Zig can validate and catch integer overflow in comptime expressions:
 
-      comptime_overflow_validation.zig
+comptime_overflow_validation.zig
 ```zig
 const value = @as(u8, 200) + 100; // Compile error: overflow of integer type 'u8' with value '300'
 ```
@@ -108,7 +89,7 @@ This compile-time validation ensures that overflow bugs are caught before the pr
 
 Use wrapping operators when you intentionally want overflow to wrap around without safety checks:
 
-      wrapping_arithmetic.zig
+wrapping_arithmetic.zig
 ```zig
 const std = @import("std");
 
@@ -125,7 +106,7 @@ test "wrapping arithmetic" {
 
 Use saturating operators when you want overflow to clamp at type limits:
 
-      saturating_arithmetic.zig
+saturating_arithmetic.zig
 ```zig
 const std = @import("std");
 
@@ -142,7 +123,7 @@ test "saturating arithmetic" {
 
 For fine-grained control, use builtin functions that return overflow status:
 
-      explicit_overflow_checking.zig
+explicit_overflow_checking.zig
 ```zig
 const std = @import("std");
 
@@ -155,7 +136,7 @@ test "explicit overflow checking" {
     // result[1] = overflow bit (1 if overflow occurred)
 
     if (result[1] != 0) {
-        std.debug.print("Overflow detected!\n", .{});
+  std.debug.print("Overflow detected!\n", .{});
     }
 }
 ```
@@ -170,7 +151,7 @@ test "explicit overflow checking" {
 
 Use `@setRuntimeSafety` to enable or disable overflow checking for specific code blocks:
 
-      runtime_safety_control.zig
+runtime_safety_control.zig
 ```zig
 const std = @import("std");
 

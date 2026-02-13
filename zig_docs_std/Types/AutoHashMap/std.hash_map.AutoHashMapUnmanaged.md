@@ -127,10 +127,10 @@ defer map.deinit(allocator);  // ← REQUIRED! Must pass allocator to deinit
 // Unmanaged: no allocator stored
 pub fn AutoHashMapUnmanaged(comptime K: type, comptime V: type) type {
     return HashMapUnmanaged(
-        K,
-        V,
-        AutoContext(K),
-        default_max_load_percentage,
+  K,
+  V,
+  AutoContext(K),
+  default_max_load_percentage,
     );
 }
 
@@ -886,9 +886,9 @@ var iter = std.mem.tokenizeScalar(u8, text, ' ');
 while (iter.next()) |word| {
     const result = try counts.getOrPut(allocator, word);
     if (result.found_existing) {
-        result.value_ptr.* += 1;
+  result.value_ptr.* += 1;
     } else {
-        result.value_ptr.* = 1;
+  result.value_ptr.* = 1;
     }
 }
 ```
@@ -955,7 +955,7 @@ for (0..10) |batch_num| {
 
     try map.ensureUnusedCapacity(allocator, 100);
     for (0..100) |i| {
-        map.putAssumeCapacity(@intCast(i), @intCast(batch_num));
+  map.putAssumeCapacity(@intCast(i), @intCast(batch_num));
     }
 
     // Process batch...
@@ -969,15 +969,15 @@ const Cache = struct {
     data: std.AutoHashMapUnmanaged(u32, []const u8) = .{},
 
     fn deinit(self: *@This(), alloc: std.mem.Allocator) void {
-        self.data.deinit(alloc);
+  self.data.deinit(alloc);
     }
 
     fn put(self: *@This(), alloc: std.mem.Allocator, key: u32, value: []const u8) !void {
-        try self.data.put(alloc, key, value);
+  try self.data.put(alloc, key, value);
     }
 
     fn get(self: *const @This(), key: u32) ?[]const u8 {
-        return self.data.get(key);
+  return self.data.get(key);
     }
 };
 ```
@@ -1031,15 +1031,15 @@ When debugging unmanaged hash map issues, verify:
    ```zig
    try map.ensureUnusedCapacity(allocator, items.len);
    for (items) |item| {
-       map.putAssumeCapacity(item.id, item);  // No error handling needed
+ map.putAssumeCapacity(item.id, item);  // No error handling needed
    }
    ```
 
 3. **Reuse maps with `clearRetainingCapacity()`** - Avoid allocation churn when processing batches:
    ```zig
    for (batches) |batch| {
-       defer map.clearRetainingCapacity();
-       // Process batch with map
+ defer map.clearRetainingCapacity();
+ // Process batch with map
    }
    ```
 
@@ -1048,7 +1048,7 @@ When debugging unmanaged hash map issues, verify:
 5. **Use `getPtr()` for in-place modification** - Avoid copying large values:
    ```zig
    if (map.getPtr(key)) |value_ptr| {
-       value_ptr.field += 1;  // Modify directly
+ value_ptr.field += 1;  // Modify directly
    }
    ```
 
@@ -1061,8 +1061,8 @@ When debugging unmanaged hash map issues, verify:
 7. **Embed in structs for memory efficiency** - Unmanaged variant saves 8-16 bytes per instance:
    ```zig
    const MyStruct = struct {
-       map: std.AutoHashMapUnmanaged(u32, i32) = .{},
-       // No allocator field needed
+ map: std.AutoHashMapUnmanaged(u32, i32) = .{},
+ // No allocator field needed
    };
    ```
 

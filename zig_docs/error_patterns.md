@@ -2,6 +2,9 @@
 
 This guide focuses on **how to write** error handling code in Zig, not the theory.
 
+📘 **Policy and architecture companion:** [Error Handling Playbook](error_handling_playbook.md)
+📚 **Runnable policy tests:** `zig_docs_std/Examples/error_handling_playbook.tests.zig`
+
 ## Table of Contents
 - [Capture Patterns](#capture-patterns)
 - [defer vs errdefer](#defer-vs-errdefer)
@@ -180,8 +183,8 @@ Reading until end-of-stream is a fundamental pattern:
 ```zig
 while (true) {
     const line = reader.readUntilDelimiter('\n') catch |err| {
-        if (err == error.EndOfStream) break;  // ✅ Expected - exit loop
-        return err;  // ❌ Unexpected - propagate
+  if (err == error.EndOfStream) break;  // ✅ Expected - exit loop
+  return err;  // ❌ Unexpected - propagate
     };
 
     // Process line...
@@ -202,9 +205,9 @@ Sometimes you want to try something, and fall back if it fails:
 ```zig
 const value = parseAsInt(input) catch |err| blk: {
     if (err == error.InvalidFormat) {
-        // Try parsing as float instead
-        const float_val = try parseAsFloat(input);
-        break :blk @as(i32, @intFromFloat(float_val));
+  // Try parsing as float instead
+  const float_val = try parseAsFloat(input);
+  break :blk @as(i32, @intFromFloat(float_val));
     }
     return err;  // Other errors propagate
 };
@@ -251,11 +254,11 @@ fn processAll(items: []Item) Result {
     var failed: usize = 0;
 
     for (items) |item| {
-        item.process() catch {
-            failed += 1;
-            continue;  // Don't propagate, just count
-        };
-        succeeded += 1;
+  item.process() catch {
+      failed += 1;
+      continue;  // Don't propagate, just count
+  };
+  succeeded += 1;
     }
 
     return .{ .succeeded = succeeded, .failed = failed };
@@ -271,8 +274,8 @@ Add context when propagating errors:
 ```zig
 fn loadConfig(path: []const u8) !Config {
     const file = std.Io.File.open(io, path, .{}) catch |err| {
-        std.debug.print("Failed to open config at '{s}': {}\n", .{path, err});
-        return err;
+  std.debug.print("Failed to open config at '{s}': {}\n", .{path, err});
+  return err;
     };
     defer file.close(io);
 
@@ -326,22 +329,22 @@ const Database = struct {
     cache: Cache,
 
     fn init(allocator: Allocator) !Database {
-        var self: Database = undefined;
+  var self: Database = undefined;
 
-        // Step 1
-        self.connection = try Connection.init(allocator);
-        errdefer self.connection.deinit();
+  // Step 1
+  self.connection = try Connection.init(allocator);
+  errdefer self.connection.deinit();
 
-        // Step 2
-        self.cache = try Cache.init(allocator);
-        errdefer self.cache.deinit();
+  // Step 2
+  self.cache = try Cache.init(allocator);
+  errdefer self.cache.deinit();
 
-        return self;
+  return self;
     }
 
     fn deinit(self: *Database) void {
-        self.cache.deinit();
-        self.connection.deinit();
+  self.cache.deinit();
+  self.connection.deinit();
     }
 };
 ```
@@ -360,18 +363,18 @@ const Parser = struct {
     temp_buffer: ?[]u8 = null,
 
     fn parse(self: *Parser, allocator: Allocator) !Result {
-        // Cleanup any partial state on error
-        errdefer {
-            if (self.partial_result) |val| {
-                var result = val;  // Value capture, make mutable
-                result.deinit();
-            }
-            if (self.temp_buffer) |buf| {
-                allocator.free(buf);  // No need for var (free takes []u8)
-            }
-        }
+  // Cleanup any partial state on error
+  errdefer {
+      if (self.partial_result) |val| {
+          var result = val;  // Value capture, make mutable
+          result.deinit();
+      }
+      if (self.temp_buffer) |buf| {
+          allocator.free(buf);  // No need for var (free takes []u8)
+      }
+  }
 
-        // ... parsing that might fail at any point ...
+  // ... parsing that might fail at any point ...
     }
 };
 ```
@@ -389,10 +392,10 @@ fn complexOperation(allocator: Allocator) !Result {
     var resource3: ?Resource3 = null;
 
     errdefer {
-        // Single defer block for all cleanup
-        if (resource1) |r| { var x = r; x.deinit(); }
-        if (resource2) |r| { var x = r; x.deinit(); }
-        if (resource3) |r| { var x = r; x.deinit(); }
+  // Single defer block for all cleanup
+  if (resource1) |r| { var x = r; x.deinit(); }
+  if (resource2) |r| { var x = r; x.deinit(); }
+  if (resource3) |r| { var x = r; x.deinit(); }
     }
 
     resource1 = try create1(allocator);
@@ -400,9 +403,9 @@ fn complexOperation(allocator: Allocator) !Result {
     resource3 = try create3(allocator);
 
     return Result{
-        .r1 = resource1.?,
-        .r2 = resource2.?,
-        .r3 = resource3.?,
+  .r1 = resource1.?,
+  .r2 = resource2.?,
+  .r3 = resource3.?,
     };
 }
 ```

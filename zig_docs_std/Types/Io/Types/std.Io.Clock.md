@@ -153,8 +153,8 @@ while (true) {
 ```zig
 const result = socket.receiveTimeout(io, &buf, .{
     .duration = .{
-        .raw = std.Io.Duration.fromMilliseconds(100),
-        .clock = .awake,
+  .raw = std.Io.Duration.fromMilliseconds(100),
+  .clock = .awake,
     },
 });
 ```

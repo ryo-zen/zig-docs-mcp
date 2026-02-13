@@ -149,8 +149,8 @@ pub fn main() !void {
 
     // This would overflow u8 (max 255)
     const sum = std.math.add(u8, a, b) catch |err| {
-        std.debug.print("Overflow detected: {}\n", .{err});
-        return err;
+  std.debug.print("Overflow detected: {}\n", .{err});
+  return err;
     };
 
     std.debug.print("Sum: {}\n", .{sum});
@@ -1364,8 +1364,8 @@ pub fn main() !void {
     const quantity: u32 = 5000;
 
     const total = calculateTotal(price, quantity) catch |err| {
-        std.debug.print("Overflow error: {}\n", .{err});
-        return err;
+  std.debug.print("Overflow error: {}\n", .{err});
+  return err;
     };
 
     std.debug.print("Total: ${}\n", .{total});
@@ -1388,8 +1388,8 @@ pub fn rotatePoint(x: f64, y: f64, degrees: f64) struct { x: f64, y: f64 } {
     const sin_angle = std.math.sin(radians);
 
     return .{
-        .x = x * cos_angle - y * sin_angle,
-        .y = x * sin_angle + y * cos_angle,
+  .x = x * cos_angle - y * sin_angle,
+  .y = x * sin_angle + y * cos_angle,
     };
 }
 
@@ -1440,8 +1440,8 @@ pub fn main() !void {
     const sizes = [_]usize{ 100, 1000, 2047, 2048, 5000 };
 
     for (sizes) |size| {
-        const aligned = try alignBufferSize(size);
-        std.debug.print("Request: {d:5} -> Aligned: {d:5}\n", .{ size, aligned });
+  const aligned = try alignBufferSize(size);
+  std.debug.print("Request: {d:5} -> Aligned: {d:5}\n", .{ size, aligned });
     }
 }
 ```

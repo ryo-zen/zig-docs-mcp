@@ -22,12 +22,12 @@ Represents any JSON value, potentially containing other JSON values. A .float va
 
 ## Functions
 
-`pub fn dump(v: Value) void`  
+`pub fn dump(v: Value) void`
 
-`pub fn jsonParse(allocator: Allocator, source: anytype, options: ParseOptions) ParseError(@TypeOf(source.*))!@This()`  
+`pub fn jsonParse(allocator: Allocator, source: anytype, options: ParseOptions) ParseError(@TypeOf(source.*))!@This()`
 
-`pub fn jsonParseFromValue(allocator: Allocator, source: Value, options: ParseOptions) !@This()`  
+`pub fn jsonParseFromValue(allocator: Allocator, source: Value, options: ParseOptions) !@This()`
 
-`pub fn jsonStringify(value: @This(), jws: anytype) !void`  
+`pub fn jsonStringify(value: @This(), jws: anytype) !void`
 
-`pub fn parseFromNumberSlice(s: []const u8) Value`  
+`pub fn parseFromNumberSlice(s: []const u8) Value`

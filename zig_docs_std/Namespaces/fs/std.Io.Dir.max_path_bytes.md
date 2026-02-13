@@ -13,8 +13,8 @@ pub const max_path_bytes = switch (native_os) {
     // +1 for the null byte at the end, which can be encoded in 1 byte.
     .windows => std.os.windows.PATH_MAX_WIDE * 3 + 1,
     else => if (@hasDecl(root, "os") and @hasDecl(root.os, "PATH_MAX"))
-        root.os.PATH_MAX
+  root.os.PATH_MAX
     else
-        @compileError("PATH_MAX not implemented for " ++ @tagName(native_os)),
+  @compileError("PATH_MAX not implemented for " ++ @tagName(native_os)),
 }
 ```

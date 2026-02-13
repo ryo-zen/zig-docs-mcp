@@ -1,17 +1,13 @@
 # Comments
 
 Zig supports 3 types of comments. Normal comments are ignored, but doc comments
-      and top-level doc comments are used by the compiler to generate the package documentation.
-      
+and top-level doc comments are used by the compiler to generate the package documentation.
 
-      
+The generated documentation is still experimental, and can be produced with:
 
-      The generated documentation is still experimental, and can be produced with:
-      
+Shellzig test -femit-docs main.zig
 
-      Shellzig test -femit-docs main.zig
-
-      comments.zig
+comments.zig
 ```zig
 const print = @import("std").debug.print;
 
@@ -28,25 +24,18 @@ Shell$ zig build-exe comments.zig
 $ ./comments
 Hello, world!
 
-      
+There are no multiline comments in Zig (e.g. like /* */
+comments in C).  This allows Zig to have the property that each line
+of code can be tokenized out of context.
 
-      There are no multiline comments in Zig (e.g. like /* */
-      comments in C).  This allows Zig to have the property that each line
-      of code can be tokenized out of context.
-      
-
-      
 ## [Doc Comments](#toc-Doc-Comments) §
 
-      
+A doc comment is one that begins with exactly three slashes (i.e.
+`///` but not `////`);
+multiple doc comments in a row are merged together to form a multiline
+doc comment.  The doc comment documents whatever immediately follows it.
 
-      A doc comment is one that begins with exactly three slashes (i.e.
-      `///` but not `////`);
-      multiple doc comments in a row are merged together to form a multiline
-      doc comment.  The doc comment documents whatever immediately follows it.
-      
-
-      doc_comments.zig
+doc_comments.zig
 ```zig
 /// A structure for storing a timestamp, with nanosecond precision (this is a
 /// multiline doc comment).
@@ -59,22 +48,19 @@ const Timestamp = struct {
     /// Returns a `Timestamp` struct representing the Unix epoch; that is, the
     /// moment of 1970 Jan 1 00:00:00 UTC (this is a doc comment too).
     pub fn unixEpoch() Timestamp {
-        return Timestamp{
-            .seconds = 0,
-            .nanos = 0,
-        };
+  return Timestamp{
+      .seconds = 0,
+      .nanos = 0,
+  };
     }
 };
 ```
 
-      
+Doc comments are only allowed in certain places; it is a compile error to
+have a doc comment in an unexpected place, such as in the middle of an expression,
+or just before a non-doc comment.
 
-      Doc comments are only allowed in certain places; it is a compile error to
-      have a doc comment in an unexpected place, such as in the middle of an expression,
-      or just before a non-doc comment.
-      
-
-      invalid_doc-comment.zig
+invalid_doc-comment.zig
 ```zig
 /// doc-comment
 //! top-level doc-comment
@@ -83,9 +69,9 @@ const std = @import("std");
 Shell$ zig build-obj invalid_doc-comment.zig
 /home/ci/zig-bootstrap/zig/doc/langref/invalid_doc-comment.zig:1:16: error: expected type expression, found 'a document comment'
 /// doc-comment
-               ^
+         ^
 
-      unattached_doc-comment.zig
+unattached_doc-comment.zig
 ```zig
 pub fn main() void {}
 
@@ -96,28 +82,17 @@ Shell$ zig build-obj unattached_doc-comment.zig
 /// End of file
 ^~~~~~~~~~~~~~~
 
-      
+Doc comments can be interleaved with normal comments, which are ignored.
 
-      Doc comments can be interleaved with normal comments, which are ignored.
-      
-
-      
-      
 ## [Top-Level Doc Comments](#toc-Top-Level-Doc-Comments) §
 
-      
+A top-level doc comment is one that begins with two slashes and an exclamation
+point: `//!`; it documents the current module.
 
-      A top-level doc comment is one that begins with two slashes and an exclamation
-      point: `//!`; it documents the current module.
-      
+It is a compile error if a top-level doc comment is not placed at the start
+of a [container](#Containers), before any expressions.
 
-      
-
-      It is a compile error if a top-level doc comment is not placed at the start
-      of a [container](#Containers), before any expressions.
-      
-
-      tldoc_comments.zig
+tldoc_comments.zig
 ```zig
 //! This module provides functions for retrieving the current date and
 //! time with varying degrees of precision and accuracy. It does not

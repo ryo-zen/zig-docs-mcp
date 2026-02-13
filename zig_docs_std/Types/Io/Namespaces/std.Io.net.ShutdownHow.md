@@ -70,8 +70,8 @@ pub fn main() !void {
     var read_buf: [1024]u8 = undefined;
     var reader = stream.reader(io, &read_buf);
     const response = reader.interface.readUntilEof() catch |err| {
-        if (err == error.EndOfStream) &[_]u8{}
-        else return err;
+  if (err == error.EndOfStream) &[_]u8{}
+  else return err;
     };
 
     std.debug.print("Received: {s}\n", .{response});

@@ -8,23 +8,23 @@ It distinguishes missing/unsupported debug data from corruption and I/O failures
 
 ## Errors
 
-Canceled  
+Canceled
 Operation was canceled by caller or environment.
 
-InvalidDebugInfo  
+InvalidDebugInfo
 The required debug info is invalid or corrupted.
 
-MissingDebugInfo  
+MissingDebugInfo
 The required debug info could not be found.
 
-OutOfMemory  
+OutOfMemory
 
-ReadFailed  
+ReadFailed
 The required debug info could not be read from disk due to some IO error.
 
-Unexpected  
+Unexpected
 
-UnsupportedDebugInfo  
+UnsupportedDebugInfo
 The required debug info was found, and may be valid, but is not supported by this implementation.
 
 ## Usage Notes

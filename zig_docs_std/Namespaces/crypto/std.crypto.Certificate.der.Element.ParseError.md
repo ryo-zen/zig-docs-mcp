@@ -2,4 +2,4 @@
 
 ## Errors
 
-CertificateFieldHasInvalidLength  
+CertificateFieldHasInvalidLength

@@ -86,20 +86,20 @@ pub fn readWriteFile(allocator: Allocator, io: std.Io) !void {
 
     // Write
     {
-        const file = try dir.create(io, "data.txt", .{});
-        defer file.close(io);
-        try file.writeAll(io, "Hello, World!");
+  const file = try dir.create(io, "data.txt", .{});
+  defer file.close(io);
+  try file.writeAll(io, "Hello, World!");
     }
 
     // Read
     {
-        const file = try dir.open(io, "data.txt", .{});
-        defer file.close(io);
+  const file = try dir.open(io, "data.txt", .{});
+  defer file.close(io);
 
-        var buffer: [1024]u8 = undefined;
-        const bytes_read = try file.readAll(io, &buffer);
+  var buffer: [1024]u8 = undefined;
+  const bytes_read = try file.readAll(io, &buffer);
 
-        std.debug.print("Read: {s}\n", .{buffer[0..bytes_read]});
+  std.debug.print("Read: {s}\n", .{buffer[0..bytes_read]});
     }
 }
 ```
@@ -132,11 +132,11 @@ pub fn runServer(allocator: Allocator, io: std.Io) !void {
     std.debug.print("Listening on port 8080\n", .{});
 
     while (true) {
-        const conn = try listener.accept(io);
-        errdefer conn.close(io);
+  const conn = try listener.accept(io);
+  errdefer conn.close(io);
 
-        // Handle connection (ideally spawn thread/task)
-        try handleConnection(allocator, io, conn);
+  // Handle connection (ideally spawn thread/task)
+  try handleConnection(allocator, io, conn);
     }
 }
 
@@ -161,9 +161,9 @@ pub fn processItems(allocator: Allocator, items: []const u32) ![]u32 {
     defer result.deinit(allocator);
 
     for (items) |item| {
-        if (item > 10) {
-            try result.append(allocator, item * 2);
-        }
+  if (item > 10) {
+      try result.append(allocator, item * 2);
+  }
     }
 
     // Return owned slice
@@ -180,18 +180,18 @@ const Logger = struct {
     io: std.Io,
 
     pub fn log(self: Logger, comptime level: []const u8, msg: []const u8) !void {
-        const ts = try std.Io.Clock.real.now(self.io);
-        const seconds = ts.toSeconds();
+  const ts = try std.Io.Clock.real.now(self.io);
+  const seconds = ts.toSeconds();
 
-        std.debug.print("[{s}][{}] {s}\n", .{level, seconds, msg});
+  std.debug.print("[{s}][{}] {s}\n", .{level, seconds, msg});
     }
 
     pub fn info(self: Logger, msg: []const u8) !void {
-        try self.log("INFO", msg);
+  try self.log("INFO", msg);
     }
 
     pub fn err(self: Logger, msg: []const u8) !void {
-        try self.log("ERROR", msg);
+  try self.log("ERROR", msg);
     }
 };
 
@@ -215,30 +215,30 @@ const Database = struct {
     connections: std.ArrayList(*Connection),
 
     pub fn init(allocator: Allocator, io: std.Io) Database {
-        return .{
-            .allocator = allocator,
-            .io = io,
-            .connections = .{},
-        };
+  return .{
+      .allocator = allocator,
+      .io = io,
+      .connections = .{},
+  };
     }
 
     pub fn deinit(self: *Database) void {
-        for (self.connections.items) |conn| {
-            conn.close(self.io);
-            self.allocator.destroy(conn);
-        }
-        self.connections.deinit(self.allocator);
+  for (self.connections.items) |conn| {
+      conn.close(self.io);
+      self.allocator.destroy(conn);
+  }
+  self.connections.deinit(self.allocator);
     }
 
     pub fn connect(self: *Database, addr: []const u8) !void {
-        const net = std.Io.net;
-        const ip_addr = try net.IpAddress.parse(addr, 5432);
+  const net = std.Io.net;
+  const ip_addr = try net.IpAddress.parse(addr, 5432);
 
-        const conn_ptr = try self.allocator.create(Connection);
-        errdefer self.allocator.destroy(conn_ptr);
+  const conn_ptr = try self.allocator.create(Connection);
+  errdefer self.allocator.destroy(conn_ptr);
 
-        conn_ptr.* = try Connection.init(self.io, ip_addr);
-        try self.connections.append(self.allocator, conn_ptr);
+  conn_ptr.* = try Connection.init(self.io, ip_addr);
+  try self.connections.append(self.allocator, conn_ptr);
     }
 };
 ```
@@ -288,14 +288,14 @@ pub fn robustOperation(allocator: Allocator, io: std.Io) !void {
 
     // Create directory
     dir.createDirPath(io, "output") catch |err| {
-        std.debug.print("Failed to create directory: {}\n", .{err});
-        return err;
+  std.debug.print("Failed to create directory: {}\n", .{err});
+  return err;
     };
 
     // Open file
     const file = dir.create(io, "output/data.txt", .{}) catch |err| {
-        std.debug.print("Failed to create file: {}\n", .{err});
-        return err;
+  std.debug.print("Failed to create file: {}\n", .{err});
+  return err;
     };
     defer file.close(io);
 
@@ -321,15 +321,15 @@ pub fn efficientProcessing(io: std.Io) !void {
 
     var total: usize = 0;
     while (true) {
-        const bytes_read = std.posix.read(fd, &buffer) catch |err| switch (err) {
-            error.WouldBlock => break,
-            else => return err,
-        };
+  const bytes_read = std.posix.read(fd, &buffer) catch |err| switch (err) {
+      error.WouldBlock => break,
+      else => return err,
+  };
 
-        if (bytes_read == 0) break;
-        total += bytes_read;
+  if (bytes_read == 0) break;
+  total += bytes_read;
 
-        // Process buffer in-place
+  // Process buffer in-place
     }
 
     std.debug.print("Processed {} bytes\n", .{total});

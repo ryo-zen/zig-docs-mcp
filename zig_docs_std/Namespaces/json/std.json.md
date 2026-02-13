@@ -155,11 +155,11 @@ pub fn main() !void {
     const allocator = gpa.allocator();
 
     const json =
-        \\{
-        \\  "port": 8080,
-        \\  "host": "localhost",
-        \\  "debug": true
-        \\}
+  \\{
+  \\  "port": 8080,
+  \\  "host": "localhost",
+  \\  "debug": true
+  \\}
     ;
 
     const parsed = try std.json.parseFromSlice(Config, allocator, json, .{});
@@ -277,9 +277,9 @@ const User = struct {
 
 pub fn main() !void {
     const user = User{
-        .id = 123,
-        .name = "Alice",
-        .email = "alice@example.com",
+  .id = 123,
+  .name = "Alice",
+  .email = "alice@example.com",
     };
 
     // Stringify to fixed buffer
@@ -358,10 +358,10 @@ pub fn main() !void {
     defer scanner.deinit();
 
     while (true) {
-        const token = try scanner.next();
-        std.debug.print("Token: {any}\n", .{token});
+  const token = try scanner.next();
+  std.debug.print("Token: {any}\n", .{token});
 
-        if (token == .end_of_document) break;
+  if (token == .end_of_document) break;
     }
 }
 ```
@@ -381,9 +381,9 @@ const ApiResponse = struct {
     error_message: ?[]const u8 = null,
 
     const Data = struct {
-        id: u64,
-        name: []const u8,
-        created_at: []const u8,
+  id: u64,
+  name: []const u8,
+  created_at: []const u8,
     };
 };
 
@@ -394,12 +394,12 @@ pub fn handleApiResponse(allocator: std.mem.Allocator, json_response: []const u8
     const response = parsed.value;
 
     if (!response.success) {
-        std.debug.print("API Error: {s}\n", .{response.error_message.?});
-        return error.ApiError;
+  std.debug.print("API Error: {s}\n", .{response.error_message.?});
+  return error.ApiError;
     }
 
     if (response.data) |data| {
-        std.debug.print("Received: {s} (ID: {d})\n", .{data.name, data.id});
+  std.debug.print("Received: {s} (ID: {d})\n", .{data.name, data.id});
     }
 }
 ```
@@ -417,19 +417,19 @@ const AppConfig = struct {
     features: FeatureFlags,
 
     const ServerConfig = struct {
-        host: []const u8,
-        port: u16,
-        workers: u8 = 4,
+  host: []const u8,
+  port: u16,
+  workers: u8 = 4,
     };
 
     const DatabaseConfig = struct {
-        url: []const u8,
-        max_connections: u16 = 10,
+  url: []const u8,
+  max_connections: u16 = 10,
     };
 
     const FeatureFlags = struct {
-        enable_caching: bool = true,
-        enable_logging: bool = true,
+  enable_caching: bool = true,
+  enable_logging: bool = true,
     };
 };
 
@@ -465,22 +465,22 @@ pub fn inspectJson(allocator: std.mem.Allocator, json: []const u8) !void {
     const root = parsed.value;
 
     switch (root) {
-        .object => |obj| {
-            std.debug.print("JSON Object with {d} fields:\n", .{obj.count()});
+  .object => |obj| {
+      std.debug.print("JSON Object with {d} fields:\n", .{obj.count()});
 
-            var iter = obj.iterator();
-            while (iter.next()) |entry| {
-                std.debug.print("  {s}: {s}\n", .{entry.key_ptr.*, @tagName(entry.value_ptr.*)});
-            }
-        },
-        .array => |arr| {
-            std.debug.print("JSON Array with {d} elements\n", .{arr.items.len});
-        },
-        .string => |s| std.debug.print("JSON String: {s}\n", .{s}),
-        .integer => |i| std.debug.print("JSON Integer: {d}\n", .{i}),
-        .float => |f| std.debug.print("JSON Float: {d}\n", .{f}),
-        .bool => |b| std.debug.print("JSON Boolean: {}\n", .{b}),
-        .null => std.debug.print("JSON Null\n", .{}),
+      var iter = obj.iterator();
+      while (iter.next()) |entry| {
+          std.debug.print("  {s}: {s}\n", .{entry.key_ptr.*, @tagName(entry.value_ptr.*)});
+      }
+  },
+  .array => |arr| {
+      std.debug.print("JSON Array with {d} elements\n", .{arr.items.len});
+  },
+  .string => |s| std.debug.print("JSON String: {s}\n", .{s}),
+  .integer => |i| std.debug.print("JSON Integer: {d}\n", .{i}),
+  .float => |f| std.debug.print("JSON Float: {d}\n", .{f}),
+  .bool => |b| std.debug.print("JSON Boolean: {}\n", .{b}),
+  .null => std.debug.print("JSON Null\n", .{}),
     }
 }
 ```
@@ -522,32 +522,32 @@ const Timestamp = struct {
 
     // Custom JSON parser - converts "2024-01-15T10:30:00Z" to unix timestamp
     pub fn jsonParse(
-        allocator: std.mem.Allocator,
-        source: anytype,
-        options: std.json.ParseOptions,
+  allocator: std.mem.Allocator,
+  source: anytype,
+  options: std.json.ParseOptions,
     ) !Timestamp {
-        _ = options;
-        _ = allocator;
+  _ = options;
+  _ = allocator;
 
-        const timestamp_str = try source.nextString();
+  const timestamp_str = try source.nextString();
 
-        // In real code: parse ISO 8601 format to unix timestamp
-        // Simplified here:
-        _ = timestamp_str;
-        return Timestamp{ .unix_seconds = 1705318200 };
+  // In real code: parse ISO 8601 format to unix timestamp
+  // Simplified here:
+  _ = timestamp_str;
+  return Timestamp{ .unix_seconds = 1705318200 };
     }
 
     // Custom JSON stringifier - converts unix timestamp to ISO 8601 string
     pub fn jsonStringify(
-        self: Timestamp,
-        options: std.json.StringifyOptions,
-        writer: anytype,
+  self: Timestamp,
+  options: std.json.StringifyOptions,
+  writer: anytype,
     ) !void {
-        _ = options;
-        // In real code: format unix timestamp as ISO 8601
-        // Simplified here:
-        try writer.print("\"2024-01-15T10:30:00Z\"", .{});
-        _ = self;
+  _ = options;
+  // In real code: format unix timestamp as ISO 8601
+  // Simplified here:
+  try writer.print("\"2024-01-15T10:30:00Z\"", .{});
+  _ = self;
     }
 };
 ```
@@ -588,7 +588,7 @@ defer parsed.deinit();
 
 if (parsed.value.object.get("age")) |age_value| {
     if (age_value == .integer) {
-        std.debug.print("Age: {d}\n", .{age_value.integer});
+  std.debug.print("Age: {d}\n", .{age_value.integer});
     }
 }
 ```
@@ -678,10 +678,10 @@ try std.json.stringify(data, options, writer);
 ```zig
 pub fn Parsed(comptime T: type) type {
     return struct {
-        arena: *std.heap.ArenaAllocator,
-        value: T,
+  arena: *std.heap.ArenaAllocator,
+  value: T,
 
-        pub fn deinit(self: @This()) void { ... }
+  pub fn deinit(self: @This()) void { ... }
     };
 }
 ```
@@ -817,7 +817,7 @@ Default buffer size for `json.Reader` when parsing from streaming sources.
    ```zig
    var scanner = std.json.Scanner.initCompleteInput(allocator, json);
    while (try scanner.next() != .end_of_document) {
-       // Skip to the field you care about
+ // Skip to the field you care about
    }
    ```
 

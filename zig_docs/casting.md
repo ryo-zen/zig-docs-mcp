@@ -1,21 +1,25 @@
 # Casting
 
-A **type cast** converts a value of one type to another.
-      Zig has [Type Coercion](#Type-Coercion) for conversions that are known to be completely safe and unambiguous,
-      and [Explicit Casts](#Explicit-Casts) for conversions that one would not want to happen on accident.
-      There is also a third kind of type conversion called [Peer Type Resolution](#Peer-Type-Resolution) for
-      the case when a result type must be decided given multiple operand types.
-      
+📘 **Safety Guide:** [Unsafe Boundaries and Invariants](unsafe_boundaries.md)
+📚 **Runnable guard-rail examples:** `zig_docs_std/Examples/unsafe_boundaries.tests.zig`
 
-      
+Before using explicit casts across representation boundaries, validate:
+1. Value range.
+2. Pointer alignment.
+3. Sentinel/lifetime assumptions.
+4. Enum/tag validity.
+
+A **type cast** converts a value of one type to another.
+Zig has [Type Coercion](#Type-Coercion) for conversions that are known to be completely safe and unambiguous,
+and [Explicit Casts](#Explicit-Casts) for conversions that one would not want to happen on accident.
+There is also a third kind of type conversion called [Peer Type Resolution](#Peer-Type-Resolution) for
+the case when a result type must be decided given multiple operand types.
+
 ## [Type Coercion](#toc-Type-Coercion) §
 
-      
+Type coercion occurs when one type is expected, but different type is provided:
 
-      Type coercion occurs when one type is expected, but different type is provided:
-      
-
-      test_type_coercion.zig
+test_type_coercion.zig
 ```zig
 test "type coercion - variable declaration" {
     const a: u8 = 1;
@@ -44,37 +48,25 @@ Shell$ zig test test_type_coercion.zig
 3/3 test_type_coercion.test.type coercion - @as builtin...OK
 All 3 tests passed.
 
-      
+Type coercions are only allowed when it is completely unambiguous how to get from one type to another,
+and the transformation is guaranteed to be safe. There is one exception, which is [C Pointers](#C-Pointers).
 
-      Type coercions are only allowed when it is completely unambiguous how to get from one type to another,
-      and the transformation is guaranteed to be safe. There is one exception, which is [C Pointers](#C-Pointers).
-      
-
-      
 ### [Type Coercion: Stricter Qualification](#toc-Type-Coercion-Stricter-Qualification) §
 
-      
+Values which have the same representation at runtime can be cast to increase the strictness
+of the qualifiers, no matter how nested the qualifiers are:
 
-      Values which have the same representation at runtime can be cast to increase the strictness
-      of the qualifiers, no matter how nested the qualifiers are:
-      
-
-      
-          
 - `const` - non-const to const is allowed
-          
+
 - `volatile` - non-volatile to volatile is allowed
-          
-- `align` - bigger to smaller alignment is allowed 
-          
+
+- `align` - bigger to smaller alignment is allowed
+
 - [error sets](#Error-Set-Type) to supersets is allowed
-      
-      
 
-      These casts are no-ops at runtime since the value representation does not change.
-      
+These casts are no-ops at runtime since the value representation does not change.
 
-      test_no_op_casts.zig
+test_no_op_casts.zig
 ```zig
 test "type coercion - const qualification" {
     var a: i32 = 1;
@@ -88,12 +80,9 @@ Shell$ zig test test_no_op_casts.zig
 1/1 test_no_op_casts.test.type coercion - const qualification...OK
 All 1 tests passed.
 
-      
+In addition, pointers coerce to const optional pointers:
 
-      In addition, pointers coerce to const optional pointers:
-      
-
-      test_pointer_coerce_const_optional.zig
+test_pointer_coerce_const_optional.zig
 ```zig
 const std = @import("std");
 const expect = std.testing.expect;
@@ -109,17 +98,12 @@ Shell$ zig test test_pointer_coerce_const_optional.zig
 1/1 test_pointer_coerce_const_optional.test.cast *[1][*:0]const u8 to []const ?[*:0]const u8...OK
 All 1 tests passed.
 
-      
-      
 ### [Type Coercion: Integer and Float Widening](#toc-Type-Coercion-Integer-and-Float-Widening) §
 
-      
+[Integers](#Integers) coerce to integer types which can represent every value of the old type, and likewise
+[Floats](#Floats) coerce to float types which can represent every value of the old type.
 
-      [Integers](#Integers) coerce to integer types which can represent every value of the old type, and likewise
-      [Floats](#Floats) coerce to float types which can represent every value of the old type.
-      
-
-      test_integer_widening.zig
+test_integer_widening.zig
 ```zig
 const std = @import("std");
 const builtin = @import("builtin");
@@ -156,54 +140,34 @@ Shell$ zig test test_integer_widening.zig
 3/3 test_integer_widening.test.float widening...OK
 All 3 tests passed.
 
-      
-      
 ### [Type Coercion: Int to Float](#toc-Type-Coercion-Int-to-Float) §
 
-      
+[Integers](#Integers) coerce to [Floats](#Floats) if every possible integer value can be stored in the float
+without rounding (i.e. the integer's precision does not exceed the float's significand precision).
+Larger integer types that cannot be safely coerced must be explicitly casted with [@floatFromInt](#floatFromInt).
 
-      [Integers](#Integers) coerce to [Floats](#Floats) if every possible integer value can be stored in the float
-      without rounding (i.e. the integer's precision does not exceed the float's significand precision).
-      Larger integer types that cannot be safely coerced must be explicitly casted with [@floatFromInt](#floatFromInt).
-      
+    Float Type
+    Largest Integer Types
 
-      
-      
-        
-        
-          Float Type
-          Largest Integer Types
-        
-        
-        
-        
-            `f16`
-            `i12` and `u11`
-        
-        
-            `f32`
-            `i25` and `u24`
-        
-        
-            `f64`
-            `i54` and `u53`
-        
-        
-            `f80`
-            `i65` and `u64`
-        
-        
-            `f128`
-            `i114` and `u113`
-        
-        
-            `c_longdouble`
-            Varies by target
-        
-        
-      
-      
-      test_int_to_float_coercion.zig
+      `f16`
+      `i12` and `u11`
+
+      `f32`
+      `i25` and `u24`
+
+      `f64`
+      `i54` and `u53`
+
+      `f80`
+      `i65` and `u64`
+
+      `f128`
+      `i114` and `u113`
+
+      `c_longdouble`
+      Varies by target
+
+test_int_to_float_coercion.zig
 ```zig
 const std = @import("std");
 const expectEqual = std.testing.expectEqual;
@@ -220,7 +184,7 @@ Shell$ zig test test_int_to_float_coercion.zig
 1/1 test_int_to_float_coercion.test.implicit integer to float...OK
 All 1 tests passed.
 
-      test_failed_int_to_float_coercion.zig
+test_failed_int_to_float_coercion.zig
 ```zig
 test "integer type is too large for implicit cast to float" {
     var int: u25 = 123;
@@ -232,25 +196,18 @@ test "integer type is too large for implicit cast to float" {
 Shell$ zig test test_failed_int_to_float_coercion.zig
 /home/ci/zig-bootstrap/zig/doc/langref/test_failed_int_to_float_coercion.zig:4:24: error: expected type 'f32', found 'u25'
     const float: f32 = int;
-                       ^~~
+                 ^~~
 
-      
-      
 ### [Type Coercion: Float to Int](#toc-Type-Coercion-Float-to-Int) §
 
-      
+A compiler error is appropriate because this ambiguous expression leaves the compiler
+two choices about the coercion.
 
-      A compiler error is appropriate because this ambiguous expression leaves the compiler
-      two choices about the coercion.
-      
-
-      
-        
 - Cast `54.0` to `comptime_int` resulting in `@as(comptime_int, 10)`, which is casted to `@as(f32, 10)`
-        
+
 - Cast `5` to `comptime_float` resulting in `@as(comptime_float, 10.8)`, which is casted to `@as(f32, 10.8)`
-      
-      test_ambiguous_coercion.zig
+
+test_ambiguous_coercion.zig
 ```zig
 // Compile time coercion of float to int
 test "implicit cast to comptime_int" {
@@ -261,13 +218,11 @@ test "implicit cast to comptime_int" {
 Shell$ zig test test_ambiguous_coercion.zig
 /home/ci/zig-bootstrap/zig/doc/langref/test_ambiguous_coercion.zig:3:25: error: ambiguous coercion of division operands 'comptime_float' and 'comptime_int'; non-zero remainder '4'
     const f: f32 = 54.0 / 5;
-                   ~~~~~^~~
+             ~~~~~^~~
 
-      
-      
 ### [Type Coercion: Slices, Arrays and Pointers](#toc-Type-Coercion-Slices-Arrays-and-Pointers) §
 
-      test_coerce_slices_arrays_and_pointers.zig
+test_coerce_slices_arrays_and_pointers.zig
 ```zig
 const std = @import("std");
 const expect = std.testing.expect;
@@ -356,22 +311,15 @@ Shell$ zig test test_coerce_slices_arrays_and_pointers.zig
 8/8 test_coerce_slices_arrays_and_pointers.test.[:x]T to [*:x]T...OK
 All 8 tests passed.
 
-      
-
 See also:
 
 - [C Pointers](#C-Pointers)
 
-      
-      
 ### [Type Coercion: Optionals](#toc-Type-Coercion-Optionals) §
 
-      
+The payload type of [Optionals](#Optionals), as well as [null](#null), coerce to the optional type.
 
-      The payload type of [Optionals](#Optionals), as well as [null](#null), coerce to the optional type.
-      
-
-      test_coerce_optionals.zig
+test_coerce_optionals.zig
 ```zig
 const std = @import("std");
 const expect = std.testing.expect;
@@ -388,11 +336,9 @@ Shell$ zig test test_coerce_optionals.zig
 1/1 test_coerce_optionals.test.coerce to optionals...OK
 All 1 tests passed.
 
-      
-
 Optionals work nested inside the [Error Union Type](#Error-Union-Type), too:
 
-      test_coerce_optional_wrapped_error_union.zig
+test_coerce_optional_wrapped_error_union.zig
 ```zig
 const std = @import("std");
 const expect = std.testing.expect;
@@ -409,17 +355,12 @@ Shell$ zig test test_coerce_optional_wrapped_error_union.zig
 1/1 test_coerce_optional_wrapped_error_union.test.coerce to optionals wrapped in error union...OK
 All 1 tests passed.
 
-      
-      
 ### [Type Coercion: Error Unions](#toc-Type-Coercion-Error-Unions) §
 
-      
-
 The payload type of an [Error Union Type](#Error-Union-Type) as well as the [Error Set Type](#Error-Set-Type)
-      coerce to the error union type:
-      
+coerce to the error union type:
 
-      test_coerce_to_error_union.zig
+test_coerce_to_error_union.zig
 ```zig
 const std = @import("std");
 const expect = std.testing.expect;
@@ -436,17 +377,12 @@ Shell$ zig test test_coerce_to_error_union.zig
 1/1 test_coerce_to_error_union.test.coercion to error unions...OK
 All 1 tests passed.
 
-      
-      
 ### [Type Coercion: Compile-Time Known Numbers](#toc-Type-Coercion-Compile-Time-Known-Numbers) §
 
-      
-
 When a number is [comptime](#comptime)-known to be representable in the destination type,
-      it may be coerced:
-      
+it may be coerced:
 
-      test_coerce_large_to_small.zig
+test_coerce_large_to_small.zig
 ```zig
 const std = @import("std");
 const expect = std.testing.expect;
@@ -461,18 +397,13 @@ Shell$ zig test test_coerce_large_to_small.zig
 1/1 test_coerce_large_to_small.test.coercing large integer type to smaller one when value is comptime-known to fit...OK
 All 1 tests passed.
 
-      
-      
 ### [Type Coercion: Unions and Enums](#toc-Type-Coercion-Unions-and-Enums) §
 
-      
-
 Tagged unions can be coerced to enums, and enums can be coerced to tagged unions
-      when they are [comptime](#comptime)-known to be a field of the union that has only one possible value, such as
-      [void](#void):
-      
+when they are [comptime](#comptime)-known to be a field of the union that has only one possible value, such as
+[void](#void):
 
-      test_coerce_unions_enums.zig
+test_coerce_unions_enums.zig
 ```zig
 const std = @import("std");
 const expect = std.testing.expect;
@@ -494,10 +425,10 @@ const U2 = union(enum) {
     b: f32,
 
     fn tag(self: U2) usize {
-        switch (self) {
-            .a => return 1,
-            .b => return 2,
-        }
+  switch (self) {
+      .a => return 1,
+      .b => return 2,
+  }
     }
 };
 
@@ -526,32 +457,21 @@ Shell$ zig test test_coerce_unions_enums.zig
 1/1 test_coerce_unions_enums.test.coercion between unions and enums...OK
 All 1 tests passed.
 
-      
-
 See also:
 
 - [union](#union)
 
 - [enum](#enum)
 
-      
-      
 ### [Type Coercion: undefined](#toc-Type-Coercion-undefined) §
-
-      
 
 [undefined](#undefined) can be coerced to any type.
 
-      
-
-      
 ### [Type Coercion: Tuples to Arrays](#toc-Type-Coercion-Tuples-to-Arrays) §
-
-      
 
 [Tuples](#Tuples) can be coerced to arrays, if all of the fields have the same type.
 
-      test_coerce_tuples_arrays.zig
+test_coerce_tuples_arrays.zig
 ```zig
 const std = @import("std");
 const expect = std.testing.expect;
@@ -567,84 +487,65 @@ Shell$ zig test test_coerce_tuples_arrays.zig
 1/1 test_coerce_tuples_arrays.test.coercion from homogeneous tuple to array...OK
 All 1 tests passed.
 
-      
-      
-
-      
 ## [Explicit Casts](#toc-Explicit-Casts) §
 
-      
+Explicit casts are performed via [Builtin Functions](#Builtin-Functions).
+Some explicit casts are safe; some are not.
+Some explicit casts perform language-level assertions; some do not.
+Some explicit casts are no-ops at runtime; some are not.
 
-      Explicit casts are performed via [Builtin Functions](#Builtin-Functions).
-      Some explicit casts are safe; some are not.
-      Some explicit casts perform language-level assertions; some do not.
-      Some explicit casts are no-ops at runtime; some are not.
-      
-
-      
-          
 - [@bitCast](#bitCast) - change type but maintain bit representation
-          
+
 - [@alignCast](#alignCast) - make a pointer have more alignment
-          
+
 - [@enumFromInt](#enumFromInt) - obtain an enum value based on its integer tag value
-          
+
 - [@errorFromInt](#errorFromInt) - obtain an error code based on its integer value
-          
+
 - [@errorCast](#errorCast) - convert to a smaller error set
-          
+
 - [@floatCast](#floatCast) - convert a larger float to a smaller float
-          
+
 - [@floatFromInt](#floatFromInt) - convert an integer to a float value
-          
+
 - [@intCast](#intCast) - convert between integer types
-          
+
 - [@intFromBool](#intFromBool) - convert true to 1 and false to 0
-          
+
 - [@intFromEnum](#intFromEnum) - obtain the integer tag value of an enum or tagged union
-          
+
 - [@intFromError](#intFromError) - obtain the integer value of an error code
-          
+
 - [@intFromFloat](#intFromFloat) - obtain the integer part of a float value
-          
+
 - [@intFromPtr](#intFromPtr) - obtain the address of a pointer
-          
+
 - [@ptrFromInt](#ptrFromInt) - convert an address to a pointer
-          
+
 - [@ptrCast](#ptrCast) - convert between pointer types
-          
+
 - [@truncate](#truncate) - convert between integer types, chopping off bits
-      
-      
 
-      
 ## [Peer Type Resolution](#toc-Peer-Type-Resolution) §
-
-      
 
 Peer Type Resolution occurs in these places:
 
-      
-        
 - [switch](#switch) expressions
-        
+
 - [if](#if) expressions
-        
+
 - [while](#while) expressions
-        
+
 - [for](#for) expressions
-        
+
 - Multiple break statements in a block
-        
+
 - Some [binary operations](#Table-of-Operators)
-      
-      
 
-      This kind of type resolution chooses a type that all peer types can coerce into. Here are
-      some examples:
-      
+This kind of type resolution chooses a type that all peer types can coerce into. Here are
+some examples:
 
-      test_peer_type_resolution.zig
+test_peer_type_resolution.zig
 ```zig
 const std = @import("std");
 const expect = std.testing.expect;
@@ -683,13 +584,13 @@ test "peer type resolution: ?T and T" {
     try expect(peerTypeTAndOptionalT(true, false).? == 0);
     try expect(peerTypeTAndOptionalT(false, false).? == 3);
     comptime {
-        try expect(peerTypeTAndOptionalT(true, false).? == 0);
-        try expect(peerTypeTAndOptionalT(false, false).? == 3);
+  try expect(peerTypeTAndOptionalT(true, false).? == 0);
+  try expect(peerTypeTAndOptionalT(false, false).? == 3);
     }
 }
 fn peerTypeTAndOptionalT(c: bool, b: bool) ?usize {
     if (c) {
-        return if (b) null else @as(usize, 0);
+  return if (b) null else @as(usize, 0);
     }
 
     return @as(usize, 3);
@@ -699,34 +600,34 @@ test "peer type resolution: *[0]u8 and []const u8" {
     try expect(peerTypeEmptyArrayAndSlice(true, "hi").len == 0);
     try expect(peerTypeEmptyArrayAndSlice(false, "hi").len == 1);
     comptime {
-        try expect(peerTypeEmptyArrayAndSlice(true, "hi").len == 0);
-        try expect(peerTypeEmptyArrayAndSlice(false, "hi").len == 1);
+  try expect(peerTypeEmptyArrayAndSlice(true, "hi").len == 0);
+  try expect(peerTypeEmptyArrayAndSlice(false, "hi").len == 1);
     }
 }
 fn peerTypeEmptyArrayAndSlice(a: bool, slice: []const u8) []const u8 {
     if (a) {
-        return &[_]u8{};
+  return &[_]u8{};
     }
 
     return slice[0..1];
 }
 test "peer type resolution: *[0]u8, []const u8, and anyerror![]u8" {
     {
-        var data = "hi".*;
-        const slice = data[0..];
-        try expect((try peerTypeEmptyArrayAndSliceAndError(true, slice)).len == 0);
-        try expect((try peerTypeEmptyArrayAndSliceAndError(false, slice)).len == 1);
+  var data = "hi".*;
+  const slice = data[0..];
+  try expect((try peerTypeEmptyArrayAndSliceAndError(true, slice)).len == 0);
+  try expect((try peerTypeEmptyArrayAndSliceAndError(false, slice)).len == 1);
     }
     comptime {
-        var data = "hi".*;
-        const slice = data[0..];
-        try expect((try peerTypeEmptyArrayAndSliceAndError(true, slice)).len == 0);
-        try expect((try peerTypeEmptyArrayAndSliceAndError(false, slice)).len == 1);
+  var data = "hi".*;
+  const slice = data[0..];
+  try expect((try peerTypeEmptyArrayAndSliceAndError(true, slice)).len == 0);
+  try expect((try peerTypeEmptyArrayAndSliceAndError(false, slice)).len == 1);
     }
 }
 fn peerTypeEmptyArrayAndSliceAndError(a: bool, slice: []u8) anyerror![]u8 {
     if (a) {
-        return &[_]u8{};
+  return &[_]u8{};
     }
 
     return slice[0..1];
@@ -746,11 +647,11 @@ test "peer type resolution: error union switch" {
     var a: error{ A, B, C }!u32 = 0;
     _ = &a;
     const b = if (a) |x|
-        x + 3
+  x + 3
     else |err| switch (err) {
-        error.A => 0,
-        error.B => 1,
-        error.C => null,
+  error.A => 0,
+  error.B => 1,
+  error.C => null,
     };
     try expect(@TypeOf(b) == ?u32);
 
@@ -758,9 +659,9 @@ test "peer type resolution: error union switch" {
     // the pattern `x catch |err| blk: { switch (err) {...} }` does not consider the unwrapped `x`
     // and error case to be peers.
     const c = a catch |err| switch (err) {
-        error.A => 0,
-        error.B => 1,
-        error.C => null,
+  error.A => 0,
+  error.B => 1,
+  error.C => null,
     };
     try expect(@TypeOf(c) == ?u32);
 }

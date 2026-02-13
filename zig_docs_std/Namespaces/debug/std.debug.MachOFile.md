@@ -26,13 +26,13 @@ Key is index into `strings` of the file path.
 
 ## Functions
 
-`pub fn deinit(mf: *MachOFile, gpa: Allocator) void`  
+`pub fn deinit(mf: *MachOFile, gpa: Allocator) void`
 Releases mapped memory and backend-owned metadata.
 
-`pub fn load(gpa: Allocator, io: Io, path: []const u8, arch: std.Target.Cpu.Arch) Error!MachOFile`  
+`pub fn load(gpa: Allocator, io: Io, path: []const u8, arch: std.Target.Cpu.Arch) Error!MachOFile`
 Loads Mach-O debug metadata for the requested architecture.
 
-`pub fn lookupSymbolName(mf: *MachOFile, vaddr: u64) error{MissingDebugInfo}![]const u8`  
+`pub fn lookupSymbolName(mf: *MachOFile, vaddr: u64) error{MissingDebugInfo}![]const u8`
 Returns the symbol name associated with a virtual address.
 
 ## Error Sets

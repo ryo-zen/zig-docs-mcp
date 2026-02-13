@@ -16,9 +16,9 @@ pub fn main() !void {
     const allocator = std.heap.page_allocator;
 
     const resolved = try std.fs.path.resolve(allocator, &.{
-        "/usr/local",
-        "../share",    // Go up from local
-        "doc",
+  "/usr/local",
+  "../share",    // Go up from local
+  "doc",
     });
     defer allocator.free(resolved); // Must free!
 
@@ -42,10 +42,10 @@ pub fn main() !void {
     const allocator = std.heap.page_allocator;
 
     const result = try std.fs.path.resolve(allocator, &.{
-        "projects",
-        "myapp/src",
-        "../lib",
-        "./utils.zig",
+  "projects",
+  "myapp/src",
+  "../lib",
+  "./utils.zig",
     });
     defer allocator.free(result);
 

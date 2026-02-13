@@ -1,6 +1,12 @@
 # Table of Contents
 
 * Introduction
+  * Playbooks
+    * Memory Allocator Strategy
+    * Unsafe Boundaries and Invariants
+    * Error Handling Playbook
+    * Concurrency and Synchronization Playbook
+    * I/O Reliability and Backpressure
   * Zig Standard Library
   * Hello World
   * Comments
@@ -10,14 +16,14 @@
     * Primitive Types
     * Primitive Values
     * String Literals and Unicode Code Point Literals
-      * Escape Sequences
-      * Multiline String Literals
+* Escape Sequences
+* Multiline String Literals
     * Assignment
-      * undefined
-      * Destructuring
+* undefined
+* Destructuring
   * Zig Test
     * Test Declarations
-      * Doctests
+* Doctests
     * Test Failure
     * Skip Tests
     * Report Memory Leaks
@@ -55,13 +61,13 @@
     * Sentinel-Terminated Slices
   * struct
     * Default Field Values
-      * Faulty Default Field Values
+* Faulty Default Field Values
     * extern struct
     * packed struct
     * Struct Naming
     * Anonymous Struct Literals
     * Tuples
-      * Destructuring Tuples
+* Destructuring Tuples
   * enum
     * extern enum
     * Enum Literals
@@ -102,31 +108,31 @@
     * Function Reflection
   * Errors
     * Error Set Type
-      * The Global Error Set
+* The Global Error Set
     * Error Union Type
-      * catch
-      * try
-      * errdefer
-      * Merging Error Sets
-      * Inferred Error Sets
+* catch
+* try
+* errdefer
+* Merging Error Sets
+* Inferred Error Sets
     * Error Return Traces
-      * Implementation Details
+* Implementation Details
   * Optionals
     * Optional Type
     * null
     * Optional Pointers
   * Casting
     * Type Coercion
-      * Type Coercion: Stricter Qualification
-      * Type Coercion: Integer and Float Widening
-      * Type Coercion: Float to Int
-      * Type Coercion: Slices, Arrays and Pointers
-      * Type Coercion: Optionals
-      * Type Coercion: Error Unions
-      * Type Coercion: Compile-Time Known Numbers
-      * Type Coercion: Unions and Enums
-      * Type Coercion: undefined
-      * Type Coercion: Tuples to Arrays
+* Type Coercion: Stricter Qualification
+* Type Coercion: Integer and Float Widening
+* Type Coercion: Float to Int
+* Type Coercion: Slices, Arrays and Pointers
+* Type Coercion: Optionals
+* Type Coercion: Error Unions
+* Type Coercion: Compile-Time Known Numbers
+* Type Coercion: Unions and Enums
+* Type Coercion: undefined
+* Type Coercion: Tuples to Arrays
     * Explicit Casts
     * Peer Type Resolution
   * Zero Bit Types
@@ -137,9 +143,9 @@
   * usingnamespace
   * comptime
     * Introducing the Compile-Time Concept
-      * Compile-Time Parameters
-      * Compile-Time Variables
-      * Compile-Time Expressions
+* Compile-Time Parameters
+* Compile-Time Variables
+* Compile-Time Expressions
     * Generic Data Structures
     * Case Study: print in Zig
   * Assembly
@@ -278,10 +284,10 @@
     * Cast Negative Number to Unsigned Integer
     * Cast Truncates Data
     * Integer Overflow
-      * Default Operations
-      * Standard Library Math Functions
-      * Builtin Overflow Functions
-      * Wrapping Operations
+* Default Operations
+* Standard Library Math Functions
+* Builtin Overflow Functions
+* Wrapping Operations
     * Exact Left Shift Overflow
     * Exact Right Shift Overflow
     * Division by Zero
@@ -308,17 +314,17 @@
     * Source File Structs
     * File and Declaration Discovery
     * Special Root Declarations
-      * Entry Point
-      * Standard Library Options
-      * Panic Handler
+* Entry Point
+* Standard Library Options
+* Panic Handler
   * Zig Build System
   * C
     * C Type Primitives
     * Import from C Header File
     * C Translation CLI
-      * Command line flags
-      * Using -target and -cflags
-      * @cImport vs translate-c
+* Command line flags
+* Using -target and -cflags
+* @cImport vs translate-c
     * C Translation Caching
     * Translation failures
     * C Macros

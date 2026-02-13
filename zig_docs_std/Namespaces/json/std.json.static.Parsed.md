@@ -12,4 +12,4 @@
 
 ## Functions
 
-`pub fn deinit(self: @This()) void`  
+`pub fn deinit(self: @This()) void`

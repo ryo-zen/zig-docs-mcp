@@ -172,18 +172,18 @@ fn reportStatus(io: std.Io, status: enum { success, warning, error_ }, message: 
     const term = stderr.terminal();
 
     switch (status) {
-        .success => {
-            try term.setColor(.green);
-            try stderr.file_writer.interface.writeAll("[SUCCESS] ");
-        },
-        .warning => {
-            try term.setColor(.yellow);
-            try stderr.file_writer.interface.writeAll("[WARNING] ");
-        },
-        .error_ => {
-            try term.setColor(.red);
-            try stderr.file_writer.interface.writeAll("[ERROR] ");
-        },
+  .success => {
+      try term.setColor(.green);
+      try stderr.file_writer.interface.writeAll("[SUCCESS] ");
+  },
+  .warning => {
+      try term.setColor(.yellow);
+      try stderr.file_writer.interface.writeAll("[WARNING] ");
+  },
+  .error_ => {
+      try term.setColor(.red);
+      try stderr.file_writer.interface.writeAll("[ERROR] ");
+  },
     }
     try term.setColor(.reset);
     try stderr.file_writer.interface.print("{s}\n", .{message});
@@ -318,10 +318,10 @@ If your stderr output isn't working correctly, check:
 6. ✅ Did you handle the `tryLockStderr()` null case?
    ```zig
    if (try io.tryLockStderr(&buffer, null)) |stderr| {
-       defer io.unlockStderr();
-       // ... use stderr
+ defer io.unlockStderr();
+ // ... use stderr
    } else {
-       // Handle "lock already held" case
+ // Handle "lock already held" case
    }
    ```
 
@@ -348,16 +348,16 @@ If your stderr output isn't working correctly, check:
    ```zig
    // ❌ DON'T: Lock/unlock repeatedly
    for (errors) |err| {
-       const stderr = try io.lockStderr(&buffer, null);
-       defer io.unlockStderr();
-       try stderr.file_writer.interface.print("{s}\n", .{err});
+ const stderr = try io.lockStderr(&buffer, null);
+ defer io.unlockStderr();
+ try stderr.file_writer.interface.print("{s}\n", .{err});
    }
 
    // ✅ DO: Lock once for all writes
    const stderr = try io.lockStderr(&buffer, null);
    defer io.unlockStderr();
    for (errors) |err| {
-       try stderr.file_writer.interface.print("{s}\n", .{err});
+ try stderr.file_writer.interface.print("{s}\n", .{err});
    }
    ```
 
@@ -365,8 +365,8 @@ If your stderr output isn't working correctly, check:
    ```zig
    // For debug/trace output that can be dropped if lock is busy
    if (try io.tryLockStderr(&buffer, null)) |stderr| {
-       defer io.unlockStderr();
-       try stderr.file_writer.interface.writeAll("Debug: ...\n");
+ defer io.unlockStderr();
+ try stderr.file_writer.interface.writeAll("Debug: ...\n");
    }
    // If null, just skip the debug output
    ```

@@ -1,6 +1,7 @@
 # std.Io.net.Stream
 
-📚 **[See Comprehensive Examples & Tests](../../Examples/)** - Complete runnable code demonstrating Stream features
+📚 **Runnable examples:** `zig_docs_std/Examples/test_stream_basic.zig`, `zig_docs_std/Examples/test_stream_bidirectional.zig`, `zig_docs_std/Examples/test_stream_shutdown.zig`
+📘 **Reliability playbook:** [I/O Reliability and Backpressure](../../../../zig_docs/io_reliability_backpressure.md)
 
 ## Quick Start
 
@@ -242,8 +243,8 @@ var writer = server_stream.writer(io, &wbuf);
 
 while (true) {
     const raw = reader.interface.takeDelimiterInclusive('\n') catch |err| {
-        if (err == error.EndOfStream) break;
-        return err;
+  if (err == error.EndOfStream) break;
+  return err;
     };
     const line = raw[0 .. raw.len - 1]; // strip \n
 

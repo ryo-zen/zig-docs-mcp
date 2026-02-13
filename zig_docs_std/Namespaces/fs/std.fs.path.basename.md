@@ -14,15 +14,15 @@ const std = @import("std");
 
 pub fn main() void {
     const paths = [_][]const u8{
-        "src/main.zig",           // → "main.zig"
-        "/usr/local/bin/zig",     // → "zig"
-        "document.txt",           // → "document.txt"
-        "/trailing/",             // → "" (empty)
+  "src/main.zig",           // → "main.zig"
+  "/usr/local/bin/zig",     // → "zig"
+  "document.txt",           // → "document.txt"
+  "/trailing/",             // → "" (empty)
     };
 
     for (paths) |path| {
-        const filename = std.fs.path.basename(path);
-        std.debug.print("{s} → {s}\n", .{ path, filename });
+  const filename = std.fs.path.basename(path);
+  std.debug.print("{s} → {s}\n", .{ path, filename });
     }
 }
 ```

@@ -1,16 +1,12 @@
 # Optionals
 
 One area that Zig provides safety without compromising efficiency or
-      readability is with the optional type.
-      
+readability is with the optional type.
 
-      
+The question mark symbolizes the optional type. You can convert a type to an optional
+type by putting a question mark in front of it, like this:
 
-      The question mark symbolizes the optional type. You can convert a type to an optional
-      type by putting a question mark in front of it, like this:
-      
-
-      optional_integer.zig
+optional_integer.zig
 ```zig
 // normal integer
 const normal_int: i32 = 1234;
@@ -19,45 +15,26 @@ const normal_int: i32 = 1234;
 const optional_int: ?i32 = 5678;
 ```
 
-      
+Now the variable `optional_int` could be an `i32`, or `null`.
 
-      Now the variable `optional_int` could be an `i32`, or `null`.
-      
-
-      
-
-      Instead of integers, let's talk about pointers. Null references are the source of many runtime
-      exceptions, and even stand accused of being
-      [the worst mistake of computer science](https://www.lucidchart.com/techblog/2015/08/31/the-worst-mistake-of-computer-science/).
-      
-
-      
+Instead of integers, let's talk about pointers. Null references are the source of many runtime
+exceptions, and even stand accused of being
+[the worst mistake of computer science](https://www.lucidchart.com/techblog/2015/08/31/the-worst-mistake-of-computer-science/).
 
 Zig does not have them.
 
-      
+Instead, you can use an optional pointer. This secretly compiles down to a normal pointer,
+since we know we can use 0 as the null value for the optional type. But the compiler
+can check your work and make sure you don't assign null to something that can't be null.
 
-      Instead, you can use an optional pointer. This secretly compiles down to a normal pointer,
-      since we know we can use 0 as the null value for the optional type. But the compiler
-      can check your work and make sure you don't assign null to something that can't be null.
-      
+Typically the downside of not having null is that it makes the code more verbose to
+write. But, let's compare some equivalent C code and Zig code.
 
-      
-
-      Typically the downside of not having null is that it makes the code more verbose to
-      write. But, let's compare some equivalent C code and Zig code.
-      
-
-      
-
-      Task: call malloc, if the result is null, return null.
-      
-
-      
+Task: call malloc, if the result is null, return null.
 
 C code
 
-      call_malloc_in_c.c
+call_malloc_in_c.c
 ```zig
 // malloc prototype included for reference
 void *malloc(size_t size);
@@ -69,11 +46,9 @@ struct Foo *do_a_thing(void) {
 }
 ```
 
-      
-
 Zig code
 
-      call_malloc_from_zig.zig
+call_malloc_from_zig.zig
 ```zig
 // malloc prototype included for reference
 extern fn malloc(size: usize) ?[*]u8;
@@ -84,38 +59,29 @@ fn doAThing() ?*Foo {
 }
 ```
 
-      
+  Here, Zig is at least as convenient, if not more, than C. And, the type of "ptr"
+  is `[*]u8` *not* `?[*]u8`. The `orelse` keyword
+              unwrapped the optional type and therefore `ptr` is guaranteed to be non-null everywhere
+  it is used in the function.
 
-        Here, Zig is at least as convenient, if not more, than C. And, the type of "ptr"
-        is `[*]u8` *not* `?[*]u8`. The `orelse` keyword
-                    unwrapped the optional type and therefore `ptr` is guaranteed to be non-null everywhere
-        it is used in the function.
-      
+  The other form of checking against NULL you might see looks like this:
 
-      
-
-        The other form of checking against NULL you might see looks like this:
-      
-
-      checking_null_in_c.c
+checking_null_in_c.c
 ```zig
 void do_a_thing(struct Foo *foo) {
     // do some stuff
 
     if (foo) {
-        do_something_with_foo(foo);
+  do_something_with_foo(foo);
     }
 
     // do some stuff
 }
 ```
 
-      
+  In Zig you can accomplish the same thing:
 
-        In Zig you can accomplish the same thing:
-      
-
-      checking_null_in_zig.zig
+checking_null_in_zig.zig
 ```zig
 const Foo = struct {};
 fn doSomethingWithFoo(foo: *Foo) void {
@@ -126,38 +92,29 @@ fn doAThing(optional_foo: ?*Foo) void {
     // do some stuff
 
     if (optional_foo) |foo| {
-        doSomethingWithFoo(foo);
+  doSomethingWithFoo(foo);
     }
 
     // do some stuff
 }
 ```
 
-      
+Once again, the notable thing here is that inside the if block,
+`foo` is no longer an optional pointer, it is a pointer, which
+cannot be null.
 
-      Once again, the notable thing here is that inside the if block,
-      `foo` is no longer an optional pointer, it is a pointer, which
-      cannot be null.
-      
+One benefit to this is that functions which take pointers as arguments can
+be annotated with the "nonnull" attribute - `__attribute__((nonnull))` in
+[GCC](https://gcc.gnu.org/onlinedocs/gcc-4.0.0/gcc/Function-Attributes.html).
+The optimizer can sometimes make better decisions knowing that pointer arguments
+cannot be null.
 
-      
-
-      One benefit to this is that functions which take pointers as arguments can
-      be annotated with the "nonnull" attribute - `__attribute__((nonnull))` in
-      [GCC](https://gcc.gnu.org/onlinedocs/gcc-4.0.0/gcc/Function-Attributes.html).
-      The optimizer can sometimes make better decisions knowing that pointer arguments
-      cannot be null.
-      
-
-      
 ## [Optional Type](#toc-Optional-Type) §
 
-      
-
 An optional is created by putting `?` in front of a type. You can use compile-time
-      reflection to access the child type of an optional:
+reflection to access the child type of an optional:
 
-      test_optional_type.zig
+test_optional_type.zig
 ```zig
 const expect = @import("std").testing.expect;
 
@@ -176,31 +133,22 @@ Shell$ zig test test_optional_type.zig
 1/1 test_optional_type.test.optional type...OK
 All 1 tests passed.
 
-      
-      
 ## [null](#toc-null) §
 
-      
+Just like [undefined](#undefined), `null` has its own type, and the only way to use it is to
+cast it to a different type:
 
-      Just like [undefined](#undefined), `null` has its own type, and the only way to use it is to
-      cast it to a different type:
-      
-
-      null.zig
+null.zig
 ```zig
 const optional_value: ?i32 = null;
 ```
 
-      
-      
 ## [Optional Pointers](#toc-Optional-Pointers) §
 
-      
-
 An optional pointer is guaranteed to be the same size as a pointer. The `null` of
-      the optional is guaranteed to be address 0.
+the optional is guaranteed to be address 0.
 
-      test_optional_pointer.zig
+test_optional_pointer.zig
 ```zig
 const expect = @import("std").testing.expect;
 
@@ -222,10 +170,6 @@ test "optional pointers" {
 Shell$ zig test test_optional_pointer.zig
 1/1 test_optional_pointer.test.optional pointers...OK
 All 1 tests passed.
-
-      
-
-      
 
 See also:
 

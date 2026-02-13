@@ -16,6 +16,6 @@
 
 ## Functions
 
-`pub fn deinit(block: PosixBlock, gpa: Allocator) void`  
+`pub fn deinit(block: PosixBlock, gpa: Allocator) void`
 
-`pub fn view(block: PosixBlock) View`  
+`pub fn view(block: PosixBlock) View`

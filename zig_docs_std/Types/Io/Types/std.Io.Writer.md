@@ -1,6 +1,7 @@
 # std.Io.Writer
 
-📚 **[See Comprehensive Examples & Tests](../../Examples/std.Io.writer.tests.md)** - Complete runnable code demonstrating all Writer features
+📚 **Runnable examples:** `zig_docs_std/Examples/test_writer_comprehensive.zig`, `zig_docs_std/Examples/test_writer_print_examples.zig`, `zig_docs_std/Examples/test_writer_binary.zig`
+📘 **Reliability playbook:** [I/O Reliability and Backpressure](../../../../zig_docs/io_reliability_backpressure.md)
 
 ## Quick Start
 

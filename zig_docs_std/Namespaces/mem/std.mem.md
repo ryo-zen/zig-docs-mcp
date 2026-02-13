@@ -761,8 +761,8 @@ const std = @import("std");
 pub fn parseCsv(line: []const u8) void {
     var iter = std.mem.splitScalar(u8, line, ',');
     while (iter.next()) |field| {
-        const trimmed = std.mem.trim(u8, field, " \t");
-        std.debug.print("Field: '{s}'\n", .{trimmed});
+  const trimmed = std.mem.trim(u8, field, " \t");
+  std.debug.print("Field: '{s}'\n", .{trimmed});
     }
 }
 
@@ -818,9 +818,9 @@ pub fn encodeHeader(magic: u32, version: u16, flags: u16) [8]u8 {
 
 pub fn decodeHeader(buffer: [8]u8) struct { magic: u32, version: u16, flags: u16 } {
     return .{
-        .magic = std.mem.readInt(u32, buffer[0..4], .big),
-        .version = std.mem.readInt(u16, buffer[4..6], .big),
-        .flags = std.mem.readInt(u16, buffer[6..8], .big),
+  .magic = std.mem.readInt(u32, buffer[0..4], .big),
+  .version = std.mem.readInt(u16, buffer[4..6], .big),
+  .flags = std.mem.readInt(u16, buffer[6..8], .big),
     };
 }
 ```
@@ -834,14 +834,14 @@ const std = @import("std");
 
 pub fn stripPrefix(str: []const u8, prefix: []const u8) []const u8 {
     if (std.mem.startsWith(u8, str, prefix)) {
-        return str[prefix.len..];
+  return str[prefix.len..];
     }
     return str;
 }
 
 pub fn stripSuffix(str: []const u8, suffix: []const u8) []const u8 {
     if (std.mem.endsWith(u8, str, suffix)) {
-        return str[0 .. str.len - suffix.len];
+  return str[0 .. str.len - suffix.len];
     }
     return str;
 }

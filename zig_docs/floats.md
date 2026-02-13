@@ -81,7 +81,7 @@ test "float literals" {
     const lightspeed = 299_792_458.000_000;
     const nanosecond = 0.000_000_001;
     const more_hex = 0x1234_5678.9ABC_CDEFp-10;
-    
+
     _ = floating_point; _ = another_float; _ = yet_another;
     _ = hex_floating_point; _ = another_hex_float; _ = yet_another_hex_float;
     _ = lightspeed; _ = nanosecond; _ = more_hex;
@@ -245,7 +245,7 @@ const std = @import("std");
 const print = std.debug.print;
 
 // Large value that causes precision loss for small additions in Strict mode
-const big = 1.0e20; 
+const big = 1.0e20;
 
 // Strict Mode (Default)
 // Operations executed strictly left-to-right.
@@ -385,13 +385,13 @@ const Vec2 = struct {
     y: f32,
 
     pub fn length(self: Vec2) f32 {
-        return std.math.sqrt(self.x * self.x + self.y * self.y);
+  return std.math.sqrt(self.x * self.x + self.y * self.y);
     }
 
     pub fn normalize(self: Vec2) Vec2 {
-        const len = self.length();
-        if (len < 0.0001) return Vec2{ .x = 0, .y = 0 };
-        return Vec2{ .x = self.x / len, .y = self.y / len };
+  const len = self.length();
+  if (len < 0.0001) return Vec2{ .x = 0, .y = 0 };
+  return Vec2{ .x = self.x / len, .y = self.y / len };
     }
 };
 
@@ -414,18 +414,18 @@ const Coordinate = struct {
 
     // Haversine formula for distance between two points on Earth
     pub fn distanceTo(self: Coordinate, other: Coordinate) f64 {
-        const earth_radius_km = 6371.0;
-        const lat1 = self.latitude * std.math.pi / 180.0;
-        const lat2 = other.latitude * std.math.pi / 180.0;
-        const delta_lat = (other.latitude - self.latitude) * std.math.pi / 180.0;
-        const delta_lon = (other.longitude - self.longitude) * std.math.pi / 180.0;
+  const earth_radius_km = 6371.0;
+  const lat1 = self.latitude * std.math.pi / 180.0;
+  const lat2 = other.latitude * std.math.pi / 180.0;
+  const delta_lat = (other.latitude - self.latitude) * std.math.pi / 180.0;
+  const delta_lon = (other.longitude - self.longitude) * std.math.pi / 180.0;
 
-        const a = std.math.sin(delta_lat / 2.0) * std.math.sin(delta_lat / 2.0) +
-            std.math.cos(lat1) * std.math.cos(lat2) *
-            std.math.sin(delta_lon / 2.0) * std.math.sin(delta_lon / 2.0);
-        const c = 2.0 * std.math.atan2(std.math.sqrt(a), std.math.sqrt(1.0 - a));
+  const a = std.math.sin(delta_lat / 2.0) * std.math.sin(delta_lat / 2.0) +
+      std.math.cos(lat1) * std.math.cos(lat2) *
+      std.math.sin(delta_lon / 2.0) * std.math.sin(delta_lon / 2.0);
+  const c = 2.0 * std.math.atan2(std.math.sqrt(a), std.math.sqrt(1.0 - a));
 
-        return earth_radius_km * c;
+  return earth_radius_km * c;
     }
 };
 
@@ -447,15 +447,15 @@ const Money = struct {
     cents: i64, // Store as integer cents
 
     pub fn fromDollars(dollars: f64) Money {
-        return Money{ .cents = @intFromFloat(dollars * 100.0) };
+  return Money{ .cents = @intFromFloat(dollars * 100.0) };
     }
 
     pub fn toDollars(self: Money) f64 {
-        return @as(f64, @floatFromInt(self.cents)) / 100.0;
+  return @as(f64, @floatFromInt(self.cents)) / 100.0;
     }
 
     pub fn add(self: Money, other: Money) Money {
-        return Money{ .cents = self.cents + other.cents };
+  return Money{ .cents = self.cents + other.cents };
     }
 };
 
@@ -481,12 +481,12 @@ fn integrate(comptime f: fn (f64) f64, a: f64, b: f64, n: usize) f64 {
 
     var i: usize = 1;
     while (i < n) : (i += 2) {
-        sum += 4.0 * f(a + @as(f64, @floatFromInt(i)) * h);
+  sum += 4.0 * f(a + @as(f64, @floatFromInt(i)) * h);
     }
 
     i = 2;
     while (i < n) : (i += 2) {
-        sum += 2.0 * f(a + @as(f64, @floatFromInt(i)) * h);
+  sum += 2.0 * f(a + @as(f64, @floatFromInt(i)) * h);
     }
 
     return sum * h / 3.0;

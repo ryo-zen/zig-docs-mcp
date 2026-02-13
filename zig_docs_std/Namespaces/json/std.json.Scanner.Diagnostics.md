@@ -14,11 +14,11 @@ To enable diagnostics, declare `var diagnostics = Diagnostics{};` then call `sou
 
 ## Functions
 
-`pub fn getByteOffset(self: *const @This()) u64`  
+`pub fn getByteOffset(self: *const @This()) u64`
 Starts at 0. Measures the byte offset since the start of the input.
 
-`pub fn getColumn(self: *const @This()) u64`  
+`pub fn getColumn(self: *const @This()) u64`
 Starts at 1.
 
-`pub fn getLine(self: *const @This()) u64`  
+`pub fn getLine(self: *const @This()) u64`
 Starts at 1.

@@ -459,8 +459,8 @@ pub fn main() !void {
     defer std.process.argsFree(std.heap.page_allocator, args);
 
     if (args.len < 2) {
-        std.debug.print("Usage: program <number>\n", .{});
-        return;
+  std.debug.print("Usage: program <number>\n", .{});
+  return;
     }
 
     const num = try std.fmt.parseInt(i32, args[1], 10);
@@ -480,11 +480,11 @@ pub fn buildReport(allocator: std.mem.Allocator) ![]u8 {
     const grade = 'A';
 
     return std.fmt.allocPrint(allocator,
-        \\--- Student Report ---
-        \\Name:  {s}
-        \\Score: {d}
-        \\Grade: {c}
-        \\Status: {s}
+  \\--- Student Report ---
+  \\Name:  {s}
+  \\Score: {d}
+  \\Grade: {c}
+  \\Status: {s}
     , .{name, score, grade, if (score >= 90) "Excellent" else "Good"});
 }
 ```
@@ -518,7 +518,7 @@ pub fn formatSafe(buf: []u8, name: []const u8, value: i32) ![]u8 {
     const needed = std.fmt.count("Name: {s}, Value: {d}", .{name, value});
 
     if (needed > buf.len) {
-        return error.BufferTooSmall;
+  return error.BufferTooSmall;
     }
 
     return std.fmt.bufPrint(buf, "Name: {s}, Value: {d}", .{name, value});
@@ -579,8 +579,8 @@ pub fn formatSafe(buf: []u8, name: []const u8, value: i32) ![]u8 {
    ```zig
    var buffer: [1024]u8 = undefined;
    for (items) |item| {
-       const msg = try std.fmt.bufPrint(&buffer, "Item: {d}", .{item});
-       // Use msg...
+ const msg = try std.fmt.bufPrint(&buffer, "Item: {d}", .{item});
+ // Use msg...
    }
    ```
 

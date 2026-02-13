@@ -181,16 +181,16 @@ pub fn main() !void {
     // Receive loop
     var buffer: [2048]u8 = undefined;
     while (true) {
-        const message = try socket.receive(io, &buffer);
-        std.debug.print("From {}: {s}\n", .{ message.from, message.data });
+  const message = try socket.receive(io, &buffer);
+  std.debug.print("From {}: {s}\n", .{ message.from, message.data });
 
-        // Echo back to sender
-        var response = std.Io.net.OutgoingMessage{
-            .address = &message.from,
-            .data_ptr = message.data.ptr,
-            .data_len = message.data.len,
-        };
-        try socket.sendMany(io, (&response)[0..1], .{});
+  // Echo back to sender
+  var response = std.Io.net.OutgoingMessage{
+      .address = &message.from,
+      .data_ptr = message.data.ptr,
+      .data_len = message.data.len,
+  };
+  try socket.sendMany(io, (&response)[0..1], .{});
     }
 }
 ```
@@ -202,22 +202,22 @@ const std = @import("std");
 
 pub fn receiveWithRetry(socket: std.Io.net.Socket, io: std.Io, buffer: []u8) !std.Io.net.IncomingMessage {
     const timeout = std.Io.Timeout{ .duration = .{
-        .raw = std.Io.Duration.fromSeconds(5),
-        .clock = .awake,
+  .raw = std.Io.Duration.fromSeconds(5),
+  .clock = .awake,
     } };
 
     var retries: u32 = 0;
     while (retries < 3) : (retries += 1) {
-        const result = socket.receiveTimeout(io, buffer, timeout);
-        if (result) |message| {
-            return message;
-        } else |err| {
-            if (err == error.Timeout) {
-                std.debug.print("Timeout, retrying... ({}/3)\n", .{retries + 1});
-                continue;
-            }
-            return err;
-        }
+  const result = socket.receiveTimeout(io, buffer, timeout);
+  if (result) |message| {
+      return message;
+  } else |err| {
+      if (err == error.Timeout) {
+          std.debug.print("Timeout, retrying... ({}/3)\n", .{retries + 1});
+          continue;
+      }
+      return err;
+  }
     }
     return error.MaxRetriesExceeded;
 }
@@ -233,30 +233,30 @@ pub fn receiveBatch(socket: std.Io.net.Socket, io: std.Io) !void {
     const batch_size = 32;
     var messages: [batch_size]std.Io.net.IncomingMessage = undefined;
     for (&messages) |*msg| {
-        msg.* = std.Io.net.IncomingMessage.init;
+  msg.* = std.Io.net.IncomingMessage.init;
     }
 
     // Prepare receive buffers
     var buffers: [batch_size][2048]u8 = undefined;
 
     const timeout = std.Io.Timeout{ .duration = .{
-        .raw = std.Io.Duration.fromMilliseconds(100),
-        .clock = .awake,
+  .raw = std.Io.Duration.fromMilliseconds(100),
+  .clock = .awake,
     } };
 
     // Receive multiple messages at once
     const count = try socket.receiveManyTimeout(
-        io,
-        &messages,
-        &buffers,
-        .{},
-        timeout,
+  io,
+  &messages,
+  &buffers,
+  .{},
+  timeout,
     );
 
     std.debug.print("Received {d} messages in batch\n", .{count});
 
     for (messages[0..count]) |message| {
-        std.debug.print("From {}: {} bytes\n", .{ message.from, message.data.len });
+  std.debug.print("From {}: {} bytes\n", .{ message.from, message.data.len });
     }
 }
 ```
@@ -294,15 +294,15 @@ pub fn receiveComplete(socket: std.Io.net.Socket, io: std.Io, allocator: std.mem
     const message = try socket.receive(io, &buffer);
 
     if (message.flags.trunc) {
-        // Message was truncated - need larger buffer
-        std.debug.print("Message truncated! Consider larger buffer\n", .{});
+  // Message was truncated - need larger buffer
+  std.debug.print("Message truncated! Consider larger buffer\n", .{});
 
-        // For protocols where you can retry with larger buffer:
-        // 1. Allocate larger buffer
-        // 2. Request retransmission
-        // 3. Or handle partial message
+  // For protocols where you can retry with larger buffer:
+  // 1. Allocate larger buffer
+  // 2. Request retransmission
+  // 3. Or handle partial message
 
-        return error.MessageTruncated;
+  return error.MessageTruncated;
     }
 
     // Copy data to owned slice
@@ -345,8 +345,8 @@ If your message receiving isn't working correctly, check:
    ```zig
    const message = try socket.receive(io, &buffer);
    if (message.flags.trunc) {
-       // Data was larger than buffer - increase buffer size!
-       std.debug.print("Warning: Message truncated\n", .{});
+ // Data was larger than buffer - increase buffer size!
+ std.debug.print("Warning: Message truncated\n", .{});
    }
    ```
 
@@ -359,8 +359,8 @@ If your message receiving isn't working correctly, check:
 
    // ❌ DON'T: Let buffer go out of scope
    const message = blk: {
-       var buffer: [2048]u8 = undefined;
-       break :blk try socket.receive(io, &buffer);
+ var buffer: [2048]u8 = undefined;
+ break :blk try socket.receive(io, &buffer);
    };
    // message.data now points to invalid memory!
    ```
@@ -370,7 +370,7 @@ If your message receiving isn't working correctly, check:
    // ✅ DO: Initialize each message
    var messages: [10]std.Io.net.IncomingMessage = undefined;
    for (&messages) |*msg| {
-       msg.* = std.Io.net.IncomingMessage.init;
+ msg.* = std.Io.net.IncomingMessage.init;
    }
    ```
 
@@ -378,14 +378,14 @@ If your message receiving isn't working correctly, check:
    ```zig
    const result = socket.receiveTimeout(io, &buffer, timeout);
    if (result) |message| {
-       // Got a message
+ // Got a message
    } else |err| {
-       if (err == error.Timeout) {
-           // Normal timeout - not necessarily an error
-       } else {
-           // Real error
-           return err;
-       }
+ if (err == error.Timeout) {
+     // Normal timeout - not necessarily an error
+ } else {
+     // Real error
+     return err;
+ }
    }
    ```
 
@@ -415,7 +415,7 @@ If your message receiving isn't working correctly, check:
 
    // ❌ Inefficient: 32 syscalls
    for (0..32) |_| {
-       const message = try socket.receive(...);
+ const message = try socket.receive(...);
    }
    ```
 
@@ -424,9 +424,9 @@ If your message receiving isn't working correctly, check:
    // ✅ DO: Reuse buffer across receives
    var buffer: [2048]u8 = undefined;
    while (true) {
-       const message = try socket.receive(io, &buffer);
-       processMessage(message.data);
-       // buffer can be reused on next iteration
+ const message = try socket.receive(io, &buffer);
+ processMessage(message.data);
+ // buffer can be reused on next iteration
    }
    ```
 

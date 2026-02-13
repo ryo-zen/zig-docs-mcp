@@ -12,57 +12,57 @@ It provides the full panic-entry-point surface expected by Zig safety checks, bu
 
 ## Functions
 
-`pub fn call(_: []const u8, _: ?usize) noreturn`  
+`pub fn call(_: []const u8, _: ?usize) noreturn`
 
-`pub fn castToNull() noreturn`  
+`pub fn castToNull() noreturn`
 
-`pub fn copyLenMismatch() noreturn`  
+`pub fn copyLenMismatch() noreturn`
 
-`pub fn corruptSwitch() noreturn`  
+`pub fn corruptSwitch() noreturn`
 
-`pub fn divideByZero() noreturn`  
+`pub fn divideByZero() noreturn`
 
-`pub fn exactDivisionRemainder() noreturn`  
+`pub fn exactDivisionRemainder() noreturn`
 
-`pub fn forLenMismatch() noreturn`  
+`pub fn forLenMismatch() noreturn`
 
-`pub fn inactiveUnionField(_: anytype, _: anytype) noreturn`  
+`pub fn inactiveUnionField(_: anytype, _: anytype) noreturn`
 
-`pub fn incorrectAlignment() noreturn`  
+`pub fn incorrectAlignment() noreturn`
 
-`pub fn integerOutOfBounds() noreturn`  
+`pub fn integerOutOfBounds() noreturn`
 
-`pub fn integerOverflow() noreturn`  
+`pub fn integerOverflow() noreturn`
 
-`pub fn integerPartOutOfBounds() noreturn`  
+`pub fn integerPartOutOfBounds() noreturn`
 
-`pub fn invalidEnumValue() noreturn`  
+`pub fn invalidEnumValue() noreturn`
 
-`pub fn invalidErrorCode() noreturn`  
+`pub fn invalidErrorCode() noreturn`
 
-`pub fn memcpyAlias() noreturn`  
+`pub fn memcpyAlias() noreturn`
 
-`pub fn noreturnReturned() noreturn`  
+`pub fn noreturnReturned() noreturn`
 
-`pub fn outOfBounds(_: usize, _: usize) noreturn`  
+`pub fn outOfBounds(_: usize, _: usize) noreturn`
 
-`pub fn reachedUnreachable() noreturn`  
+`pub fn reachedUnreachable() noreturn`
 
-`pub fn sentinelMismatch(_: anytype, _: anytype) noreturn`  
+`pub fn sentinelMismatch(_: anytype, _: anytype) noreturn`
 
-`pub fn shiftRhsTooBig() noreturn`  
+`pub fn shiftRhsTooBig() noreturn`
 
-`pub fn shlOverflow() noreturn`  
+`pub fn shlOverflow() noreturn`
 
-`pub fn shrOverflow() noreturn`  
+`pub fn shrOverflow() noreturn`
 
-`pub fn sliceCastLenRemainder(_: usize) noreturn`  
+`pub fn sliceCastLenRemainder(_: usize) noreturn`
 
-`pub fn startGreaterThanEnd(_: usize, _: usize) noreturn`  
+`pub fn startGreaterThanEnd(_: usize, _: usize) noreturn`
 
-`pub fn unwrapError(_: anyerror) noreturn`  
+`pub fn unwrapError(_: anyerror) noreturn`
 
-`pub fn unwrapNull() noreturn`  
+`pub fn unwrapNull() noreturn`
 
 ## Usage Notes
 

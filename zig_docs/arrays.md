@@ -59,7 +59,7 @@ test "iterate array" {
 
 test "mutate array in place" {
     for (&some_integers, 0..) |*item, i| {
-        item.* = @intCast(i);
+  item.* = @intCast(i);
     }
     try expect(some_integers[10] == 10);
     try expect(some_integers[99] == 99);
@@ -107,7 +107,7 @@ const Point = struct {
 var fancy_array = init: {
     var initial_value: [10]Point = undefined;
     for (&initial_value, 0..) |*pt, i| {
-        pt.* = .{ .x = @intCast(i), .y = @intCast(i * 2) };
+  pt.* = .{ .x = @intCast(i), .y = @intCast(i * 2) };
     }
     break :init initial_value;
 };
@@ -144,9 +144,9 @@ test "multidimensional arrays" {
     try expect(mat4x5[3][4] == 9.9);
 
     for (mat4x5, 0..) |row, row_index| {
-        for (row, 0..) |cell, col_index| {
-            if (row_index == col_index) try expect(cell == 1.0);
-        }
+  for (row, 0..) |cell, col_index| {
+      if (row_index == col_index) try expect(cell == 1.0);
+  }
     }
 
     const all_zero: [4][5]f32 = .{.{0} ** 5} ** 4;

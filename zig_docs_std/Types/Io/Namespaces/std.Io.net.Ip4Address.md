@@ -12,15 +12,15 @@ const net = std.Io.net;
 pub fn main() !void {
     // Parse from string
     const addr = try net.IpAddress.parse("192.168.1.1", 8080);
-    
+
     // Check properties
     std.debug.print("Port: {}\n", .{@intCast(addr.port)});
-    
+
     // Format back to string
     var buf: [64]u8 = undefined;
     var fbs = std.io.fixedBufferStream(&buf);
     try addr.format(fbs.writer());
-    
+
     std.debug.print("Formatted: {s}\n", .{fbs.getWritten()});
 }
 ```

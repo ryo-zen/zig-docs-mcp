@@ -156,4 +156,4 @@ const prev = Alignment.@"8".backward(0x1005); // 0x1000
 
 // Compare alignments
 const stricter = Alignment.max(.@"4", .@"8"); // .@"8"
-```  
+```

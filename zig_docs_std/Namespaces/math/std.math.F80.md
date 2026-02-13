@@ -8,6 +8,6 @@
 
 ## Functions
 
-`pub fn fromFloat(x: f80) F80`  
+`pub fn fromFloat(x: f80) F80`
 
-`pub fn toFloat(self: F80) f80`  
+`pub fn toFloat(self: F80) f80`

@@ -1,55 +1,41 @@
 # Vectors
 
 A vector is a group of booleans, [Integers](#Integers), [Floats](#Floats), or
-      [Pointers](#Pointers) which are operated on in parallel, using SIMD instructions if possible.
-      Vector types are created with the builtin function [@Vector](#Vector).
-      
+[Pointers](#Pointers) which are operated on in parallel, using SIMD instructions if possible.
+Vector types are created with the builtin function [@Vector](#Vector).
 
-      
+Vectors generally support the same builtin operators as their underlying base types.
+The only exception to this is the keywords `and` and `or` on vectors of bools, since
+these operators affect control flow, which is not allowed for vectors.
+All other operations are performed element-wise, and return a vector of the same length
+as the input vectors. This includes:
 
-      Vectors generally support the same builtin operators as their underlying base types.
-      The only exception to this is the keywords `and` and `or` on vectors of bools, since
-      these operators affect control flow, which is not allowed for vectors.
-      All other operations are performed element-wise, and return a vector of the same length
-      as the input vectors. This includes:
-      
+    Arithmetic (`+`, `-`, `/`, `*`,
+                   `@divFloor`, `@sqrt`, `@ceil`,
+                   `@log`, etc.)
+    Bitwise operators (`>>`, `<<`, `&`,
+                           `|`, `~`, etc.)
 
-      
-          Arithmetic (`+`, `-`, `/`, `*`,
-                         `@divFloor`, `@sqrt`, `@ceil`,
-                         `@log`, etc.)
-          Bitwise operators (`>>`, `<<`, `&`,
-                                 `|`, `~`, etc.)
-          
 - Comparison operators (`<`, `>`, `==`, etc.)
-          
+
 - Boolean not (`!`)
-      
-      
 
-      It is prohibited to use a math operator on a mixture of scalars (individual numbers)
-      and vectors. Zig provides the [@splat](#splat) builtin to easily convert from scalars
-      to vectors, and it supports [@reduce](#reduce) and array indexing syntax to convert
-      from vectors to scalars. Vectors also support assignment to and from fixed-length
-      arrays with comptime-known length.
-      
+It is prohibited to use a math operator on a mixture of scalars (individual numbers)
+and vectors. Zig provides the [@splat](#splat) builtin to easily convert from scalars
+to vectors, and it supports [@reduce](#reduce) and array indexing syntax to convert
+from vectors to scalars. Vectors also support assignment to and from fixed-length
+arrays with comptime-known length.
 
-      
+For rearranging elements within and between vectors, Zig provides the [@shuffle](#shuffle) and [@select](#select) functions.
 
-      For rearranging elements within and between vectors, Zig provides the [@shuffle](#shuffle) and [@select](#select) functions.
-      
+Operations on vectors shorter than the target machine's native SIMD size will typically compile to single SIMD
+instructions, while vectors longer than the target machine's native SIMD size will compile to multiple SIMD
+instructions. If a given operation doesn't have SIMD support on the target architecture, the compiler will default
+to operating on each vector element one at a time. Zig supports any comptime-known vector length up to 2^32-1,
+although small powers of two (2-64) are most typical. Note that excessively long vector lengths (e.g. 2^20) may
+result in compiler crashes on current versions of Zig.
 
-      
-
-      Operations on vectors shorter than the target machine's native SIMD size will typically compile to single SIMD
-      instructions, while vectors longer than the target machine's native SIMD size will compile to multiple SIMD
-      instructions. If a given operation doesn't have SIMD support on the target architecture, the compiler will default
-      to operating on each vector element one at a time. Zig supports any comptime-known vector length up to 2^32-1,
-      although small powers of two (2-64) are most typical. Note that excessively long vector lengths (e.g. 2^20) may
-      result in compiler crashes on current versions of Zig.
-      
-
-      test_vector.zig
+test_vector.zig
 ```zig
 const std = @import("std");
 const expectEqual = std.testing.expectEqual;
@@ -96,13 +82,8 @@ Shell$ zig test test_vector.zig
 2/2 test_vector.test.Conversion between vectors, arrays, and slices...OK
 All 2 tests passed.
 
-      
-
-      TODO talk about C ABI interop
-      TODO consider suggesting std.MultiArrayList
-      
-
-      
+TODO talk about C ABI interop
+TODO consider suggesting std.MultiArrayList
 
 See also:
 
@@ -114,31 +95,20 @@ See also:
 
 - [@reduce](#reduce)
 
-      
 ## [Relationship with Arrays](#toc-Relationship-with-Arrays) §
 
-      
-
 Vectors and [Arrays](#Arrays) each have a well-defined **bit layout**
-      and therefore support [@bitCast](#bitCast) between each other. [Type Coercion](#Type-Coercion) implicitly peforms
-      `@bitCast`.
-
-      
+and therefore support [@bitCast](#bitCast) between each other. [Type Coercion](#Type-Coercion) implicitly peforms
+`@bitCast`.
 
 Arrays have well-defined byte layout, but vectors do not, making [@ptrCast](#ptrCast) between
-      them [Illegal Behavior](#Illegal-Behavior).
+them [Illegal Behavior](#Illegal-Behavior).
 
-      
-
-      
 ## [Destructuring Vectors](#toc-Destructuring-Vectors) §
 
-      
+  Vectors can be destructured:
 
-        Vectors can be destructured:
-      
-
-      destructuring_vectors.zig
+destructuring_vectors.zig
 ```zig
 const print = @import("std").debug.print;
 
@@ -158,8 +128,6 @@ pub fn main() void {
 Shell$ zig build-exe destructuring_vectors.zig
 $ ./destructuring_vectors
 { 1, 5, 2, 6 }
-
-      
 
 See also:
 

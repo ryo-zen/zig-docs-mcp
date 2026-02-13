@@ -8,8 +8,8 @@ On WASI without libc, this is `void` because the environment has to be queried a
 pub const Block = switch (native_os) {
     .windows => GlobalBlock,
     .wasi => switch (builtin.link_libc) {
-        false => GlobalBlock,
-        true => PosixBlock,
+  false => GlobalBlock,
+  true => PosixBlock,
     },
     .freestanding, .other => GlobalBlock,
     else => PosixBlock,

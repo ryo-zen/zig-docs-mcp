@@ -1,53 +1,36 @@
 # Result Location Semantics
 
 During compilation, every Zig expression and sub-expression is assigned optional result location
-      information. This information dictates what type the expression should have (its result type), and
-      where the resulting value should be placed in memory (its result location). The information is
-      optional in the sense that not every expression has this information: assignment to
-      `_`, for instance, does not provide any information about the type of an
-      expression, nor does it provide a concrete memory location to place it in.
-      
+information. This information dictates what type the expression should have (its result type), and
+where the resulting value should be placed in memory (its result location). The information is
+optional in the sense that not every expression has this information: assignment to
+`_`, for instance, does not provide any information about the type of an
+expression, nor does it provide a concrete memory location to place it in.
 
-      
+As a motivating example, consider the statement `const x: u32 = 42;`. The type
+annotation here provides a result type of `u32` to the initialization expression
+`42`, instructing the compiler to coerce this integer (initially of type
+`comptime_int`) to this type. We will see more examples shortly.
 
-      As a motivating example, consider the statement `const x: u32 = 42;`. The type
-      annotation here provides a result type of `u32` to the initialization expression
-      `42`, instructing the compiler to coerce this integer (initially of type
-      `comptime_int`) to this type. We will see more examples shortly.
-      
+This is not an implementation detail: the logic outlined above is codified into the Zig language
+specification, and is the primary mechanism of type inference in the language. This system is
+collectively referred to as "Result Location Semantics".
 
-      
-
-      This is not an implementation detail: the logic outlined above is codified into the Zig language
-      specification, and is the primary mechanism of type inference in the language. This system is
-      collectively referred to as "Result Location Semantics".
-      
-
-      
 ## [Result Types](#toc-Result-Types) §
 
-      
+Result types are propagated recursively through expressions where possible. For instance, if the
+expression `&e` has result type `*u32`, then
+`e` is given a result type of `u32`, allowing the
+language to perform this coercion before taking a reference.
 
-      Result types are propagated recursively through expressions where possible. For instance, if the
-      expression `&e` has result type `*u32`, then
-      `e` is given a result type of `u32`, allowing the
-      language to perform this coercion before taking a reference.
-      
+The result type mechanism is utilized by casting builtins such as `@intCast`.
+Rather than taking as an argument the type to cast to, these builtins use their result type to
+determine this information. The result type is often known from context; where it is not, the
+`@as` builtin can be used to explicitly provide a result type.
 
-      
+We can break down the result types for each component of a simple expression as follows:
 
-      The result type mechanism is utilized by casting builtins such as `@intCast`.
-      Rather than taking as an argument the type to cast to, these builtins use their result type to
-      determine this information. The result type is often known from context; where it is not, the
-      `@as` builtin can be used to explicitly provide a result type.
-      
-
-      
-
-      We can break down the result types for each component of a simple expression as follows:
-      
-
-      result_type_propagation.zig
+result_type_propagation.zig
 ```zig
 const expectEqual = @import("std").testing.expectEqual;
 test "result type propagates through struct initializer" {
@@ -64,138 +47,98 @@ Shell$ zig test result_type_propagation.zig
 1/1 result_type_propagation.test.result type propagates through struct initializer...OK
 All 1 tests passed.
 
-      
+This result type information is useful for the aforementioned cast builtins, as well as to avoid
+the construction of pre-coercion values, and to avoid the need for explicit type coercions in some
+cases. The following table details how some common expressions propagate result types, where
+`x` and `y` are arbitrary sub-expressions.
 
-      This result type information is useful for the aforementioned cast builtins, as well as to avoid
-      the construction of pre-coercion values, and to avoid the need for explicit type coercions in some
-      cases. The following table details how some common expressions propagate result types, where
-      `x` and `y` are arbitrary sub-expressions.
-      
+      Expression
+      Parent Result Type
+      Sub-expression Result Type
 
-      
-      
-        
-          
-            Expression
-            Parent Result Type
-            Sub-expression Result Type
-          
-        
-        
-          
-            `const val: T = x`
-            -
-            `x` is a `T`
-          
-          
-            `var val: T = x`
-            -
-            `x` is a `T`
-          
-          
-            `val = x`
-            -
-            `x` is a `@TypeOf(val)`
-          
-          
-            `@as(T, x)`
-            -
-            `x` is a `T`
-          
-          
-            `&x`
-            `*T`
-            `x` is a `T`
-          
-          
-            `&x`
-            `[]T`
-            `x` is some array of `T`
-          
-          
-            `f(x)`
-            -
-            `x` has the type of the first parameter of `f`
-          
-          
-            `.{x}`
-            `T`
-            `x` is a `@FieldType(T, "0")`
-          
-          
-            `.{ .a = x }`
-            `T`
-            `x` is a `@FieldType(T, "a")`
-          
-          
-            `T{x}`
-            -
-            `x` is a `@FieldType(T, "0")`
-          
-          
-            `T{ .a = x }`
-            -
-            `x` is a `@FieldType(T, "a")`
-          
-          
-            `@Int(x, y)`
-            -
-            `x` is a `std.builtin.Signedness`, `y` is a `u16`
-          
-          
-            `@typeInfo(x)`
-            -
-            `x` is a `type`
-          
-          
-            `x << y`
-            -
-            `y` is a `std.math.Log2IntCeil(@TypeOf(x))`
-          
-        
-      
-      
-      
-      
+      `const val: T = x`
+      -
+      `x` is a `T`
+
+      `var val: T = x`
+      -
+      `x` is a `T`
+
+      `val = x`
+      -
+      `x` is a `@TypeOf(val)`
+
+      `@as(T, x)`
+      -
+      `x` is a `T`
+
+      `&x`
+      `*T`
+      `x` is a `T`
+
+      `&x`
+      `[]T`
+      `x` is some array of `T`
+
+      `f(x)`
+      -
+      `x` has the type of the first parameter of `f`
+
+      `.{x}`
+      `T`
+      `x` is a `@FieldType(T, "0")`
+
+      `.{ .a = x }`
+      `T`
+      `x` is a `@FieldType(T, "a")`
+
+      `T{x}`
+      -
+      `x` is a `@FieldType(T, "0")`
+
+      `T{ .a = x }`
+      -
+      `x` is a `@FieldType(T, "a")`
+
+      `@Int(x, y)`
+      -
+      `x` is a `std.builtin.Signedness`, `y` is a `u16`
+
+      `@typeInfo(x)`
+      -
+      `x` is a `type`
+
+      `x << y`
+      -
+      `y` is a `std.math.Log2IntCeil(@TypeOf(x))`
+
 ## [Result Locations](#toc-Result-Locations) §
 
-      
+In addition to result type information, every expression may be optionally assigned a result
+location: a pointer to which the value must be directly written. This system can be used to prevent
+intermediate copies when initializing data structures, which can be important for types which must
+have a fixed memory address ("pinned" types).
 
-      In addition to result type information, every expression may be optionally assigned a result
-      location: a pointer to which the value must be directly written. This system can be used to prevent
-      intermediate copies when initializing data structures, which can be important for types which must
-      have a fixed memory address ("pinned" types).
-      
+When compiling the simple assignment expression `x = e`, many languages would
+create the temporary value `e` on the stack, and then assign it to
+`x`, potentially performing a type coercion in the process. Zig approaches this
+differently. The expression `e` is given a result type matching the type of
+`x`, and a result location of `&x`. For many syntactic
+forms of `e`, this has no practical impact. However, it can have important
+semantic effects when working with more complex syntax forms.
 
-      
+For instance, if the expression `.{ .a = x, .b = y }` has a result location of
+`ptr`, then `x` is given a result location of
+`&ptr.a`, and `y` a result location of `&ptr.b`.
+Without this system, this expression would construct a temporary struct value entirely on the stack, and
+only then copy it to the destination address. In essence, Zig desugars the assignment
+`foo = .{ .a = x, .b = y }` to the two statements `foo.a = x; foo.b = y;`.
 
-      When compiling the simple assignment expression `x = e`, many languages would
-      create the temporary value `e` on the stack, and then assign it to
-      `x`, potentially performing a type coercion in the process. Zig approaches this
-      differently. The expression `e` is given a result type matching the type of
-      `x`, and a result location of `&x`. For many syntactic
-      forms of `e`, this has no practical impact. However, it can have important
-      semantic effects when working with more complex syntax forms.
-      
+This can sometimes be important when assigning an aggregate value where the initialization
+expression depends on the previous value of the aggregate. The easiest way to demonstrate this is by
+attempting to swap fields of a struct or array - the following logic looks sound, but in fact is not:
 
-      
-
-      For instance, if the expression `.{ .a = x, .b = y }` has a result location of
-      `ptr`, then `x` is given a result location of
-      `&ptr.a`, and `y` a result location of `&ptr.b`.
-      Without this system, this expression would construct a temporary struct value entirely on the stack, and
-      only then copy it to the destination address. In essence, Zig desugars the assignment
-      `foo = .{ .a = x, .b = y }` to the two statements `foo.a = x; foo.b = y;`.
-      
-
-      
-
-      This can sometimes be important when assigning an aggregate value where the initialization
-      expression depends on the previous value of the aggregate. The easiest way to demonstrate this is by
-      attempting to swap fields of a struct or array - the following logic looks sound, but in fact is not:
-      
-
-      result_location_interfering_with_swap.zig
+result_location_interfering_with_swap.zig
 ```zig
 const expect = @import("std").testing.expect;
 test "attempt to swap array elements with array initializer" {
@@ -213,7 +156,7 @@ Shell$ zig test result_location_interfering_with_swap.zig
 1/1 result_location_interfering_with_swap.test.attempt to swap array elements with array initializer...FAIL (TestUnexpectedResult)
 /home/ci/zig-bootstrap/out/host/lib/zig/std/testing.zig:615:14: 0x102d019 in expect (std.zig)
     if (!ok) return error.TestUnexpectedResult;
-             ^
+       ^
 /home/ci/zig-bootstrap/zig/doc/langref/result_location_interfering_with_swap.zig:10:5: 0x102d16b in test.attempt to swap array elements with array initializer (result_location_interfering_with_swap.zig)
     try expect(arr[1] == 1); // fails
     ^
@@ -221,85 +164,63 @@ Shell$ zig test result_location_interfering_with_swap.zig
 error: the following test command failed with exit code 1:
 /home/ci/zig-bootstrap/out/zig-local-cache/o/8383ec94797d828be47a45856ad0bd28/test --seed=0x8c80dc9b
 
-      
+The following table details how some common expressions propagate result locations, where
+`x` and `y` are arbitrary sub-expressions. Note that
+some expressions cannot provide meaningful result locations to sub-expressions, even if they
+themselves have a result location.
 
-      The following table details how some common expressions propagate result locations, where
-      `x` and `y` are arbitrary sub-expressions. Note that
-      some expressions cannot provide meaningful result locations to sub-expressions, even if they
-      themselves have a result location.
-      
+      Expression
+      Result Location
+      Sub-expression Result Locations
 
-      
-      
-        
-          
-            Expression
-            Result Location
-            Sub-expression Result Locations
-          
-        
-        
-          
-            `const val: T = x`
-            -
-            `x` has result location `&val`
-          
-          
-            `var val: T = x`
-            -
-            `x` has result location `&val`
-          
-          
-            `val = x`
-            -
-            `x` has result location `&val`
-          
-          
-            `@as(T, x)`
-            `ptr`
-            `x` has no result location
-          
-          
-            `&x`
-            `ptr`
-            `x` has no result location
-          
-          
-            `f(x)`
-            `ptr`
-            `x` has no result location
-          
-          
-            `.{x}`
-            `ptr`
-            `x` has result location `&ptr[0]`
-          
-          
-            `.{ .a = x }`
-            `ptr`
-            `x` has result location `&ptr.a`
-          
-          
-            `T{x}`
-            `ptr`
-            `x` has no result location (typed initializers do not propagate result locations)
-          
-          
-            `T{ .a = x }`
-            `ptr`
-            `x` has no result location (typed initializers do not propagate result locations)
-          
-          
-            `@Int(x, y)`
-            -
-            `x` and `y` do not have result locations
-          
-          
-            `@typeInfo(x)`
-            `ptr`
-            `x` has no result location
-          
-          
-            `x << y`
-            `ptr`
-            `x` and `y` do not have result locations
+      `const val: T = x`
+      -
+      `x` has result location `&val`
+
+      `var val: T = x`
+      -
+      `x` has result location `&val`
+
+      `val = x`
+      -
+      `x` has result location `&val`
+
+      `@as(T, x)`
+      `ptr`
+      `x` has no result location
+
+      `&x`
+      `ptr`
+      `x` has no result location
+
+      `f(x)`
+      `ptr`
+      `x` has no result location
+
+      `.{x}`
+      `ptr`
+      `x` has result location `&ptr[0]`
+
+      `.{ .a = x }`
+      `ptr`
+      `x` has result location `&ptr.a`
+
+      `T{x}`
+      `ptr`
+      `x` has no result location (typed initializers do not propagate result locations)
+
+      `T{ .a = x }`
+      `ptr`
+      `x` has no result location (typed initializers do not propagate result locations)
+
+      `@Int(x, y)`
+      -
+      `x` and `y` do not have result locations
+
+      `@typeInfo(x)`
+      `ptr`
+      `x` has no result location
+
+      `x << y`
+      `ptr`
+      `x` and `y` do not have result locations

@@ -13,9 +13,9 @@ const std = @import("std");
 
 pub fn main(init: std.process.Init) !void {
     var child = try std.process.spawn(init.io, .{
-        .argv = &[_][]const u8{ "ls", "-l" },
+  .argv = &[_][]const u8{ "ls", "-l" },
     });
-    
+
     // Wait for the process to complete
     const term = try child.wait(init.io);
     std.debug.print("Process exited with {}\n", .{term});
@@ -27,11 +27,11 @@ pub fn main(init: std.process.Init) !void {
 ```zig
 pub fn main(init: std.process.Init) !void {
     var child = try std.process.spawn(init.io, .{
-        .argv = &[_][]const u8{ "echo", "Hello from Zig!" },
-        .stdout = .pipe,
-        .stderr = .pipe,
+  .argv = &[_][]const u8{ "echo", "Hello from Zig!" },
+  .stdout = .pipe,
+  .stderr = .pipe,
     });
-    
+
     var stdout_list: std.ArrayList(u8) = .empty;
     defer stdout_list.deinit(init.gpa);
     var stderr_list: std.ArrayList(u8) = .empty;
@@ -39,7 +39,7 @@ pub fn main(init: std.process.Init) !void {
 
     // Use collectOutput to capture all output from stdout and stderr pipes
     try child.collectOutput(init.gpa, &stdout_list, &stderr_list, 1024);
-    
+
     _ = try child.wait(init.io);
     std.debug.print("Got: {s}", .{stdout_list.items});
 }

@@ -287,9 +287,9 @@ fn dfs(node: *Node, visited: *BitStack) !void {
     defer _ = visited.pop(); // Unmark on return
 
     for (node.children) |child| {
-        if (!child.visited) {
-            try dfs(child, visited);
-        }
+  if (!child.visited) {
+      try dfs(child, visited);
+  }
     }
 }
 ```
@@ -304,8 +304,8 @@ defer bit_buffer.deinit();
 while (try readByte(stream)) |byte| {
     var i: u3 = 0;
     while (i < 8) : (i += 1) {
-        const bit: u1 = @intCast((byte >> i) & 1);
-        try bit_buffer.push(bit);
+  const bit: u1 = @intCast((byte >> i) & 1);
+  try bit_buffer.push(bit);
     }
 }
 
@@ -325,14 +325,14 @@ fn processBitSequence(bits: []const u1) !void {
     var bit_len: usize = 0;
 
     for (bits) |bit| {
-        if (bit_len >= 512) return error.TooManyBits;
-        std.BitStack.pushWithStateAssumeCapacity(&buffer, &bit_len, bit);
+  if (bit_len >= 512) return error.TooManyBits;
+  std.BitStack.pushWithStateAssumeCapacity(&buffer, &bit_len, bit);
     }
 
     // Process in reverse
     while (bit_len > 0) {
-        const bit = std.BitStack.popWithState(&buffer, &bit_len);
-        // ... process bit ...
+  const bit = std.BitStack.popWithState(&buffer, &bit_len);
+  // ... process bit ...
     }
 }
 ```

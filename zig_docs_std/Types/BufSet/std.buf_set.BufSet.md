@@ -321,7 +321,7 @@ fn getUniqueWords(allocator: Allocator, text: []const u8) !std.BufSet {
 
     var it = std.mem.tokenizeScalar(u8, text, ' ');
     while (it.next()) |word| {
-        try unique.insert(word);
+  try unique.insert(word);
     }
 
     return unique;
@@ -343,22 +343,22 @@ const Article = struct {
     tags: std.BufSet,
 
     fn init(allocator: Allocator, title: []const u8) Article {
-        return .{
-            .title = title,
-            .tags = std.BufSet.init(allocator),
-        };
+  return .{
+      .title = title,
+      .tags = std.BufSet.init(allocator),
+  };
     }
 
     fn deinit(self: *Article) void {
-        self.tags.deinit();
+  self.tags.deinit();
     }
 
     fn addTag(self: *Article, tag: []const u8) !void {
-        try self.tags.insert(tag);
+  try self.tags.insert(tag);
     }
 
     fn hasTag(self: *const Article, tag: []const u8) bool {
-        return self.tags.contains(tag);
+  return self.tags.contains(tag);
     }
 };
 ```
@@ -371,9 +371,9 @@ fn mergeUniqueSources(allocator: Allocator, sources: []const []const []const u8)
     errdefer combined.deinit();
 
     for (sources) |source| {
-        for (source) |item| {
-            try combined.insert(item);
-        }
+  for (source) |item| {
+      try combined.insert(item);
+  }
     }
 
     return combined;
@@ -399,9 +399,9 @@ fn setDifference(allocator: Allocator, a: *const std.BufSet, b: *const std.BufSe
 
     var it = a.iterator();
     while (it.next()) |value| {
-        if (!b.contains(value.*)) {
-            try result.insert(value.*);
-        }
+  if (!b.contains(value.*)) {
+      try result.insert(value.*);
+  }
     }
 
     return result;
@@ -413,9 +413,9 @@ fn setIntersection(allocator: Allocator, a: *const std.BufSet, b: *const std.Buf
 
     var it = a.iterator();
     while (it.next()) |value| {
-        if (b.contains(value.*)) {
-            try result.insert(value.*);
-        }
+  if (b.contains(value.*)) {
+      try result.insert(value.*);
+  }
     }
 
     return result;

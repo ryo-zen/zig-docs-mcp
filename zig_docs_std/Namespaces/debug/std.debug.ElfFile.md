@@ -56,13 +56,13 @@ Sometimes, debug info is stored separately to the main ELF file. In that case, `
 
 ## Functions
 
-`pub fn deinit(ef: *ElfFile, gpa: Allocator) void`  
+`pub fn deinit(ef: *ElfFile, gpa: Allocator) void`
 Releases mapped files, arena state, and associated metadata.
 
-`pub fn load( gpa: Allocator, io: Io, elf_file: Io.File, opt_build_id: ?[]const u8, di_search_paths: *const DebugInfoSearchPaths, ) LoadError!ElfFile`  
+`pub fn load( gpa: Allocator, io: Io, elf_file: Io.File, opt_build_id: ?[]const u8, di_search_paths: *const DebugInfoSearchPaths, ) LoadError!ElfFile`
 Loads ELF metadata and optional external debug-info mappings.
 
-`pub fn searchSymtab(ef: *ElfFile, gpa: Allocator, vaddr: u64) error{ NoSymtab, NoStrtab, BadSymtab, OutOfMemory, }!std.debug.Symbol`  
+`pub fn searchSymtab(ef: *ElfFile, gpa: Allocator, vaddr: u64) error{ NoSymtab, NoStrtab, BadSymtab, OutOfMemory, }!std.debug.Symbol`
 Performs symbol-table lookup for a virtual address.
 
 ## Error Sets

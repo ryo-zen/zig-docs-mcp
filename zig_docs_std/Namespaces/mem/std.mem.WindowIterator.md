@@ -124,22 +124,22 @@ Advance: 1
 Windows:
   [A B C]─┐
     [B C D]─┐
-      [C D E]─┐
-        [D E F]─┐
-          [E F G]
+[C D E]─┐
+  [D E F]─┐
+    [E F G]
 
 Advance: 2
 
 Windows:
   [A B C]───┐
-        [C D E]───┐
-            [E F G]
+  [C D E]───┐
+      [E F G]
 
 Advance: 3 (non-overlapping)
 
 Windows:
   [A B C]──────┐
-               [D E F]──────┐
+         [D E F]──────┐
 ```
 
 ## Performance Considerations

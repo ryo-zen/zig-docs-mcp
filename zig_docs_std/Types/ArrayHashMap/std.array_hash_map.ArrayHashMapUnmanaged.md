@@ -17,13 +17,13 @@ const allocator = gpa.allocator();
 // Define custom hash context
 const StringContext = struct {
     pub fn hash(ctx: @This(), key: []const u8) u32 {
-        _ = ctx;
-        return std.array_hash_map.hashString(key);
+  _ = ctx;
+  return std.array_hash_map.hashString(key);
     }
     pub fn eql(ctx: @This(), a: []const u8, b: []const u8, b_index: usize) bool {
-        _ = ctx;
-        _ = b_index;
-        return std.mem.eql(u8, a, b);
+  _ = ctx;
+  _ = b_index;
+  return std.mem.eql(u8, a, b);
     }
 };
 
@@ -126,12 +126,12 @@ A namespace that provides hash and equality functions. Must have:
 ```zig
 const MyContext = struct {
     pub fn hash(self: @This(), key: K) u32 {
-        // Return u32 hash of key
+  // Return u32 hash of key
     }
 
     pub fn eql(self: @This(), a: K, b: K, b_index: usize) bool {
-        // Return true if a equals b
-        // b_index is the position of b in the map (can be ignored unless needed)
+  // Return true if a equals b
+  // b_index is the position of b in the map (can be ignored unless needed)
     }
 };
 ```
@@ -144,13 +144,13 @@ const IntContext = std.array_hash_map.AutoContext(u64);
 // For strings
 const StringContext = struct {
     pub fn hash(ctx: @This(), key: []const u8) u32 {
-        _ = ctx;
-        return std.array_hash_map.hashString(key);
+  _ = ctx;
+  return std.array_hash_map.hashString(key);
     }
     pub fn eql(ctx: @This(), a: []const u8, b: []const u8, b_index: usize) bool {
-        _ = ctx;
-        _ = b_index;
-        return std.mem.eql(u8, a, b);
+  _ = ctx;
+  _ = b_index;
+  return std.mem.eql(u8, a, b);
     }
 };
 
@@ -158,16 +158,16 @@ const StringContext = struct {
 const Point = struct { x: i32, y: i32 };
 const PointContext = struct {
     pub fn hash(ctx: @This(), p: Point) u32 {
-        _ = ctx;
-        var hasher = std.hash.Wyhash.init(0);
-        std.hash.autoHash(&hasher, p.x);
-        std.hash.autoHash(&hasher, p.y);
-        return @truncate(hasher.final());
+  _ = ctx;
+  var hasher = std.hash.Wyhash.init(0);
+  std.hash.autoHash(&hasher, p.x);
+  std.hash.autoHash(&hasher, p.y);
+  return @truncate(hasher.final());
     }
     pub fn eql(ctx: @This(), a: Point, b: Point, b_index: usize) bool {
-        _ = ctx;
-        _ = b_index;
-        return a.x == b.x and a.y == b.y;
+  _ = ctx;
+  _ = b_index;
+  return a.x == b.x and a.y == b.y;
     }
 };
 ```
@@ -568,13 +568,13 @@ These accept a key-like value of a different type with its own context. Useful f
 // Map stores owned strings, but lookup with string literals
 const StringAdaptCtx = struct {
     pub fn hash(ctx: @This(), key: []const u8) u32 {
-        _ = ctx;
-        return std.array_hash_map.hashString(key);
+  _ = ctx;
+  return std.array_hash_map.hashString(key);
     }
     pub fn eql(ctx: @This(), adapted: []const u8, stored: []const u8, stored_idx: usize) bool {
-        _ = ctx;
-        _ = stored_idx;
-        return std.mem.eql(u8, adapted, stored);
+  _ = ctx;
+  _ = stored_idx;
+  return std.mem.eql(u8, adapted, stored);
     }
 };
 
@@ -965,7 +965,7 @@ Sort entries by custom comparison (stable sort).
 const SortCtx = struct {
     keys: []const K,
     pub fn lessThan(ctx: @This(), a_idx: usize, b_idx: usize) bool {
-        return ctx.keys[a_idx] < ctx.keys[b_idx];
+  return ctx.keys[a_idx] < ctx.keys[b_idx];
     }
 };
 
@@ -1068,13 +1068,13 @@ const std = @import("std");
 
 const StringContext = struct {
     pub fn hash(ctx: @This(), key: []const u8) u32 {
-        _ = ctx;
-        return std.array_hash_map.hashString(key);
+  _ = ctx;
+  return std.array_hash_map.hashString(key);
     }
     pub fn eql(ctx: @This(), a: []const u8, b: []const u8, b_index: usize) bool {
-        _ = ctx;
-        _ = b_index;
-        return std.mem.eql(u8, a, b);
+  _ = ctx;
+  _ = b_index;
+  return std.mem.eql(u8, a, b);
     }
 };
 
@@ -1083,11 +1083,11 @@ pub fn countWords(allocator: std.mem.Allocator, text: []const u8) !std.array_has
 
     var iter = std.mem.tokenizeAny(u8, text, " \t\n");
     while (iter.next()) |word| {
-        const result = try counts.getOrPut(allocator, word);
-        if (!result.found_existing) {
-            result.value_ptr.* = 0;
-        }
-        result.value_ptr.* += 1;
+  const result = try counts.getOrPut(allocator, word);
+  if (!result.found_existing) {
+      result.value_ptr.* = 0;
+  }
+  result.value_ptr.* += 1;
     }
 
     return counts;
@@ -1106,19 +1106,19 @@ pub const Cache = struct {
     allocator: std.mem.Allocator,
 
     pub fn init(allocator: std.mem.Allocator) Cache {
-        return .{ .allocator = allocator };
+  return .{ .allocator = allocator };
     }
 
     pub fn deinit(self: *Cache) void {
-        self.data.deinit(self.allocator);
+  self.data.deinit(self.allocator);
     }
 
     pub fn put(self: *Cache, key: u64, value: []const u8) !void {
-        try self.data.put(self.allocator, key, value);
+  try self.data.put(self.allocator, key, value);
     }
 
     pub fn get(self: *Cache, key: u64) ?[]const u8 {
-        return self.data.get(key);
+  return self.data.get(key);
     }
 };
 ```
@@ -1137,7 +1137,7 @@ pub fn bulkInsert(
     try map.ensureUnusedCapacity(allocator, pairs.len);
 
     for (pairs) |pair| {
-        map.putAssumeCapacity(pair.key, pair.value);
+  map.putAssumeCapacity(pair.key, pair.value);
     }
 }
 ```
@@ -1186,7 +1186,7 @@ When debugging ArrayHashMapUnmanaged issues:
    ```zig
    try map.ensureTotalCapacity(allocator, expected_size);
    for (items) |item| {
-       map.putAssumeCapacity(item.key, item.value);
+ map.putAssumeCapacity(item.key, item.value);
    }
    ```
 
@@ -1210,7 +1210,7 @@ When debugging ArrayHashMapUnmanaged issues:
 6. **Use getPtr for in-place modification**
    ```zig
    if (map.getPtr(key)) |ptr| {
-       ptr.* = new_value;  // No copy
+ ptr.* = new_value;  // No copy
    }
    ```
 
@@ -1218,7 +1218,7 @@ When debugging ArrayHashMapUnmanaged issues:
    ```zig
    try map.ensureUnusedCapacity(allocator, batch.len);
    for (batch) |item| {
-       map.putAssumeCapacity(item.key, item.value);
+ map.putAssumeCapacity(item.key, item.value);
    }
    ```
 

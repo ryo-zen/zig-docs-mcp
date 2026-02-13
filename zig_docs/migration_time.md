@@ -193,16 +193,16 @@ pub fn doWorkWithTimeout(io: std.Io) !void {
     const timeout_ts = deadline.add(timeout_duration);
 
     while (true) {
-        // Do work
+  // Do work
 
-        // Check timeout
-        const now = try std.Io.Clock.monotonic.now(io);
-        if (now.isAfter(timeout_ts)) {
-            return error.Timeout;
-        }
+  // Check timeout
+  const now = try std.Io.Clock.monotonic.now(io);
+  if (now.isAfter(timeout_ts)) {
+      return error.Timeout;
+  }
 
-        // Sleep a bit
-        try io.sleep(std.Io.Duration.fromMilliseconds(10), std.Io.Clock.monotonic);
+  // Sleep a bit
+  try io.sleep(std.Io.Duration.fromMilliseconds(10), std.Io.Clock.monotonic);
     }
 }
 ```

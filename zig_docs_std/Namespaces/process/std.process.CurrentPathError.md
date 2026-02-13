@@ -2,12 +2,12 @@
 
 ## Errors
 
-CurrentDirUnlinked  
+CurrentDirUnlinked
 Not possible on Windows. Always returned on WASI.
 
-NameTooLong  
+NameTooLong
 
-Unexpected UnexpectedError  
+Unexpected UnexpectedError
 The Operating System returned an undocumented error code.
 
 This error is in theory not possible, but it would be better to handle this error than to invoke undefined behavior.

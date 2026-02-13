@@ -13,8 +13,8 @@ It wraps object-format backends (`ElfFile`, `MachOFile`) behind one API and reli
 ### Fields
 
     impl: union(enum) {
-        elf: ElfFile,
-        macho: MachOFile,
+  elf: ElfFile,
+  macho: MachOFile,
     }
 
     coverage: *Coverage
@@ -23,13 +23,13 @@ Externally managed, outlives this `Info` instance.
 
 ## Functions
 
-`pub fn deinit(info: *Info, gpa: Allocator) void`  
+`pub fn deinit(info: *Info, gpa: Allocator) void`
 Releases backend resources owned by this `Info`.
 
-`pub fn load( gpa: Allocator, io: Io, path: Path, coverage: *Coverage, format: std.Target.ObjectFormat, arch: std.Target.Cpu.Arch, ) LoadError!Info`  
+`pub fn load( gpa: Allocator, io: Io, path: Path, coverage: *Coverage, format: std.Target.ObjectFormat, arch: std.Target.Cpu.Arch, ) LoadError!Info`
 Loads debug-info backend state for the specified object format/architecture.
 
-`pub fn resolveAddresses( info: *Info, gpa: Allocator, io: Io, sorted_pc_addrs: []const u64, output: []SourceLocation, ) ResolveAddressesError!void`  
+`pub fn resolveAddresses( info: *Info, gpa: Allocator, io: Io, sorted_pc_addrs: []const u64, output: []SourceLocation, ) ResolveAddressesError!void`
 Given an array of virtual memory addresses, sorted ascending, outputs a corresponding array of source locations.
 
 ## Error Sets

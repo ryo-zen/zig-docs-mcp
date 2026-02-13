@@ -167,15 +167,15 @@ pub fn downloadBlocksParallel(
 
     // Launch all downloads concurrently
     for (tasks) |task| {
-        const future = try io.concurrent(downloadBlock, .{task.peer, task.height});
-        try futures.append(future);
+  const future = try io.concurrent(downloadBlock, .{task.peer, task.height});
+  try futures.append(future);
     }
 
     // Collect results
     var blocks = std.ArrayList(types.Block).init(allocator);
     for (futures.items) |future| {
-        const block = try io.await(future);
-        try blocks.append(block);
+  const block = try io.await(future);
+  try blocks.append(block);
     }
 
     return blocks.toOwnedSlice();
@@ -199,19 +199,19 @@ const PeerConnection = struct {
     stream: std.Io.net.TcpStream,
 
     pub fn handleMessages(self: *PeerConnection) !void {
-        defer self.stream.close(self.io);
+  defer self.stream.close(self.io);
 
-        while (true) {
-            // Cancellable read
-            try self.io.checkCancel();
+  while (true) {
+      // Cancellable read
+      try self.io.checkCancel();
 
-            const msg = self.readMessage() catch |err| switch (err) {
-                error.Canceled => break,  // Clean shutdown
-                else => return err,
-            };
+      const msg = self.readMessage() catch |err| switch (err) {
+          error.Canceled => break,  // Clean shutdown
+          else => return err,
+      };
 
-            try self.processMessage(msg);
-        }
+      try self.processMessage(msg);
+  }
     }
 };
 ```
@@ -253,7 +253,7 @@ pub fn startMining(self: *MiningManager, miner_keypair: key.KeyPair) !void {
     if (self.context.mining_state.active.load(.acquire)) return;
     self.context.mining_state.active.store(true, .release);
     self.context.mining_state.thread = try std.Thread.spawn(.{}, miningThreadFn, .{
-        self.context, miner_keypair, self.mining_address
+  self.context, miner_keypair, self.mining_address
     });
 }
 
@@ -262,8 +262,8 @@ pub fn stopMining(self: *MiningManager) void {
     self.context.mining_state.active.store(false, .release);
     self.context.mining_state.condition.signal();
     if (self.context.mining_state.thread) |thread| {
-        thread.join();
-        self.context.mining_state.thread = null;
+  thread.join();
+  self.context.mining_state.thread = null;
     }
 }
 ```
@@ -273,37 +273,37 @@ pub fn stopMining(self: *MiningManager) void {
 pub fn startMining(self: *MiningManager, io: std.Io, miner_keypair: key.KeyPair) !void {
     // Cancel any existing mining
     if (self.mining_task) |task| {
-        io.cancel(task);
+  io.cancel(task);
     }
 
     // Start new mining task
     self.mining_task = try io.concurrent(miningLoop, .{
-        io, self.context, miner_keypair, self.mining_address
+  io, self.context, miner_keypair, self.mining_address
     });
 }
 
 pub fn stopMining(self: *MiningManager, io: std.Io) void {
     if (self.mining_task) |task| {
-        io.cancel(task);
-        self.mining_task = null;
+  io.cancel(task);
+  self.mining_task = null;
     }
 }
 
 fn miningLoop(io: std.Io, ctx: MiningContext, keypair: key.KeyPair, addr: types.Address) !void {
     while (true) {
-        try io.checkCancel();  // Respect cancellation
+  try io.checkCancel();  // Respect cancellation
 
-        // Wait for transactions
-        const tx = try ctx.tx_queue.pop(io);  // Blocks until available
+  // Wait for transactions
+  const tx = try ctx.tx_queue.pop(io);  // Blocks until available
 
-        // Mine block
-        var block = try core.zenMineBlock(ctx, keypair, addr);
-        defer block.deinit(ctx.allocator);
+  // Mine block
+  var block = try core.zenMineBlock(ctx, keypair, addr);
+  defer block.deinit(ctx.allocator);
 
-        // Broadcast
-        if (ctx.network) |net| {
-            try net.broadcastBlock(block);
-        }
+  // Broadcast
+  if (ctx.network) |net| {
+      try net.broadcastBlock(block);
+  }
     }
 }
 ```

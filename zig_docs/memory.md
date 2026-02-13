@@ -65,7 +65,7 @@ test "using an allocator" {
 
     // 2. Pass it to functions
     const result = try concat(allocator, "foo", "bar");
-    
+
     try std.testing.expect(std.mem.eql(u8, "foobar", result));
 }
 
@@ -252,11 +252,11 @@ String literals and `const` values known at comptime live here. They are immutab
 test "string literals are const" {
     // This is valid:
     const s: []const u8 = "hello";
-    
+
     // This would be a compile error:
-    // var mutable_s: []u8 = "hello"; 
+    // var mutable_s: []u8 = "hello";
     // Error: types '[]u8' and '*const [5:0]u8' are incompatible
-    
+
     _ = s;
 }
 ```
@@ -321,7 +321,7 @@ var gpa = std.heap.GeneralPurposeAllocator(.{}){};
 defer {
     const leaked = gpa.deinit();
     if (leaked == .leak) {
-        std.debug.print("❌ MEMORY LEAK DETECTED\n", .{});
+  std.debug.print("❌ MEMORY LEAK DETECTED\n", .{});
     }
 }
 const allocator = gpa.allocator();
@@ -459,13 +459,13 @@ fn gameLoop(gpa: Allocator) !void {
     defer frame_arena.deinit();
 
     while (game.running) {
-        // Reset arena but keep capacity for next frame
-        defer _ = frame_arena.reset(.retain_capacity);
+  // Reset arena but keep capacity for next frame
+  defer _ = frame_arena.reset(.retain_capacity);
 
-        const allocator = frame_arena.allocator();
-        const entities = try loadEntities(allocator);
-        try renderFrame(allocator, entities);
-        // All frame memory freed at loop end
+  const allocator = frame_arena.allocator();
+  const entities = try loadEntities(allocator);
+  try renderFrame(allocator, entities);
+  // All frame memory freed at loop end
     }
 }
 ```
@@ -506,7 +506,7 @@ pub const Config = struct {
     entries: []Entry,
 
     pub fn deinit(self: *Config, allocator: Allocator) void {
-        allocator.free(self.entries);
+  allocator.free(self.entries);
     }
 };
 ```

@@ -22,14 +22,14 @@ This value is available for the implementation to use as it wishes.
 
 ## Functions
 
-`pub fn async(g: *Group, io: Io, function: anytype, args: std.meta.ArgsTuple(@TypeOf(function))) void`  
+`pub fn async(g: *Group, io: Io, function: anytype, args: std.meta.ArgsTuple(@TypeOf(function))) void`
 Equivalent to `Io.async`, except the task is spawned in this `Group` instead of becoming associated with a `Future`.
 
-`pub fn await(g: *Group, io: Io) Cancelable!void`  
+`pub fn await(g: *Group, io: Io) Cancelable!void`
 Blocks until all tasks of the group finish. During this time, cancelation requests propagate to all members of the group, and will also cause `error.Canceled` to be returned when the group does ultimately finish.
 
-`pub fn cancel(g: *Group, io: Io) void`  
+`pub fn cancel(g: *Group, io: Io) void`
 Equivalent to `await` but immediately requests cancelation on all members of the group.
 
-`pub fn concurrent(g: *Group, io: Io, function: anytype, args: std.meta.ArgsTuple(@TypeOf(function))) ConcurrentError!void`  
+`pub fn concurrent(g: *Group, io: Io, function: anytype, args: std.meta.ArgsTuple(@TypeOf(function))) ConcurrentError!void`
 Equivalent to `Io.concurrent`, except the task is spawned in this `Group` instead of becoming associated with a `Future`.

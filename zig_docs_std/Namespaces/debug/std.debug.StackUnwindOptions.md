@@ -27,8 +27,8 @@ const std = @import("std");
 
 pub fn main() void {
     std.debug.dumpCurrentStackTrace(.{
-        .first_address = @returnAddress(),
-        .allow_unsafe_unwind = false,
+  .first_address = @returnAddress(),
+  .allow_unsafe_unwind = false,
     });
 }
 ```

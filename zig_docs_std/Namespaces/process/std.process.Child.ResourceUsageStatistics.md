@@ -6,5 +6,5 @@
 
 ## Functions
 
-`pub inline fn getMaxRss(rus: ResourceUsageStatistics) ?usize`  
+`pub inline fn getMaxRss(rus: ResourceUsageStatistics) ?usize`
 Returns the peak resident set size of the child process, in bytes, if available.

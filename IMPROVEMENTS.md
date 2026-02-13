@@ -1,6 +1,6 @@
 # Zig Docs Roadmap
 
-This roadmap defines the documentation work needed to make `zig-docs-mcp` strong enough for systems programming usage.
+This roadmap defines the documentation work needed to make `zig-docs-mcp` strong enough for systems programming usage for Zig Language v0.16-dev
 
 ## Goals
 
@@ -37,6 +37,7 @@ A document is "done" when it has:
 
 ### 2) Unsafe Boundaries + Invariants
 - Why: Systems programming depends on correctness around casts, aliasing, and bounds assumptions.
+- Status: Done ✅ Completed
 - Deliverables:
   - New guide: `zig_docs/unsafe_boundaries.md`
   - Cross-link from: `zig_docs/casting.md`, `zig_docs/pointers.md`, `zig_docs/illegal_behavior.md`
@@ -47,6 +48,7 @@ A document is "done" when it has:
 
 ### 3) Error Policy + Failure Design
 - Why: Production behavior depends on consistent error handling strategy.
+- Status: Done ✅ Completed
 - Deliverables:
   - Upgrade: `zig_docs/errors.md`, `zig_docs/error_patterns.md`, `zig_docs/common_errors.md`
   - New guide: `zig_docs/error_handling_playbook.md`
@@ -57,6 +59,7 @@ A document is "done" when it has:
 
 ### 4) Concurrency + Synchronization
 - Why: Race conditions and lock discipline are core systems risks.
+- Status: Done ✅ Completed
 - Deliverables:
   - New guide: `zig_docs/concurrency_playbook.md`
   - Upgrade: `zig_docs/atomics.md`, async docs, relevant `std.Io` docs
@@ -67,6 +70,7 @@ A document is "done" when it has:
 
 ### 5) I/O Reliability + Backpressure
 - Why: Real systems fail at boundaries: partial writes, framing, shutdown semantics.
+- Status: Done ✅ Completed
 - Deliverables:
   - Upgrade: I/O docs and `std.Io` namespace/type docs
   - Add examples: robust read loops, partial write handling, protocol framing
@@ -146,9 +150,9 @@ Use this checklist per document:
 
 ## Immediate Next Targets
 
-1. `zig_docs/unsafe_boundaries.md`
-2. `zig_docs/casting.md`
-3. `zig_docs/illegal_behavior.md`
-4. `zig_docs/errors.md`
-5. `zig_docs/error_patterns.md`
-6. `zig_docs/atomics.md`
+1. `zig_docs/performance_playbook.md`
+2. `zig_docs/build_mode.md`
+3. `zig_docs/compilation_model.md`
+4. `zig_docs/release_checklist.md`
+5. `zig_docs/comptime.md`
+6. `zig_docs/c.md`

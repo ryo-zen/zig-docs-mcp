@@ -6,4 +6,4 @@
 
 ## Functions
 
-`pub fn isEmpty(v: View) bool`  
+`pub fn isEmpty(v: View) bool`

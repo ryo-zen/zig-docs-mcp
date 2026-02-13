@@ -2,6 +2,6 @@
 
 ## Errors
 
-CertificateFieldHasInvalidLength  
+CertificateFieldHasInvalidLength
 
-UnsupportedCertificateVersion  
+UnsupportedCertificateVersion

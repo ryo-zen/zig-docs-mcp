@@ -46,7 +46,7 @@ pub fn main() !void {
     // Assuming you have 'server' and 'stdin' available:
     // files.server_socket = server.socket.handle; // Note: You need an Io.File here, so you might need to wrap handles
     // files.console_input = std.io.getStdIn();
-    
+
     // 4. Use with std.Io.poll (hypothetical usage context)
     // var poller = std.Io.poll(allocator, MyStreams, files);
 }

@@ -5,6 +5,7 @@ Zig has two kinds of pointers: single-item and many-item.
 📚 **Runnable Examples:** `zig_docs_std/Examples/pointers.tests.zig`
 
 📘 **Related Guide:** [Memory Allocator Strategy](memory_allocator_strategy.md)
+📘 **Safety Guide:** [Unsafe Boundaries and Invariants](unsafe_boundaries.md)
 
 ## Overview
 
@@ -37,69 +38,51 @@ Before pointer casts/arithmetic/dereference across boundaries:
 4. **Sentinel contract:** If using sentinel types, is sentinel guaranteed?
 5. **Mutability:** Are `const` vs mutable guarantees preserved?
 6. **Concurrency:** Is there race-free ownership/synchronization for mutable access?
-      
 
-      
-          `*T` - single-item pointer to exactly one item.
-            
-              
+    `*T` - single-item pointer to exactly one item.
+
 - Supports deref syntax: `ptr.*`
-              
+
 - Supports slice syntax: `ptr[0..1]`
-              
+
 - Supports pointer subtraction: `ptr - ptr`
-            
-          
-          `[*]T` - many-item pointer to unknown number of items.
-            
-              
+
+    `[*]T` - many-item pointer to unknown number of items.
+
 - Supports index syntax: `ptr[i]`
-              
+
 - Supports slice syntax: `ptr[start..end]` and `ptr[start..]`
-              
+
 - Supports pointer-integer arithmetic: `ptr + int`, `ptr - int`
-              
+
 - Supports pointer subtraction: `ptr - ptr`
-            
-            `T` must have a known size, which means that it cannot be
-            `anyopaque` or any other [opaque type](#opaque).
-          
-      
-      
+
+      `T` must have a known size, which means that it cannot be
+      `anyopaque` or any other [opaque type](#opaque).
 
 These types are closely related to [Arrays](#Arrays) and [Slices](#Slices):
 
-        
-            `*[N]T` - pointer to N items, same as single-item pointer to an array.
-            
-                
+      `*[N]T` - pointer to N items, same as single-item pointer to an array.
+
 - Supports index syntax: `array_ptr[i]`
-                
+
 - Supports slice syntax: `array_ptr[start..end]`
-                
+
 - Supports len property: `array_ptr.len`
-                
+
 - Supports pointer subtraction: `array_ptr - array_ptr`
-            
-            
-        
-        
-            `[]T` - is a slice (a fat pointer, which contains a pointer of type `[*]T` and a length).
-            
-                
+
+      `[]T` - is a slice (a fat pointer, which contains a pointer of type `[*]T` and a length).
+
 - Supports index syntax: `slice[i]`
-                
+
 - Supports slice syntax: `slice[start..end]`
-                
+
 - Supports len property: `slice.len`
-            
-            
-        
-        
 
 Use `&x` to obtain a single-item pointer:
 
-      test_single_item_pointer.zig
+test_single_item_pointer.zig
 ```zig
 const expect = @import("std").testing.expect;
 
@@ -155,12 +138,9 @@ Shell$ zig test test_single_item_pointer.zig
 3/3 test_single_item_pointer.test.slice syntax...OK
 All 3 tests passed.
 
-      
+ Zig supports pointer arithmetic. It's better to assign the pointer to `[*]T` and increment that variable. For example, directly incrementing the pointer from a slice will corrupt it.
 
-       Zig supports pointer arithmetic. It's better to assign the pointer to `[*]T` and increment that variable. For example, directly incrementing the pointer from a slice will corrupt it.
-      
-
-      test_pointer_arithmetic.zig
+test_pointer_arithmetic.zig
 ```zig
 const expect = @import("std").testing.expect;
 
@@ -201,20 +181,14 @@ Shell$ zig test test_pointer_arithmetic.zig
 2/2 test_pointer_arithmetic.test.pointer arithmetic with slices...OK
 All 2 tests passed.
 
-      
+  In Zig, we generally prefer [Slices](#Slices) rather than [Sentinel-Terminated Pointers](#Sentinel-Terminated-Pointers).
+  You can turn an array or pointer into a slice using slice syntax.
 
-        In Zig, we generally prefer [Slices](#Slices) rather than [Sentinel-Terminated Pointers](#Sentinel-Terminated-Pointers).
-        You can turn an array or pointer into a slice using slice syntax.
-      
+  Slices have bounds checking and are therefore protected
+  against this kind of Illegal Behavior. This is one reason
+  we prefer slices to pointers.
 
-      
-
-        Slices have bounds checking and are therefore protected
-        against this kind of Illegal Behavior. This is one reason
-        we prefer slices to pointers.
-      
-
-      test_slice_bounds.zig
+test_slice_bounds.zig
 ```zig
 const expect = @import("std").testing.expect;
 
@@ -234,22 +208,20 @@ Shell$ zig test test_slice_bounds.zig
 1/1 test_slice_bounds.test.pointer slicing...OK
 All 1 tests passed.
 
-      
-
 Pointers work at compile-time too, as long as the code does not depend on
-      an undefined memory layout:
+an undefined memory layout:
 
-      test_comptime_pointers.zig
+test_comptime_pointers.zig
 ```zig
 const expect = @import("std").testing.expect;
 
 test "comptime pointers" {
     comptime {
-        var x: i32 = 1;
-        const ptr = &x;
-        ptr.* += 1;
-        x += 1;
-        try expect(ptr.* == 3);
+  var x: i32 = 1;
+  const ptr = &x;
+  ptr.* += 1;
+  x += 1;
+  try expect(ptr.* == 3);
     }
 }
 ```
@@ -257,12 +229,10 @@ Shell$ zig test test_comptime_pointers.zig
 1/1 test_comptime_pointers.test.comptime pointers...OK
 All 1 tests passed.
 
-      
-
 To convert an integer address into a pointer, use `@ptrFromInt`.
-      To convert a pointer to an integer, use `@intFromPtr`:
+To convert a pointer to an integer, use `@intFromPtr`:
 
-      test_integer_pointer_conversion.zig
+test_integer_pointer_conversion.zig
 ```zig
 const expect = @import("std").testing.expect;
 
@@ -277,23 +247,21 @@ Shell$ zig test test_integer_pointer_conversion.zig
 1/1 test_integer_pointer_conversion.test.@intFromPtr and @ptrFromInt...OK
 All 1 tests passed.
 
-      
-
 Zig is able to preserve memory addresses in comptime code, as long as
-      the pointer is never dereferenced:
+the pointer is never dereferenced:
 
-      test_comptime_pointer_conversion.zig
+test_comptime_pointer_conversion.zig
 ```zig
 const expect = @import("std").testing.expect;
 
 test "comptime @ptrFromInt" {
     comptime {
-        // Zig is able to do this at compile-time, as long as
-        // ptr is never dereferenced.
-        const ptr: *i32 = @ptrFromInt(0xdeadbee0);
-        const addr = @intFromPtr(ptr);
-        try expect(@TypeOf(addr) == usize);
-        try expect(addr == 0xdeadbee0);
+  // Zig is able to do this at compile-time, as long as
+  // ptr is never dereferenced.
+  const ptr: *i32 = @ptrFromInt(0xdeadbee0);
+  const addr = @intFromPtr(ptr);
+  try expect(@TypeOf(addr) == usize);
+  try expect(addr == 0xdeadbee0);
     }
 }
 ```
@@ -301,16 +269,13 @@ Shell$ zig test test_comptime_pointer_conversion.zig
 1/1 test_comptime_pointer_conversion.test.comptime @ptrFromInt...OK
 All 1 tests passed.
 
-      
+[@ptrCast](#ptrCast) converts a pointer's element type to another. This
+creates a new pointer that can cause undetectable Illegal Behavior
+depending on the loads and stores that pass through it. Generally, other
+kinds of type conversions are preferable to
+`@ptrCast` if possible.
 
-      [@ptrCast](#ptrCast) converts a pointer's element type to another. This
-      creates a new pointer that can cause undetectable Illegal Behavior
-      depending on the loads and stores that pass through it. Generally, other
-      kinds of type conversions are preferable to
-      `@ptrCast` if possible.
-      
-
-      test_pointer_casting.zig
+test_pointer_casting.zig
 ```zig
 const std = @import("std");
 const expect = std.testing.expect;
@@ -339,8 +304,6 @@ Shell$ zig test test_pointer_casting.zig
 2/2 test_pointer_casting.test.pointer child type...OK
 All 2 tests passed.
 
-      
-
 See also:
 
 - [Optional Pointers](#Optional-Pointers)
@@ -351,17 +314,14 @@ See also:
 
 - [C Pointers](#C-Pointers)
 
-      
 ## [volatile](#toc-volatile) §
 
-      
-
 Loads and stores are assumed to not have side effects. If a given load or store
-      should have side effects, such as Memory Mapped Input/Output (MMIO), use `volatile`.
-      In the following code, loads and stores with `mmio_ptr` are guaranteed to all happen
-      and in the same order as in source code:
+should have side effects, such as Memory Mapped Input/Output (MMIO), use `volatile`.
+In the following code, loads and stores with `mmio_ptr` are guaranteed to all happen
+and in the same order as in source code:
 
-      test_volatile.zig
+test_volatile.zig
 ```zig
 const expect = @import("std").testing.expect;
 
@@ -374,39 +334,24 @@ Shell$ zig test test_volatile.zig
 1/1 test_volatile.test.volatile...OK
 All 1 tests passed.
 
-      
+Note that `volatile` is unrelated to concurrency and [Atomics](#Atomics).
+If you see code that is using `volatile` for something other than Memory Mapped
+Input/Output, it is probably a bug.
 
-      Note that `volatile` is unrelated to concurrency and [Atomics](#Atomics).
-      If you see code that is using `volatile` for something other than Memory Mapped
-      Input/Output, it is probably a bug.
-      
-
-      
-
-      
 ## [Alignment](#toc-Alignment) §
 
-      
+Each type has an **alignment** - a number of bytes such that,
+when a value of the type is loaded from or stored to memory,
+the memory address must be evenly divisible by this number. You can use
+[@alignOf](#alignOf) to find out this value for any type.
 
-      Each type has an **alignment** - a number of bytes such that,
-      when a value of the type is loaded from or stored to memory,
-      the memory address must be evenly divisible by this number. You can use
-      [@alignOf](#alignOf) to find out this value for any type.
-      
+Alignment depends on the CPU architecture, but is always a power of two, and
+less than `1 << 29`.
 
-      
+In Zig, a pointer type has an alignment value. If the value is equal to the
+alignment of the underlying type, it can be omitted from the type:
 
-      Alignment depends on the CPU architecture, but is always a power of two, and
-      less than `1 << 29`.
-      
-
-      
-
-      In Zig, a pointer type has an alignment value. If the value is equal to the
-      alignment of the underlying type, it can be omitted from the type:
-      
-
-      test_variable_alignment.zig
+test_variable_alignment.zig
 ```zig
 const std = @import("std");
 const builtin = @import("builtin");
@@ -418,7 +363,7 @@ test "variable alignment" {
     try expect(@TypeOf(&x) == *i32);
     try expect(*i32 == *align(align_of_i32) i32);
     if (builtin.target.cpu.arch == .x86_64) {
-        try expect(@typeInfo(*i32).pointer.alignment == 4);
+  try expect(@typeInfo(*i32).pointer.alignment == 4);
     }
 }
 ```
@@ -426,20 +371,14 @@ Shell$ zig test test_variable_alignment.zig
 1/1 test_variable_alignment.test.variable alignment...OK
 All 1 tests passed.
 
-      
-
 In the same way that a `*i32` can be [coerced](#Type-Coercion) to a
-          `*const i32`, a pointer with a larger alignment can be implicitly
-      cast to a pointer with a smaller alignment, but not vice versa.
-      
+    `*const i32`, a pointer with a larger alignment can be implicitly
+cast to a pointer with a smaller alignment, but not vice versa.
 
-      
+You can specify alignment on variables and functions. If you do this, then
+pointers to them get the specified alignment:
 
-      You can specify alignment on variables and functions. If you do this, then
-      pointers to them get the specified alignment:
-      
-
-      test_variable_func_alignment.zig
+test_variable_func_alignment.zig
 ```zig
 const expect = @import("std").testing.expect;
 
@@ -479,15 +418,12 @@ Shell$ zig test test_variable_func_alignment.zig
 2/2 test_variable_func_alignment.test.function alignment...OK
 All 2 tests passed.
 
-      
+If you have a pointer or a slice that has a small alignment, but you know that it actually
+has a bigger alignment, use [@alignCast](#alignCast) to change the
+pointer into a more aligned pointer. This is a no-op at runtime, but inserts a
+[safety check](#Incorrect-Pointer-Alignment):
 
-      If you have a pointer or a slice that has a small alignment, but you know that it actually
-      has a bigger alignment, use [@alignCast](#alignCast) to change the
-      pointer into a more aligned pointer. This is a no-op at runtime, but inserts a
-      [safety check](#Incorrect-Pointer-Alignment):
-      
-
-      test_incorrect_pointer_alignment.zig
+test_incorrect_pointer_alignment.zig
 ```zig
 const std = @import("std");
 
@@ -506,41 +442,35 @@ Shell$ zig test test_incorrect_pointer_alignment.zig
 1/1 test_incorrect_pointer_alignment.test.pointer alignment safety...thread 3447318 panic: incorrect alignment
 /home/ci/zig-bootstrap/zig/doc/langref/test_incorrect_pointer_alignment.zig:10:68: 0x103f1f6 in foo (test_incorrect_pointer_alignment.zig)
     const int_slice = std.mem.bytesAsSlice(u32, @as([]align(4) u8, @alignCast(slice4)));
-                                                                   ^
+                                                             ^
 /home/ci/zig-bootstrap/zig/doc/langref/test_incorrect_pointer_alignment.zig:6:31: 0x103f08e in test.pointer alignment safety (test_incorrect_pointer_alignment.zig)
     try std.testing.expect(foo(bytes) == 0x11111111);
-                              ^
-/home/ci/zig-bootstrap/out/host/lib/zig/compiler/test_runner.zig:255:25: 0x11d0ff2 in mainTerminal (test_runner.zig)
-        if (test_fn.func()) |_| {
                         ^
+/home/ci/zig-bootstrap/out/host/lib/zig/compiler/test_runner.zig:255:25: 0x11d0ff2 in mainTerminal (test_runner.zig)
+  if (test_fn.func()) |_| {
+                  ^
 /home/ci/zig-bootstrap/out/host/lib/zig/compiler/test_runner.zig:70:28: 0x11caea2 in main (test_runner.zig)
-        return mainTerminal(init);
-                           ^
+  return mainTerminal(init);
+                     ^
 /home/ci/zig-bootstrap/out/host/lib/zig/std/start.zig:680:88: 0x11c7517 in callMain (std.zig)
     if (fn_info.params[0].type.? == std.process.Init.Minimal) return wrapMain(root.main(.{
-                                                                                       ^
+                                                                                 ^
 /home/ci/zig-bootstrap/out/host/lib/zig/std/start.zig:190:5: 0x11c6f41 in _start (std.zig)
     asm volatile (switch (native_arch) {
     ^
 error: the following test command terminated with signal ABRT:
 /home/ci/zig-bootstrap/out/zig-local-cache/o/a7f2f5b9d42a63e4655aa55e2afe9e67/test --seed=0x562512eb
 
-      
-
-      
 ## [allowzero](#toc-allowzero) §
 
-      
+This pointer attribute allows a pointer to have address zero. This is only ever needed on the
+freestanding OS target, where the address zero is mappable. If you want to represent null pointers, use
+[Optional Pointers](#Optional-Pointers) instead. [Optional Pointers](#Optional-Pointers) with `allowzero`
+are not the same size as pointers. In this code example, if the pointer
+did not have the `allowzero` attribute, this would be a
+[Pointer Cast Invalid Null](#Pointer-Cast-Invalid-Null) panic:
 
-      This pointer attribute allows a pointer to have address zero. This is only ever needed on the
-      freestanding OS target, where the address zero is mappable. If you want to represent null pointers, use
-      [Optional Pointers](#Optional-Pointers) instead. [Optional Pointers](#Optional-Pointers) with `allowzero`
-      are not the same size as pointers. In this code example, if the pointer
-      did not have the `allowzero` attribute, this would be a
-      [Pointer Cast Invalid Null](#Pointer-Cast-Invalid-Null) panic:
-      
-
-      test_allowzero.zig
+test_allowzero.zig
 ```zig
 const std = @import("std");
 const expect = std.testing.expect;
@@ -556,19 +486,13 @@ Shell$ zig test test_allowzero.zig
 1/1 test_allowzero.test.allowzero...OK
 All 1 tests passed.
 
-      
-
-      
 ## [Sentinel-Terminated Pointers](#toc-Sentinel-Terminated-Pointers) §
 
-      
+The syntax `[*:x]T` describes a pointer that
+has a length determined by a sentinel value. This provides protection
+against buffer overflow and overreads.
 
-      The syntax `[*:x]T` describes a pointer that
-      has a length determined by a sentinel value. This provides protection
-      against buffer overflow and overreads.
-      
-
-      sentinel-terminated_pointer.zig
+sentinel-terminated_pointer.zig
 ```zig
 const std = @import("std");
 
@@ -586,18 +510,16 @@ pub fn main() anyerror!void {
 Shell$ zig build-exe sentinel-terminated_pointer.zig -lc
 /home/ci/zig-bootstrap/zig/doc/langref/sentinel-terminated_pointer.zig:11:16: error: expected type '[*:0]const u8', found '*const [14]u8'
     _ = printf(&non_null_terminated_msg);
-               ^~~~~~~~~~~~~~~~~~~~~~~~
+         ^~~~~~~~~~~~~~~~~~~~~~~~
 /home/ci/zig-bootstrap/zig/doc/langref/sentinel-terminated_pointer.zig:11:16: note: destination pointer requires '0' sentinel
 /home/ci/zig-bootstrap/zig/doc/langref/sentinel-terminated_pointer.zig:4:34: note: parameter type declared here
 pub extern "c" fn printf(format: [*:0]const u8, ...) c_int;
-                                 ^~~~~~~~~~~~~
+                           ^~~~~~~~~~~~~
 referenced by:
     callMain [inlined]: /home/ci/zig-bootstrap/out/host/lib/zig/std/start.zig:679:59
     callMainWithArgs [inlined]: /home/ci/zig-bootstrap/out/host/lib/zig/std/start.zig:629:20
     main: /home/ci/zig-bootstrap/out/host/lib/zig/std/start.zig:656:28
     1 reference(s) hidden; use '-freference-trace=4' to see all references
-
-      
 
 See also:
 

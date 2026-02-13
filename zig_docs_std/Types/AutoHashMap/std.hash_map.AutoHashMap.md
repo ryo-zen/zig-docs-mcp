@@ -105,10 +105,10 @@ defer map.deinit();  // ← REQUIRED! Always deinit to free backing storage
 ```zig
 pub fn AutoHashMap(comptime K: type, comptime V: type) type {
     return HashMap(
-        K,
-        V,
-        AutoContext(K),
-        default_max_load_percentage,
+  K,
+  V,
+  AutoContext(K),
+  default_max_load_percentage,
     );
 }
 ```
@@ -890,12 +890,12 @@ pub fn countWords(allocator: std.mem.Allocator, text: []const u8) !std.StringHas
 
     var iter = std.mem.tokenize(u8, text, " \t\n");
     while (iter.next()) |word| {
-        const result = try counts.getOrPut(word);
-        if (result.found_existing) {
-            result.value_ptr.* += 1;
-        } else {
-            result.value_ptr.* = 1;
-        }
+  const result = try counts.getOrPut(word);
+  if (result.found_existing) {
+      result.value_ptr.* += 1;
+  } else {
+      result.value_ptr.* = 1;
+  }
     }
 
     return counts;
@@ -909,7 +909,7 @@ const Cache = std.AutoHashMap(u64, []const u8);
 
 pub fn expensiveComputation(cache: *Cache, allocator: std.mem.Allocator, input: u64) ![]const u8 {
     if (cache.get(input)) |cached_result| {
-        return cached_result;  // Return cached value
+  return cached_result;  // Return cached value
     }
 
     // Perform expensive computation
@@ -931,7 +931,7 @@ pub fn buildUserLookup(allocator: std.mem.Allocator, users: []const User) !std.A
     try lookup.ensureTotalCapacity(@intCast(users.len));
 
     for (users) |user| {
-        lookup.putAssumeCapacity(user.id, user);
+  lookup.putAssumeCapacity(user.id, user);
     }
 
     return lookup;
@@ -949,10 +949,10 @@ pub fn removeDuplicates(allocator: std.mem.Allocator, items: []const i32) ![]con
     errdefer result.deinit();
 
     for (items) |item| {
-        const gop = try seen.getOrPut(item);
-        if (!gop.found_existing) {
-            try result.append(item);
-        }
+  const gop = try seen.getOrPut(item);
+  if (!gop.found_existing) {
+      try result.append(item);
+  }
     }
 
     return result.toOwnedSlice();
@@ -1006,15 +1006,15 @@ When debugging hash map issues, verify:
    ```zig
    try map.ensureUnusedCapacity(items.len);
    for (items) |item| {
-       map.putAssumeCapacity(item.id, item);  // No error handling needed
+ map.putAssumeCapacity(item.id, item);  // No error handling needed
    }
    ```
 
 3. **Reuse maps with `clearRetainingCapacity()`** - Avoid allocation churn when processing batches:
    ```zig
    for (batches) |batch| {
-       defer map.clearRetainingCapacity();
-       // Process batch with map
+ defer map.clearRetainingCapacity();
+ // Process batch with map
    }
    ```
 
@@ -1023,7 +1023,7 @@ When debugging hash map issues, verify:
 5. **Use `getPtr()` for in-place modification** - Avoid copying large values:
    ```zig
    if (map.getPtr(key)) |value_ptr| {
-       value_ptr.field += 1;  // Modify directly
+ value_ptr.field += 1;  // Modify directly
    }
    ```
 

@@ -28,7 +28,7 @@ Password hashing functions must be used whenever sensitive data has to be direct
 
 ## Functions
 
-`pub fn pbkdf2(dk: []u8, password: []const u8, salt: []const u8, rounds: u32, comptime Prf: type) (WeakParametersError || OutputTooLongError)!void`  
+`pub fn pbkdf2(dk: []u8, password: []const u8, salt: []const u8, rounds: u32, comptime Prf: type) (WeakParametersError || OutputTooLongError)!void`
 Apply PBKDF2 to generate a key from a password.
 
 ## Error Sets

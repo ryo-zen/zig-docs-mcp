@@ -48,19 +48,19 @@ Protects the other fields.
 
 ## Functions
 
-`pub fn addStringAssumeCapacity(cov: *Coverage, s: []const u8) String`  
+`pub fn addStringAssumeCapacity(cov: *Coverage, s: []const u8) String`
 Adds a string into the intern table when capacity has already been reserved.
 
-`pub fn deinit(cov: *Coverage, gpa: Allocator) void`  
+`pub fn deinit(cov: *Coverage, gpa: Allocator) void`
 Releases all memory owned by coverage indices and string storage.
 
-`pub fn fileAt(cov: *Coverage, index: File.Index) *File`  
+`pub fn fileAt(cov: *Coverage, index: File.Index) *File`
 Returns a pointer to a tracked file record by index.
 
-`pub fn resolveAddressesDwarf( cov: *Coverage, gpa: Allocator, io: Io, endian: std.builtin.Endian, sorted_pc_addrs: []const u64, output: []SourceLocation, d: *Dwarf, ) ResolveAddressesDwarfError!void`  
+`pub fn resolveAddressesDwarf( cov: *Coverage, gpa: Allocator, io: Io, endian: std.builtin.Endian, sorted_pc_addrs: []const u64, output: []SourceLocation, d: *Dwarf, ) ResolveAddressesDwarfError!void`
 Resolves sorted program-counter addresses into source locations using DWARF data.
 
-`pub fn stringAt(cov: *Coverage, index: String) [:0]const u8`  
+`pub fn stringAt(cov: *Coverage, index: String) [:0]const u8`
 Returns a zero-terminated string slice from the intern table.
 
 ## Error Sets

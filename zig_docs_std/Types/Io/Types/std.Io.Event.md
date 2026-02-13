@@ -20,11 +20,11 @@ try event.wait(io);
 var event = std.Io.Event.unset;
 
 // Wait up to 1 second
-event.waitTimeout(io, .{ 
-    .duration = .{ 
-        .raw = std.Io.Duration.fromSeconds(1), 
-        .clock = .awake 
-    } 
+event.waitTimeout(io, .{
+    .duration = .{
+  .raw = std.Io.Duration.fromSeconds(1),
+  .clock = .awake
+    }
 }) catch |err| switch (err) {
     error.Timeout => std.debug.print("Timed out waiting for event\n", .{}),
     else => return err,
@@ -236,14 +236,14 @@ var shutdown_event = std.Io.Event.unset;
 
 fn workerLoop(io: std.Io) !void {
     while (!shutdown_event.isSet()) {
-        // Process work items
-        processNextItem() catch |err| {
-            if (err == error.NoMoreWork) {
-                std.time.sleep(10 * std.time.ns_per_ms);
-                continue;
-            }
-            return err;
-        };
+  // Process work items
+  processNextItem() catch |err| {
+      if (err == error.NoMoreWork) {
+          std.time.sleep(10 * std.time.ns_per_ms);
+          continue;
+      }
+      return err;
+  };
     }
 
     // Cleanup before exit
@@ -261,7 +261,7 @@ pub fn main() !void {
     // Spawn workers
     var group = std.Io.Group.init(io);
     for (0..4) |_| {
-        group.async(workerLoop, .{io});
+  group.async(workerLoop, .{io});
     }
 
     // Wait for shutdown signal (e.g., SIGTERM handler)
@@ -286,18 +286,18 @@ fn operationWithTimeout(
     timeout_ms: u64
 ) !void {
     const timeout = std.Io.Timeout{
-        .duration = .{
-            .raw = std.Io.Duration.fromMillis(timeout_ms),
-            .clock = .awake,
-        },
+  .duration = .{
+      .raw = std.Io.Duration.fromMillis(timeout_ms),
+      .clock = .awake,
+  },
     };
 
     operation_event.waitTimeout(io, timeout) catch |err| {
-        if (err == error.Timeout) {
-            std.debug.print("Operation timed out after {} ms\n", .{timeout_ms});
-            return error.OperationTimeout;
-        }
-        return err;
+  if (err == error.Timeout) {
+      std.debug.print("Operation timed out after {} ms\n", .{timeout_ms});
+      return error.OperationTimeout;
+  }
+  return err;
     };
 
     std.debug.print("Operation completed within timeout\n", .{});
@@ -313,15 +313,15 @@ fn processMultipleBatches(io: std.Io) !void {
     var batch_ready = std.Io.Event.unset;
 
     for (0..5) |batch_num| {
-        // Spawn batch processor
-        spawnBatchProcessor(io, batch_num, &batch_ready);
+  // Spawn batch processor
+  spawnBatchProcessor(io, batch_num, &batch_ready);
 
-        // Wait for this batch
-        try batch_ready.wait(io);
-        std.debug.print("Batch {} completed\n", .{batch_num});
+  // Wait for this batch
+  try batch_ready.wait(io);
+  std.debug.print("Batch {} completed\n", .{batch_num});
 
-        // Reset for next batch
-        batch_ready.reset();
+  // Reset for next batch
+  batch_ready.reset();
     }
 }
 ```

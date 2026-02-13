@@ -177,17 +177,17 @@ const std = @import("std");
 
 pub fn main() void {
     if (std.fs.path.dirname("src/utils/parser.zig")) |dir| {
-        std.debug.print("{s}\n", .{dir}); // "src/utils"
+  std.debug.print("{s}\n", .{dir}); // "src/utils"
     }
 
     if (std.fs.path.dirname("/etc/passwd")) |dir| {
-        std.debug.print("{s}\n", .{dir}); // "/etc"
+  std.debug.print("{s}\n", .{dir}); // "/etc"
     }
 
     if (std.fs.path.dirname("no_directory")) |dir| {
-        std.debug.print("{s}\n", .{dir});
+  std.debug.print("{s}\n", .{dir});
     } else {
-        std.debug.print("null\n", .{}); // This executes - no directory component
+  std.debug.print("null\n", .{}); // This executes - no directory component
     }
 }
 ```
@@ -279,7 +279,7 @@ pub fn main() !void {
     const path1 = try std.fs.path.join(allocator, &.{"src", "utils", "parser.zig"});
     defer allocator.free(path1);
     std.debug.print("Path 1: {s}\n", .{path1}); // "src/utils/parser.zig" (POSIX)
-                                                 // "src\utils\parser.zig" (Windows)
+                                           // "src\utils\parser.zig" (Windows)
 
     const path2 = try std.fs.path.join(allocator, &.{"/usr", "local", "bin"});
     defer allocator.free(path2);
@@ -331,9 +331,9 @@ pub fn main() !void {
     const allocator = std.heap.page_allocator;
 
     const resolved = try std.fs.path.resolve(allocator, &.{
-        "/usr/local",
-        "../share",
-        "doc",
+  "/usr/local",
+  "../share",
+  "doc",
     });
     defer allocator.free(resolved);
     std.debug.print("Resolved: {s}\n", .{resolved}); // "/usr/share/doc"
@@ -442,11 +442,11 @@ pub fn main() !void {
     defer allocator.free(cwd);
 
     const rel = try std.fs.path.relative(
-        allocator,
-        cwd,
-        null, // No environment map needed for simple case
-        "/usr/local/bin",
-        "/usr/local/share/doc",
+  allocator,
+  cwd,
+  null, // No environment map needed for simple case
+  "/usr/local/bin",
+  "/usr/local/share/doc",
     );
     defer allocator.free(rel);
 
@@ -522,7 +522,7 @@ pub fn main() void {
     var it = std.fs.path.componentIterator(path);
 
     while (it.next()) |component| {
-        std.debug.print("Component: {s}\n", .{component});
+  std.debug.print("Component: {s}\n", .{component});
     }
     // Output:
     // Component: usr
@@ -597,7 +597,7 @@ pub fn normalizePathSeparators(allocator: std.mem.Allocator, path: []const u8) !
 
     var it = std.fs.path.componentIterator(path);
     while (it.next()) |component| {
-        try components.append(component);
+  try components.append(component);
     }
 
     return std.fs.path.join(allocator, components.items);
@@ -628,13 +628,13 @@ pub fn printPathHierarchy(path: []const u8) void {
     var depth: usize = 0;
 
     while (it.next()) |component| {
-        const indent = depth * 2;
-        var i: usize = 0;
-        while (i < indent) : (i += 1) {
-            std.debug.print(" ", .{});
-        }
-        std.debug.print("{s}\n", .{component});
-        depth += 1;
+  const indent = depth * 2;
+  var i: usize = 0;
+  while (i < indent) : (i += 1) {
+      std.debug.print(" ", .{});
+  }
+  std.debug.print("{s}\n", .{component});
+  depth += 1;
     }
 }
 
@@ -833,8 +833,8 @@ Functions like `relative()` may also return:
    const allocator = arena.allocator();
 
    for (files) |file| {
-       const path = try std.fs.path.join(allocator, &.{dir, file});
-       // Use path...
+ const path = try std.fs.path.join(allocator, &.{dir, file});
+ // Use path...
    }
    // All paths freed at once by arena.deinit()
    ```

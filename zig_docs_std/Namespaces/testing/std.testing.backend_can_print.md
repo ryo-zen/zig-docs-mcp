@@ -29,7 +29,7 @@ const std = @import("std");
 
 test "conditional printing test" {
     if (!std.testing.backend_can_print) {
-        return error.SkipZigTest;
+  return error.SkipZigTest;
     }
 
     // This test requires printing support

@@ -2,6 +2,6 @@
 
 ## Errors
 
-CertificateFieldHasInvalidLength ParseError  
+CertificateFieldHasInvalidLength ParseError
 
-CertificateFieldHasWrongDataType  
+CertificateFieldHasWrongDataType

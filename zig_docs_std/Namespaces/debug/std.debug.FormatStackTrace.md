@@ -14,7 +14,7 @@ Use it when you want stack-trace output integrated into your own writer flow ins
 
 ## Functions
 
-`pub fn format(fst: FormatStackTrace, writer: *Writer) Writer.Error!void`  
+`pub fn format(fst: FormatStackTrace, writer: *Writer) Writer.Error!void`
 Writes the formatted stack trace to `writer`, honoring `terminal_mode` for color behavior.
 
 ## Usage Notes

@@ -1,42 +1,32 @@
 # Illegal Behavior
 
+📘 **Related guide:** [Unsafe Boundaries and Invariants](unsafe_boundaries.md)
+📚 **Runnable guard-rail examples:** `zig_docs_std/Examples/unsafe_boundaries.tests.zig`
+
 Many operations in Zig trigger what is known as "Illegal Behavior" (IB). If Illegal Behavior is detected at
-      compile-time, Zig emits a compile error and refuses to continue. Otherwise, when Illegal Behavior is not caught
-      at compile-time, it falls into one of two categories.
-      
+compile-time, Zig emits a compile error and refuses to continue. Otherwise, when Illegal Behavior is not caught
+at compile-time, it falls into one of two categories.
 
-      
+Some Illegal Behavior is *safety-checked*: this means that the compiler will insert "safety checks"
+anywhere that the Illegal Behavior may occur at runtime, to determine whether it is about to happen. If it
+is, the safety check "fails", which triggers a panic.
 
-      Some Illegal Behavior is *safety-checked*: this means that the compiler will insert "safety checks"
-      anywhere that the Illegal Behavior may occur at runtime, to determine whether it is about to happen. If it
-      is, the safety check "fails", which triggers a panic.
-      
+All other Illegal Behavior is *unchecked*, meaning the compiler is unable to insert safety checks for
+it. If Unchecked Illegal Behavior is invoked at runtime, anything can happen: usually that will be some kind of
+crash, but the optimizer is free to make Unchecked Illegal Behavior do anything, such as calling arbitrary functions
+or clobbering arbitrary data. This is similar to the concept of "undefined behavior" in some other languages. Note that
+Unchecked Illegal Behavior still always results in a compile error if evaluated at [comptime](#comptime), because the Zig
+compiler is able to perform more sophisticated checks at compile-time than at runtime.
 
-      
+Most Illegal Behavior is safety-checked. However, to facilitate optimizations, safety checks are disabled by default
+in the [ReleaseFast](#ReleaseFast) and [ReleaseSmall](#ReleaseSmall) optimization modes. Safety checks can also be enabled or disabled
+on a per-block basis, overriding the default for the current optimization mode, using [@setRuntimeSafety](#setRuntimeSafety). When
+safety checks are disabled, Safety-Checked Illegal Behavior behaves like Unchecked Illegal Behavior; that is, any behavior
+may result from invoking it.
 
-      All other Illegal Behavior is *unchecked*, meaning the compiler is unable to insert safety checks for
-      it. If Unchecked Illegal Behavior is invoked at runtime, anything can happen: usually that will be some kind of
-      crash, but the optimizer is free to make Unchecked Illegal Behavior do anything, such as calling arbitrary functions
-      or clobbering arbitrary data. This is similar to the concept of "undefined behavior" in some other languages. Note that
-      Unchecked Illegal Behavior still always results in a compile error if evaluated at [comptime](#comptime), because the Zig
-      compiler is able to perform more sophisticated checks at compile-time than at runtime.
-      
+When a safety check fails, Zig's default panic handler crashes with a stack trace, like this:
 
-      
-
-      Most Illegal Behavior is safety-checked. However, to facilitate optimizations, safety checks are disabled by default
-      in the [ReleaseFast](#ReleaseFast) and [ReleaseSmall](#ReleaseSmall) optimization modes. Safety checks can also be enabled or disabled
-      on a per-block basis, overriding the default for the current optimization mode, using [@setRuntimeSafety](#setRuntimeSafety). When
-      safety checks are disabled, Safety-Checked Illegal Behavior behaves like Unchecked Illegal Behavior; that is, any behavior
-      may result from invoking it.
-      
-
-      
-
-      When a safety check fails, Zig's default panic handler crashes with a stack trace, like this:
-      
-
-      test_illegal_behavior.zig
+test_illegal_behavior.zig
 ```zig
 test "safety check" {
     unreachable;
@@ -48,28 +38,25 @@ Shell$ zig test test_illegal_behavior.zig
     unreachable;
     ^
 /home/ci/zig-bootstrap/out/host/lib/zig/compiler/test_runner.zig:255:25: 0x11d0ce2 in mainTerminal (test_runner.zig)
-        if (test_fn.func()) |_| {
-                        ^
+  if (test_fn.func()) |_| {
+            ^
 /home/ci/zig-bootstrap/out/host/lib/zig/compiler/test_runner.zig:70:28: 0x11cab92 in main (test_runner.zig)
-        return mainTerminal(init);
-                           ^
+  return mainTerminal(init);
+               ^
 /home/ci/zig-bootstrap/out/host/lib/zig/std/start.zig:680:88: 0x11c7207 in callMain (std.zig)
     if (fn_info.params[0].type.? == std.process.Init.Minimal) return wrapMain(root.main(.{
-                                                                                       ^
+                                                                           ^
 /home/ci/zig-bootstrap/out/host/lib/zig/std/start.zig:190:5: 0x11c6c31 in _start (std.zig)
     asm volatile (switch (native_arch) {
     ^
 error: the following test command terminated with signal ABRT:
 /home/ci/zig-bootstrap/out/zig-local-cache/o/1cdb2c2ed5183fc952923ec155ad04f4/test --seed=0x8f10e983
 
-      
 ## [Reaching Unreachable Code](#toc-Reaching-Unreachable-Code) §
-
-      
 
 At compile-time:
 
-      test_comptime_reaching_unreachable.zig
+test_comptime_reaching_unreachable.zig
 ```zig
 comptime {
     assert(false);
@@ -81,16 +68,14 @@ fn assert(ok: bool) void {
 Shell$ zig test test_comptime_reaching_unreachable.zig
 /home/ci/zig-bootstrap/zig/doc/langref/test_comptime_reaching_unreachable.zig:5:14: error: reached unreachable code
     if (!ok) unreachable; // assertion failure
-             ^~~~~~~~~~~
+ ^~~~~~~~~~~
 /home/ci/zig-bootstrap/zig/doc/langref/test_comptime_reaching_unreachable.zig:2:11: note: called at comptime here
     assert(false);
     ~~~~~~^~~~~~~
 
-      
-
 At runtime:
 
-      runtime_reaching_unreachable.zig
+runtime_reaching_unreachable.zig
 ```zig
 const std = @import("std");
 
@@ -103,27 +88,23 @@ $ ./runtime_reaching_unreachable
 thread 3448917 panic: reached unreachable code
 /home/ci/zig-bootstrap/out/host/lib/zig/std/debug.zig:419:14: 0x1031679 in assert (std.zig)
     if (!ok) unreachable; // assertion failure
-             ^
+ ^
 /home/ci/zig-bootstrap/zig/doc/langref/runtime_reaching_unreachable.zig:4:21: 0x11ab43e in main (runtime_reaching_unreachable.zig)
     std.debug.assert(false);
-                    ^
+        ^
 /home/ci/zig-bootstrap/out/host/lib/zig/std/start.zig:679:59: 0x11aaad2 in callMain (std.zig)
     if (fn_info.params.len == 0) return wrapMain(root.main());
-                                                          ^
+                                              ^
 /home/ci/zig-bootstrap/out/host/lib/zig/std/start.zig:190:5: 0x11aa551 in _start (std.zig)
     asm volatile (switch (native_arch) {
     ^
 (process terminated by signal)
 
-      
-      
 ## [Index out of Bounds](#toc-Index-out-of-Bounds) §
-
-      
 
 At compile-time:
 
-      test_comptime_index_out_of_bounds.zig
+test_comptime_index_out_of_bounds.zig
 ```zig
 comptime {
     const array: [5]u8 = "hello".*;
@@ -134,13 +115,11 @@ comptime {
 Shell$ zig test test_comptime_index_out_of_bounds.zig
 /home/ci/zig-bootstrap/zig/doc/langref/test_comptime_index_out_of_bounds.zig:3:27: error: index 5 outside array of length 5
     const garbage = array[5];
-                          ^
-
-      
+              ^
 
 At runtime:
 
-      runtime_index_out_of_bounds.zig
+runtime_index_out_of_bounds.zig
 ```zig
 pub fn main() void {
     const x = foo("hello");
@@ -156,27 +135,23 @@ $ ./runtime_index_out_of_bounds
 thread 3449014 panic: index out of bounds: index 5, len 5
 /home/ci/zig-bootstrap/zig/doc/langref/runtime_index_out_of_bounds.zig:7:13: 0x11ace4e in foo (runtime_index_out_of_bounds.zig)
     return x[5];
-            ^
+^
 /home/ci/zig-bootstrap/zig/doc/langref/runtime_index_out_of_bounds.zig:2:18: 0x11ac44a in main (runtime_index_out_of_bounds.zig)
     const x = foo("hello");
-                 ^
+     ^
 /home/ci/zig-bootstrap/out/host/lib/zig/std/start.zig:679:59: 0x11abad2 in callMain (std.zig)
     if (fn_info.params.len == 0) return wrapMain(root.main());
-                                                          ^
+                                              ^
 /home/ci/zig-bootstrap/out/host/lib/zig/std/start.zig:190:5: 0x11ab551 in _start (std.zig)
     asm volatile (switch (native_arch) {
     ^
 (process terminated by signal)
 
-      
-      
 ## [Cast Negative Number to Unsigned Integer](#toc-Cast-Negative-Number-to-Unsigned-Integer) §
-
-      
 
 At compile-time:
 
-      test_comptime_invalid_cast.zig
+test_comptime_invalid_cast.zig
 ```zig
 comptime {
     const value: i32 = -1;
@@ -187,13 +162,11 @@ comptime {
 Shell$ zig test test_comptime_invalid_cast.zig
 /home/ci/zig-bootstrap/zig/doc/langref/test_comptime_invalid_cast.zig:3:36: error: type 'u32' cannot represent integer value '-1'
     const unsigned: u32 = @intCast(value);
-                                   ^~~~~
-
-      
+                       ^~~~~
 
 At runtime:
 
-      runtime_invalid_cast.zig
+runtime_invalid_cast.zig
 ```zig
 const std = @import("std");
 
@@ -209,29 +182,22 @@ $ ./runtime_invalid_cast
 thread 3448385 panic: integer does not fit in destination type
 /home/ci/zig-bootstrap/zig/doc/langref/runtime_invalid_cast.zig:6:27: 0x11ab44f in main (runtime_invalid_cast.zig)
     const unsigned: u32 = @intCast(value);
-                          ^
+              ^
 /home/ci/zig-bootstrap/out/host/lib/zig/std/start.zig:679:59: 0x11aaad2 in callMain (std.zig)
     if (fn_info.params.len == 0) return wrapMain(root.main());
-                                                          ^
+                                              ^
 /home/ci/zig-bootstrap/out/host/lib/zig/std/start.zig:190:5: 0x11aa551 in _start (std.zig)
     asm volatile (switch (native_arch) {
     ^
 (process terminated by signal)
 
-      
+To obtain the maximum value of an unsigned integer, use `std.math.maxInt`.
 
-      To obtain the maximum value of an unsigned integer, use `std.math.maxInt`.
-      
-
-      
-      
 ## [Cast Truncates Data](#toc-Cast-Truncates-Data) §
-
-      
 
 At compile-time:
 
-      test_comptime_invalid_cast_truncate.zig
+test_comptime_invalid_cast_truncate.zig
 ```zig
 comptime {
     const spartan_count: u16 = 300;
@@ -242,13 +208,11 @@ comptime {
 Shell$ zig test test_comptime_invalid_cast_truncate.zig
 /home/ci/zig-bootstrap/zig/doc/langref/test_comptime_invalid_cast_truncate.zig:3:31: error: type 'u8' cannot represent integer value '300'
     const byte: u8 = @intCast(spartan_count);
-                              ^~~~~~~~~~~~~
-
-      
+                  ^~~~~~~~~~~~~
 
 At runtime:
 
-      runtime_invalid_cast_truncate.zig
+runtime_invalid_cast_truncate.zig
 ```zig
 const std = @import("std");
 
@@ -264,56 +228,44 @@ $ ./runtime_invalid_cast_truncate
 thread 3450495 panic: integer does not fit in destination type
 /home/ci/zig-bootstrap/zig/doc/langref/runtime_invalid_cast_truncate.zig:6:22: 0x11ab450 in main (runtime_invalid_cast_truncate.zig)
     const byte: u8 = @intCast(spartan_count);
-                     ^
+         ^
 /home/ci/zig-bootstrap/out/host/lib/zig/std/start.zig:679:59: 0x11aaad2 in callMain (std.zig)
     if (fn_info.params.len == 0) return wrapMain(root.main());
-                                                          ^
+                                              ^
 /home/ci/zig-bootstrap/out/host/lib/zig/std/start.zig:190:5: 0x11aa551 in _start (std.zig)
     asm volatile (switch (native_arch) {
     ^
 (process terminated by signal)
 
-      
+To truncate bits, use [@truncate](#truncate).
 
-      To truncate bits, use [@truncate](#truncate).
-      
-
-      
-      
 ## [Integer Overflow](#toc-Integer-Overflow) §
 
-      
 ### [Default Operations](#toc-Default-Operations) §
-
-
 
 **Integer overflow validation and checking:** Zig automatically validates integer operations at compile-time and provides runtime safety checking in Debug and ReleaseSafe modes. This overflow detection prevents undefined behavior and security vulnerabilities.
 
 The following operators can cause integer overflow:
 
-      
-          
 - `+` (addition)
-          
+
 - `-` (subtraction)
-          
+
 - `-` (negation)
-          
+
 - `*` (multiplication)
-          
+
 - `/` (division)
-        
+
 - [@divTrunc](#divTrunc) (division)
-        
+
 - [@divFloor](#divFloor) (division)
-        
+
 - [@divExact](#divExact) (division)
-      
-      
 
 Example with addition at compile-time:
 
-      test_comptime_overflow.zig
+test_comptime_overflow.zig
 ```zig
 comptime {
     var byte: u8 = 255;
@@ -325,11 +277,9 @@ Shell$ zig test test_comptime_overflow.zig
     byte += 1;
     ~~~~~^~~~
 
-      
-
 At runtime:
 
-      runtime_overflow.zig
+runtime_overflow.zig
 ```zig
 const std = @import("std");
 
@@ -344,44 +294,36 @@ $ ./runtime_overflow
 thread 3447638 panic: integer overflow
 /home/ci/zig-bootstrap/zig/doc/langref/runtime_overflow.zig:5:10: 0x11ab465 in main (runtime_overflow.zig)
     byte += 1;
-         ^
+   ^
 /home/ci/zig-bootstrap/out/host/lib/zig/std/start.zig:679:59: 0x11aaad2 in callMain (std.zig)
     if (fn_info.params.len == 0) return wrapMain(root.main());
-                                                          ^
+                                              ^
 /home/ci/zig-bootstrap/out/host/lib/zig/std/start.zig:190:5: 0x11aa551 in _start (std.zig)
     asm volatile (switch (native_arch) {
     ^
 (process terminated by signal)
 
-      
-      
 ### [Standard Library Math Functions](#toc-Standard-Library-Math-Functions) §
-
-      
 
 These functions provided by the standard library return possible errors.
 
-      
-          
 - `@import("std").math.add`
-          
+
 - `@import("std").math.sub`
-          
+
 - `@import("std").math.mul`
-          
+
 - `@import("std").math.divTrunc`
-          
+
 - `@import("std").math.divFloor`
-          
+
 - `@import("std").math.divExact`
-          
+
 - `@import("std").math.shl`
-      
-      
 
 Example of catching an overflow for addition:
 
-      math_add.zig
+math_add.zig
 ```zig
 const math = @import("std").math;
 const print = @import("std").debug.print;
@@ -389,8 +331,8 @@ pub fn main() !void {
     var byte: u8 = 255;
 
     byte = if (math.add(u8, byte, 1)) |result| result else |err| {
-        print("unable to add one: {s}\n", .{@errorName(err)});
-        return err;
+  print("unable to add one: {s}\n", .{@errorName(err)});
+  return err;
     };
 
     print("result: {}\n", .{byte});
@@ -402,37 +344,27 @@ unable to add one: Overflow
 error: Overflow
 /home/ci/zig-bootstrap/out/host/lib/zig/std/math.zig:565:21: 0x11ab6a4 in add__anon_30207 (std.zig)
     if (ov[1] != 0) return error.Overflow;
-                    ^
-/home/ci/zig-bootstrap/zig/doc/langref/math_add.zig:8:9: 0x11aa614 in main (math_add.zig)
-        return err;
         ^
+/home/ci/zig-bootstrap/zig/doc/langref/math_add.zig:8:9: 0x11aa614 in main (math_add.zig)
+  return err;
+  ^
 
-      
-      
 ### [Builtin Overflow Functions](#toc-Builtin-Overflow-Functions) §
 
-      
+These builtins return a tuple containing whether there was an overflow
+(as a `u1`) and the possibly overflowed bits of the operation:
 
-      These builtins return a tuple containing whether there was an overflow
-      (as a `u1`) and the possibly overflowed bits of the operation:
-      
-
-      
-          
 - [@addWithOverflow](#addWithOverflow)
-          
+
 - [@subWithOverflow](#subWithOverflow)
-          
+
 - [@mulWithOverflow](#mulWithOverflow)
-          
+
 - [@shlWithOverflow](#shlWithOverflow)
-      
-      
 
-      Example of [@addWithOverflow](#addWithOverflow):
-      
+Example of [@addWithOverflow](#addWithOverflow):
 
-      addWithOverflow_builtin.zig
+addWithOverflow_builtin.zig
 ```zig
 const print = @import("std").debug.print;
 pub fn main() void {
@@ -440,9 +372,9 @@ pub fn main() void {
 
     const ov = @addWithOverflow(byte, 10);
     if (ov[1] != 0) {
-        print("overflowed result: {}\n", .{ov[0]});
+  print("overflowed result: {}\n", .{ov[0]});
     } else {
-        print("result: {}\n", .{ov[0]});
+  print("result: {}\n", .{ov[0]});
     }
 }
 ```
@@ -450,26 +382,19 @@ Shell$ zig build-exe addWithOverflow_builtin.zig
 $ ./addWithOverflow_builtin
 overflowed result: 9
 
-      
-      
 ### [Wrapping Operations](#toc-Wrapping-Operations) §
 
-      
+These operations have guaranteed wraparound semantics.
 
-      These operations have guaranteed wraparound semantics.
-      
-
-      
-          
 - `+%` (wraparound addition)
-          
+
 - `-%` (wraparound subtraction)
-          
+
 - `-%` (wraparound negation)
-          
+
 - `*%` (wraparound multiplication)
-      
-      test_wraparound_semantics.zig
+
+test_wraparound_semantics.zig
 ```zig
 const std = @import("std");
 const expect = std.testing.expect;
@@ -488,16 +413,11 @@ Shell$ zig test test_wraparound_semantics.zig
 1/1 test_wraparound_semantics.test.wraparound addition and subtraction...OK
 All 1 tests passed.
 
-      
-      
-      
 ## [Exact Left Shift Overflow](#toc-Exact-Left-Shift-Overflow) §
-
-      
 
 At compile-time:
 
-      test_comptime_shlExact_overflow.zig
+test_comptime_shlExact_overflow.zig
 ```zig
 comptime {
     const x = @shlExact(@as(u8, 0b01010101), 2);
@@ -507,13 +427,11 @@ comptime {
 Shell$ zig test test_comptime_shlExact_overflow.zig
 /home/ci/zig-bootstrap/zig/doc/langref/test_comptime_shlExact_overflow.zig:2:15: error: overflow of integer type 'u8' with value '340'
     const x = @shlExact(@as(u8, 0b01010101), 2);
-              ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-      
+  ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 At runtime:
 
-      runtime_shlExact_overflow.zig
+runtime_shlExact_overflow.zig
 ```zig
 const std = @import("std");
 
@@ -532,21 +450,17 @@ thread 3449386 panic: left shift overflowed bits
     ^
 /home/ci/zig-bootstrap/out/host/lib/zig/std/start.zig:679:59: 0x11aaad2 in callMain (std.zig)
     if (fn_info.params.len == 0) return wrapMain(root.main());
-                                                          ^
+                                              ^
 /home/ci/zig-bootstrap/out/host/lib/zig/std/start.zig:190:5: 0x11aa551 in _start (std.zig)
     asm volatile (switch (native_arch) {
     ^
 (process terminated by signal)
 
-      
-      
 ## [Exact Right Shift Overflow](#toc-Exact-Right-Shift-Overflow) §
-
-      
 
 At compile-time:
 
-      test_comptime_shrExact_overflow.zig
+test_comptime_shrExact_overflow.zig
 ```zig
 comptime {
     const x = @shrExact(@as(u8, 0b10101010), 2);
@@ -556,13 +470,11 @@ comptime {
 Shell$ zig test test_comptime_shrExact_overflow.zig
 /home/ci/zig-bootstrap/zig/doc/langref/test_comptime_shrExact_overflow.zig:2:15: error: exact shift shifted out 1 bits
     const x = @shrExact(@as(u8, 0b10101010), 2);
-              ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-      
+  ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 At runtime:
 
-      runtime_shrExact_overflow.zig
+runtime_shrExact_overflow.zig
 ```zig
 const builtin = @import("builtin");
 const std = @import("std");
@@ -584,21 +496,17 @@ thread 3447861 panic: right shift overflowed bits
     ^
 /home/ci/zig-bootstrap/out/host/lib/zig/std/start.zig:679:59: 0x11aaad2 in callMain (std.zig)
     if (fn_info.params.len == 0) return wrapMain(root.main());
-                                                          ^
+                                              ^
 /home/ci/zig-bootstrap/out/host/lib/zig/std/start.zig:190:5: 0x11aa551 in _start (std.zig)
     asm volatile (switch (native_arch) {
     ^
 (process terminated by signal)
 
-      
-      
 ## [Division by Zero](#toc-Division-by-Zero) §
-
-      
 
 At compile-time:
 
-      test_comptime_division_by_zero.zig
+test_comptime_division_by_zero.zig
 ```zig
 comptime {
     const a: i32 = 1;
@@ -610,13 +518,11 @@ comptime {
 Shell$ zig test test_comptime_division_by_zero.zig
 /home/ci/zig-bootstrap/zig/doc/langref/test_comptime_division_by_zero.zig:4:19: error: division by zero here causes illegal behavior
     const c = a / b;
-                  ^
-
-      
+      ^
 
 At runtime:
 
-      runtime_division_by_zero.zig
+runtime_division_by_zero.zig
 ```zig
 const std = @import("std");
 
@@ -633,24 +539,20 @@ $ ./runtime_division_by_zero
 thread 3450220 panic: division by zero
 /home/ci/zig-bootstrap/zig/doc/langref/runtime_division_by_zero.zig:7:17: 0x11ab460 in main (runtime_division_by_zero.zig)
     const c = a / b;
-                ^
+    ^
 /home/ci/zig-bootstrap/out/host/lib/zig/std/start.zig:679:59: 0x11aaad2 in callMain (std.zig)
     if (fn_info.params.len == 0) return wrapMain(root.main());
-                                                          ^
+                                              ^
 /home/ci/zig-bootstrap/out/host/lib/zig/std/start.zig:190:5: 0x11aa551 in _start (std.zig)
     asm volatile (switch (native_arch) {
     ^
 (process terminated by signal)
 
-      
-      
 ## [Remainder Division by Zero](#toc-Remainder-Division-by-Zero) §
-
-      
 
 At compile-time:
 
-      test_comptime_remainder_division_by_zero.zig
+test_comptime_remainder_division_by_zero.zig
 ```zig
 comptime {
     const a: i32 = 10;
@@ -662,13 +564,11 @@ comptime {
 Shell$ zig test test_comptime_remainder_division_by_zero.zig
 /home/ci/zig-bootstrap/zig/doc/langref/test_comptime_remainder_division_by_zero.zig:4:19: error: division by zero here causes illegal behavior
     const c = a % b;
-                  ^
-
-      
+      ^
 
 At runtime:
 
-      runtime_remainder_division_by_zero.zig
+runtime_remainder_division_by_zero.zig
 ```zig
 const std = @import("std");
 
@@ -685,24 +585,20 @@ $ ./runtime_remainder_division_by_zero
 thread 3448916 panic: division by zero
 /home/ci/zig-bootstrap/zig/doc/langref/runtime_remainder_division_by_zero.zig:7:17: 0x11ab460 in main (runtime_remainder_division_by_zero.zig)
     const c = a % b;
-                ^
+    ^
 /home/ci/zig-bootstrap/out/host/lib/zig/std/start.zig:679:59: 0x11aaad2 in callMain (std.zig)
     if (fn_info.params.len == 0) return wrapMain(root.main());
-                                                          ^
+                                              ^
 /home/ci/zig-bootstrap/out/host/lib/zig/std/start.zig:190:5: 0x11aa551 in _start (std.zig)
     asm volatile (switch (native_arch) {
     ^
 (process terminated by signal)
 
-      
-      
 ## [Exact Division Remainder](#toc-Exact-Division-Remainder) §
-
-      
 
 At compile-time:
 
-      test_comptime_divExact_remainder.zig
+test_comptime_divExact_remainder.zig
 ```zig
 comptime {
     const a: u32 = 10;
@@ -714,13 +610,11 @@ comptime {
 Shell$ zig test test_comptime_divExact_remainder.zig
 /home/ci/zig-bootstrap/zig/doc/langref/test_comptime_divExact_remainder.zig:4:15: error: exact division produced remainder
     const c = @divExact(a, b);
-              ^~~~~~~~~~~~~~~
-
-      
+  ^~~~~~~~~~~~~~~
 
 At runtime:
 
-      runtime_divExact_remainder.zig
+runtime_divExact_remainder.zig
 ```zig
 const std = @import("std");
 
@@ -737,24 +631,20 @@ $ ./runtime_divExact_remainder
 thread 3447498 panic: exact division produced remainder
 /home/ci/zig-bootstrap/zig/doc/langref/runtime_divExact_remainder.zig:7:15: 0x11ab495 in main (runtime_divExact_remainder.zig)
     const c = @divExact(a, b);
-              ^
+  ^
 /home/ci/zig-bootstrap/out/host/lib/zig/std/start.zig:679:59: 0x11aaad2 in callMain (std.zig)
     if (fn_info.params.len == 0) return wrapMain(root.main());
-                                                          ^
+                                              ^
 /home/ci/zig-bootstrap/out/host/lib/zig/std/start.zig:190:5: 0x11aa551 in _start (std.zig)
     asm volatile (switch (native_arch) {
     ^
 (process terminated by signal)
 
-      
-      
 ## [Attempt to Unwrap Null](#toc-Attempt-to-Unwrap-Null) §
-
-      
 
 At compile-time:
 
-      test_comptime_unwrap_null.zig
+test_comptime_unwrap_null.zig
 ```zig
 comptime {
     const optional_number: ?i32 = null;
@@ -765,13 +655,11 @@ comptime {
 Shell$ zig test test_comptime_unwrap_null.zig
 /home/ci/zig-bootstrap/zig/doc/langref/test_comptime_unwrap_null.zig:3:35: error: unable to unwrap null
     const number = optional_number.?;
-                   ~~~~~~~~~~~~~~~^~
-
-      
+       ~~~~~~~~~~~~~~~^~
 
 At runtime:
 
-      runtime_unwrap_null.zig
+runtime_unwrap_null.zig
 ```zig
 const std = @import("std");
 
@@ -787,30 +675,28 @@ $ ./runtime_unwrap_null
 thread 3447860 panic: attempt to use null value
 /home/ci/zig-bootstrap/zig/doc/langref/runtime_unwrap_null.zig:6:35: 0x11ab464 in main (runtime_unwrap_null.zig)
     const number = optional_number.?;
-                                  ^
+                      ^
 /home/ci/zig-bootstrap/out/host/lib/zig/std/start.zig:679:59: 0x11aaad2 in callMain (std.zig)
     if (fn_info.params.len == 0) return wrapMain(root.main());
-                                                          ^
+                                              ^
 /home/ci/zig-bootstrap/out/host/lib/zig/std/start.zig:190:5: 0x11aa551 in _start (std.zig)
     asm volatile (switch (native_arch) {
     ^
 (process terminated by signal)
 
-      
-
 One way to avoid this crash is to test for null instead of assuming non-null, with
-      the `if` expression:
+the `if` expression:
 
-      testing_null_with_if.zig
+testing_null_with_if.zig
 ```zig
 const print = @import("std").debug.print;
 pub fn main() void {
     const optional_number: ?i32 = null;
 
     if (optional_number) |number| {
-        print("got number: {}\n", .{number});
+  print("got number: {}\n", .{number});
     } else {
-        print("it's null\n", .{});
+  print("it's null\n", .{});
     }
 }
 ```
@@ -818,21 +704,15 @@ Shell$ zig build-exe testing_null_with_if.zig
 $ ./testing_null_with_if
 it's null
 
-      
-
 See also:
 
 - [Optionals](#Optionals)
 
-      
-      
 ## [Attempt to Unwrap Error](#toc-Attempt-to-Unwrap-Error) §
-
-      
 
 At compile-time:
 
-      test_comptime_unwrap_error.zig
+test_comptime_unwrap_error.zig
 ```zig
 comptime {
     const number = getNumberOrFail() catch unreachable;
@@ -846,16 +726,14 @@ fn getNumberOrFail() !i32 {
 Shell$ zig test test_comptime_unwrap_error.zig
 /home/ci/zig-bootstrap/zig/doc/langref/test_comptime_unwrap_error.zig:2:44: error: caught unexpected error 'UnableToReturnNumber'
     const number = getNumberOrFail() catch unreachable;
-                                           ^~~~~~~~~~~
+                               ^~~~~~~~~~~
 /home/ci/zig-bootstrap/zig/doc/langref/test_comptime_unwrap_error.zig:7:18: note: error returned here
     return error.UnableToReturnNumber;
-                 ^~~~~~~~~~~~~~~~~~~~
-
-      
+     ^~~~~~~~~~~~~~~~~~~~
 
 At runtime:
 
-      runtime_unwrap_error.zig
+runtime_unwrap_error.zig
 ```zig
 const std = @import("std");
 
@@ -879,21 +757,19 @@ error return context:
 stack trace:
 /home/ci/zig-bootstrap/zig/doc/langref/runtime_unwrap_error.zig:4:44: 0x11ac4a3 in main (runtime_unwrap_error.zig)
     const number = getNumberOrFail() catch unreachable;
-                                           ^
+                               ^
 /home/ci/zig-bootstrap/out/host/lib/zig/std/start.zig:679:59: 0x11abad2 in callMain (std.zig)
     if (fn_info.params.len == 0) return wrapMain(root.main());
-                                                          ^
+                                              ^
 /home/ci/zig-bootstrap/out/host/lib/zig/std/start.zig:190:5: 0x11ab551 in _start (std.zig)
     asm volatile (switch (native_arch) {
     ^
 (process terminated by signal)
 
-      
-
 One way to avoid this crash is to test for an error instead of assuming a successful result, with
-      the `if` expression:
+the `if` expression:
 
-      testing_error_with_if.zig
+testing_error_with_if.zig
 ```zig
 const print = @import("std").debug.print;
 
@@ -901,9 +777,9 @@ pub fn main() void {
     const result = getNumberOrFail();
 
     if (result) |number| {
-        print("got number: {}\n", .{number});
+  print("got number: {}\n", .{number});
     } else |err| {
-        print("got error: {s}\n", .{@errorName(err)});
+  print("got error: {s}\n", .{@errorName(err)});
     }
 }
 
@@ -915,21 +791,15 @@ Shell$ zig build-exe testing_error_with_if.zig
 $ ./testing_error_with_if
 got error: UnableToReturnNumber
 
-      
-
 See also:
 
 - [Errors](#Errors)
 
-      
-      
 ## [Invalid Error Code](#toc-Invalid-Error-Code) §
-
-      
 
 At compile-time:
 
-      test_comptime_invalid_error_code.zig
+test_comptime_invalid_error_code.zig
 ```zig
 comptime {
     const err = error.AnError;
@@ -941,13 +811,11 @@ comptime {
 Shell$ zig test test_comptime_invalid_error_code.zig
 /home/ci/zig-bootstrap/zig/doc/langref/test_comptime_invalid_error_code.zig:4:39: error: integer value '11' represents no error
     const invalid_err = @errorFromInt(number);
-                                      ^~~~~~
-
-      
+                          ^~~~~~
 
 At runtime:
 
-      runtime_invalid_error_code.zig
+runtime_invalid_error_code.zig
 ```zig
 const std = @import("std");
 
@@ -967,21 +835,17 @@ thread 3448616 panic: invalid error code
     ^
 /home/ci/zig-bootstrap/out/host/lib/zig/std/start.zig:679:59: 0x11aaad2 in callMain (std.zig)
     if (fn_info.params.len == 0) return wrapMain(root.main());
-                                                          ^
+                                              ^
 /home/ci/zig-bootstrap/out/host/lib/zig/std/start.zig:190:5: 0x11aa551 in _start (std.zig)
     asm volatile (switch (native_arch) {
     ^
 (process terminated by signal)
 
-      
-      
 ## [Invalid Enum Cast](#toc-Invalid-Enum-Cast) §
-
-      
 
 At compile-time:
 
-      test_comptime_invalid_enum_cast.zig
+test_comptime_invalid_enum_cast.zig
 ```zig
 const Foo = enum {
     a,
@@ -997,16 +861,14 @@ comptime {
 Shell$ zig test test_comptime_invalid_enum_cast.zig
 /home/ci/zig-bootstrap/zig/doc/langref/test_comptime_invalid_enum_cast.zig:8:20: error: enum 'test_comptime_invalid_enum_cast.Foo' has no tag with value '3'
     const b: Foo = @enumFromInt(a);
-                   ^~~~~~~~~~~~~~~
+       ^~~~~~~~~~~~~~~
 /home/ci/zig-bootstrap/zig/doc/langref/test_comptime_invalid_enum_cast.zig:1:13: note: enum declared here
 const Foo = enum {
-            ^~~~
-
-      
+^~~~
 
 At runtime:
 
-      runtime_invalid_enum_cast.zig
+runtime_invalid_enum_cast.zig
 ```zig
 const std = @import("std");
 
@@ -1028,25 +890,20 @@ $ ./runtime_invalid_enum_cast
 thread 3447999 panic: invalid enum value
 /home/ci/zig-bootstrap/zig/doc/langref/runtime_invalid_enum_cast.zig:12:20: 0x11ab4c0 in main (runtime_invalid_enum_cast.zig)
     const b: Foo = @enumFromInt(a);
-                   ^
+       ^
 /home/ci/zig-bootstrap/out/host/lib/zig/std/start.zig:679:59: 0x11aaad2 in callMain (std.zig)
     if (fn_info.params.len == 0) return wrapMain(root.main());
-                                                          ^
+                                              ^
 /home/ci/zig-bootstrap/out/host/lib/zig/std/start.zig:190:5: 0x11aa551 in _start (std.zig)
     asm volatile (switch (native_arch) {
     ^
 (process terminated by signal)
 
-      
-
-      
 ## [Invalid Error Set Cast](#toc-Invalid-Error-Set-Cast) §
-
-      
 
 At compile-time:
 
-      test_comptime_invalid_error_set_cast.zig
+test_comptime_invalid_error_set_cast.zig
 ```zig
 const Set1 = error{
     A,
@@ -1063,13 +920,11 @@ comptime {
 Shell$ zig test test_comptime_invalid_error_set_cast.zig
 /home/ci/zig-bootstrap/zig/doc/langref/test_comptime_invalid_error_set_cast.zig:10:19: error: 'error.B' not a member of error set 'error{A,C}'
     _ = @as(Set2, @errorCast(Set1.B));
-                  ^~~~~~~~~~~~~~~~~~
-
-      
+      ^~~~~~~~~~~~~~~~~~
 
 At runtime:
 
-      runtime_invalid_error_set_cast.zig
+runtime_invalid_error_set_cast.zig
 ```zig
 const std = @import("std");
 
@@ -1094,28 +949,23 @@ $ ./runtime_invalid_error_set_cast
 thread 3450111 panic: invalid error code
 /home/ci/zig-bootstrap/zig/doc/langref/runtime_invalid_error_set_cast.zig:15:21: 0x11ace6c in foo (runtime_invalid_error_set_cast.zig)
     const x: Set2 = @errorCast(set1);
-                    ^
+        ^
 /home/ci/zig-bootstrap/zig/doc/langref/runtime_invalid_error_set_cast.zig:12:8: 0x11ac447 in main (runtime_invalid_error_set_cast.zig)
     foo(Set1.B);
-       ^
+ ^
 /home/ci/zig-bootstrap/out/host/lib/zig/std/start.zig:679:59: 0x11abad2 in callMain (std.zig)
     if (fn_info.params.len == 0) return wrapMain(root.main());
-                                                          ^
+                                              ^
 /home/ci/zig-bootstrap/out/host/lib/zig/std/start.zig:190:5: 0x11ab551 in _start (std.zig)
     asm volatile (switch (native_arch) {
     ^
 (process terminated by signal)
 
-      
-
-      
 ## [Incorrect Pointer Alignment](#toc-Incorrect-Pointer-Alignment) §
-
-      
 
 At compile-time:
 
-      test_comptime_incorrect_pointer_alignment.zig
+test_comptime_incorrect_pointer_alignment.zig
 ```zig
 comptime {
     const ptr: *align(1) i32 = @ptrFromInt(0x1);
@@ -1126,13 +976,11 @@ comptime {
 Shell$ zig test test_comptime_incorrect_pointer_alignment.zig
 /home/ci/zig-bootstrap/zig/doc/langref/test_comptime_incorrect_pointer_alignment.zig:3:47: error: pointer address 0x1 is not aligned to 4 bytes
     const aligned: *align(4) i32 = @alignCast(ptr);
-                                              ^~~
-
-      
+                                  ^~~
 
 At runtime:
 
-      runtime_incorrect_pointer_alignment.zig
+runtime_incorrect_pointer_alignment.zig
 ```zig
 const mem = @import("std").mem;
 pub fn main() !void {
@@ -1151,27 +999,23 @@ $ ./runtime_incorrect_pointer_alignment
 thread 3446527 panic: incorrect alignment
 /home/ci/zig-bootstrap/zig/doc/langref/runtime_incorrect_pointer_alignment.zig:9:64: 0x11ab696 in foo (runtime_incorrect_pointer_alignment.zig)
     const int_slice = mem.bytesAsSlice(u32, @as([]align(4) u8, @alignCast(slice4)));
-                                                               ^
+                                                   ^
 /home/ci/zig-bootstrap/zig/doc/langref/runtime_incorrect_pointer_alignment.zig:5:12: 0x11aa5ae in main (runtime_incorrect_pointer_alignment.zig)
     if (foo(bytes) != 0x11111111) return error.Wrong;
-           ^
+     ^
 /home/ci/zig-bootstrap/out/host/lib/zig/std/start.zig:679:59: 0x11aab7d in callMain (std.zig)
     if (fn_info.params.len == 0) return wrapMain(root.main());
-                                                          ^
+                                              ^
 /home/ci/zig-bootstrap/out/host/lib/zig/std/start.zig:190:5: 0x11aa551 in _start (std.zig)
     asm volatile (switch (native_arch) {
     ^
 (process terminated by signal)
 
-      
-      
 ## [Wrong Union Field Access](#toc-Wrong-Union-Field-Access) §
-
-      
 
 At compile-time:
 
-      test_comptime_wrong_union_field_access.zig
+test_comptime_wrong_union_field_access.zig
 ```zig
 comptime {
     var f = Foo{ .int = 42 };
@@ -1189,13 +1033,11 @@ Shell$ zig test test_comptime_wrong_union_field_access.zig
     ~^~~~~~
 /home/ci/zig-bootstrap/zig/doc/langref/test_comptime_wrong_union_field_access.zig:6:13: note: union declared here
 const Foo = union {
-            ^~~~~
-
-      
+^~~~~
 
 At runtime:
 
-      runtime_wrong_union_field_access.zig
+runtime_wrong_union_field_access.zig
 ```zig
 const std = @import("std");
 
@@ -1222,26 +1064,20 @@ thread 3447500 panic: access of union field 'float' while field 'int' is active
      ^
 /home/ci/zig-bootstrap/zig/doc/langref/runtime_wrong_union_field_access.zig:10:8: 0x11ac44e in main (runtime_wrong_union_field_access.zig)
     bar(&f);
-       ^
+ ^
 /home/ci/zig-bootstrap/out/host/lib/zig/std/start.zig:679:59: 0x11abad2 in callMain (std.zig)
     if (fn_info.params.len == 0) return wrapMain(root.main());
-                                                          ^
+                                              ^
 /home/ci/zig-bootstrap/out/host/lib/zig/std/start.zig:190:5: 0x11ab551 in _start (std.zig)
     asm volatile (switch (native_arch) {
     ^
 (process terminated by signal)
 
-      
+This safety is not available for `extern` or `packed` unions.
 
-      This safety is not available for `extern` or `packed` unions.
-      
+To change the active field of a union, assign the entire union, like this:
 
-      
-
-      To change the active field of a union, assign the entire union, like this:
-      
-
-      change_active_union_field.zig
+change_active_union_field.zig
 ```zig
 const std = @import("std");
 
@@ -1264,13 +1100,10 @@ Shell$ zig build-exe change_active_union_field.zig
 $ ./change_active_union_field
 value: 12.34
 
-      
+To change the active field of a union when a meaningful value for the field is not known,
+use [undefined](#undefined), like this:
 
-      To change the active field of a union when a meaningful value for the field is not known,
-      use [undefined](#undefined), like this:
-      
-
-      undefined_active_union_field.zig
+undefined_active_union_field.zig
 ```zig
 const std = @import("std");
 
@@ -1294,30 +1127,20 @@ Shell$ zig build-exe undefined_active_union_field.zig
 $ ./undefined_active_union_field
 value: 12.34
 
-      
-
 See also:
 
 - [union](#union)
 
 - [extern union](#extern-union)
 
-      
-
-      
 ## [Out of Bounds Float to Integer Cast](#toc-Out-of-Bounds-Float-to-Integer-Cast) §
 
-      
-
-      This happens when casting a float to an integer where the float has a value outside the
-      integer type's range.
-      
-
-      
+This happens when casting a float to an integer where the float has a value outside the
+integer type's range.
 
 At compile-time:
 
-      test_comptime_out_of_bounds_float_to_integer_cast.zig
+test_comptime_out_of_bounds_float_to_integer_cast.zig
 ```zig
 comptime {
     const float: f32 = 4294967296;
@@ -1328,13 +1151,11 @@ comptime {
 Shell$ zig test test_comptime_out_of_bounds_float_to_integer_cast.zig
 /home/ci/zig-bootstrap/zig/doc/langref/test_comptime_out_of_bounds_float_to_integer_cast.zig:3:36: error: float value '4294967296' cannot be stored in integer type 'i32'
     const int: i32 = @intFromFloat(float);
-                                   ^~~~~
-
-      
+                       ^~~~~
 
 At runtime:
 
-      runtime_out_of_bounds_float_to_integer_cast.zig
+runtime_out_of_bounds_float_to_integer_cast.zig
 ```zig
 pub fn main() void {
     var float: f32 = 4294967296; // runtime-known
@@ -1348,32 +1169,24 @@ $ ./runtime_out_of_bounds_float_to_integer_cast
 thread 3449013 panic: integer part of floating point value out of bounds
 /home/ci/zig-bootstrap/zig/doc/langref/runtime_out_of_bounds_float_to_integer_cast.zig:4:22: 0x11ab47f in main (runtime_out_of_bounds_float_to_integer_cast.zig)
     const int: i32 = @intFromFloat(float);
-                     ^
+         ^
 /home/ci/zig-bootstrap/out/host/lib/zig/std/start.zig:679:59: 0x11aaad2 in callMain (std.zig)
     if (fn_info.params.len == 0) return wrapMain(root.main());
-                                                          ^
+                                              ^
 /home/ci/zig-bootstrap/out/host/lib/zig/std/start.zig:190:5: 0x11aa551 in _start (std.zig)
     asm volatile (switch (native_arch) {
     ^
 (process terminated by signal)
 
-      
-
-      
 ## [Pointer Cast Invalid Null](#toc-Pointer-Cast-Invalid-Null) §
 
-      
-
-      This happens when casting a pointer with the address 0 to a pointer which may not have the address 0.
-      For example, [C Pointers](#C-Pointers), [Optional Pointers](#Optional-Pointers), and [allowzero](#allowzero) pointers
-      allow address zero, but normal [Pointers](#Pointers) do not.
-      
-
-      
+This happens when casting a pointer with the address 0 to a pointer which may not have the address 0.
+For example, [C Pointers](#C-Pointers), [Optional Pointers](#Optional-Pointers), and [allowzero](#allowzero) pointers
+allow address zero, but normal [Pointers](#Pointers) do not.
 
 At compile-time:
 
-      test_comptime_invalid_null_pointer_cast.zig
+test_comptime_invalid_null_pointer_cast.zig
 ```zig
 comptime {
     const opt_ptr: ?*i32 = null;
@@ -1384,13 +1197,11 @@ comptime {
 Shell$ zig test test_comptime_invalid_null_pointer_cast.zig
 /home/ci/zig-bootstrap/zig/doc/langref/test_comptime_invalid_null_pointer_cast.zig:3:32: error: null pointer casted to type '*i32'
     const ptr: *i32 = @ptrCast(opt_ptr);
-                               ^~~~~~~
-
-      
+                   ^~~~~~~
 
 At runtime:
 
-      runtime_invalid_null_pointer_cast.zig
+runtime_invalid_null_pointer_cast.zig
 ```zig
 pub fn main() void {
     var opt_ptr: ?*i32 = null;
@@ -1404,10 +1215,10 @@ $ ./runtime_invalid_null_pointer_cast
 thread 3450222 panic: cast causes pointer to be null
 /home/ci/zig-bootstrap/zig/doc/langref/runtime_invalid_null_pointer_cast.zig:4:23: 0x11ab45a in main (runtime_invalid_null_pointer_cast.zig)
     const ptr: *i32 = @ptrCast(opt_ptr);
-                      ^
+          ^
 /home/ci/zig-bootstrap/out/host/lib/zig/std/start.zig:679:59: 0x11aaad2 in callMain (std.zig)
     if (fn_info.params.len == 0) return wrapMain(root.main());
-                                                          ^
+                                              ^
 /home/ci/zig-bootstrap/out/host/lib/zig/std/start.zig:190:5: 0x11aa551 in _start (std.zig)
     asm volatile (switch (native_arch) {
     ^

@@ -51,60 +51,60 @@ Notes on standards compliance: https://datatracker.ietf.org/doc/html/rfc8259
 
 ## Functions
 
-`pub fn allocNextIntoArrayList(self: *@This(), value_list: *std.array_list.Managed(u8), when: AllocWhen) AllocIntoArrayListError!?[]const u8`  
+`pub fn allocNextIntoArrayList(self: *@This(), value_list: *std.array_list.Managed(u8), when: AllocWhen) AllocIntoArrayListError!?[]const u8`
 Equivalent to `allocNextIntoArrayListMax(value_list, when, default_max_value_len);`
 
-`pub fn allocNextIntoArrayListMax(self: *@This(), value_list: *std.array_list.Managed(u8), when: AllocWhen, max_value_len: usize) AllocIntoArrayListError!?[]const u8`  
+`pub fn allocNextIntoArrayListMax(self: *@This(), value_list: *std.array_list.Managed(u8), when: AllocWhen, max_value_len: usize) AllocIntoArrayListError!?[]const u8`
 The next token type must be either `.number` or `.string`. See `peekNextTokenType()`. When allocation is not necessary with `.alloc_if_needed`, this method returns the content slice from the input buffer, and `value_list` is not touched. When allocation is necessary or with `.alloc_always`, this method concatenates partial tokens into the given `value_list`, and returns `null` once the final `.number` or `.string` token has been written into it. In case of an `error.BufferUnderrun`, partial values will be left in the given value_list. The given `value_list` is never reset by this method, so an `error.BufferUnderrun` situation can be resumed by passing the same array list in again. This method does not indicate whether the token content being returned is for a `.number` or `.string` token type; the caller of this method is expected to know which type of token is being processed.
 
-`pub fn deinit(self: *@This()) void`  
+`pub fn deinit(self: *@This()) void`
 
-`pub fn enableDiagnostics(self: *@This(), diagnostics: *Diagnostics) void`  
+`pub fn enableDiagnostics(self: *@This(), diagnostics: *Diagnostics) void`
 
-`pub fn endInput(self: *@This()) void`  
+`pub fn endInput(self: *@This()) void`
 Call this when you will no longer call `feedInput()` anymore. This can be called either immediately after the last `feedInput()`, or at any time afterward, such as when getting `error.BufferUnderrun` from `next()`. Don't forget to call `next*()` after `endInput()` until you get `.end_of_document`.
 
-`pub fn ensureTotalStackCapacity(self: *@This(), height: usize) Allocator.Error!void`  
+`pub fn ensureTotalStackCapacity(self: *@This(), height: usize) Allocator.Error!void`
 Pre allocate memory to hold the given number of nesting levels. `stackHeight()` up to the given number will not cause allocations.
 
-`pub fn feedInput(self: *@This(), input: []const u8) void`  
+`pub fn feedInput(self: *@This(), input: []const u8) void`
 Call this whenever you get `error.BufferUnderrun` from `next()`. When there is no more input to provide, call `endInput()`.
 
-`pub fn initCompleteInput(allocator: Allocator, complete_input: []const u8) @This()`  
+`pub fn initCompleteInput(allocator: Allocator, complete_input: []const u8) @This()`
 Use this if your input is a single slice. This is effectively equivalent to:
 
     initStreaming(allocator);
     feedInput(complete_input);
     endInput();
 
-`pub fn initStreaming(allocator: Allocator) @This()`  
+`pub fn initStreaming(allocator: Allocator) @This()`
 The allocator is only used to track `[]` and `{}` nesting levels.
 
-`pub fn isNumberFormattedLikeAnInteger(value: []const u8) bool`  
+`pub fn isNumberFormattedLikeAnInteger(value: []const u8) bool`
 For the slice you get from a `Token.number` or `Token.allocated_number`, this function returns true if the number doesn't contain any fraction or exponent components, and is not `-0`. Note, the numeric value encoded by the value may still be an integer, such as `1.0`. This function is meant to give a hint about whether integer parsing or float parsing should be used on the value. This function will not give meaningful results on non-numeric input.
 
-`pub fn next(self: *@This()) NextError!Token`  
+`pub fn next(self: *@This()) NextError!Token`
 See `std.json.Token` for documentation of this function.
 
-`pub fn nextAlloc(self: *@This(), allocator: Allocator, when: AllocWhen) AllocError!Token`  
+`pub fn nextAlloc(self: *@This(), allocator: Allocator, when: AllocWhen) AllocError!Token`
 Equivalent to `nextAllocMax(allocator, when, default_max_value_len);` This function is only available after `endInput()` (or `initCompleteInput()`) has been called. See also `std.json.Token` for documentation of `nextAlloc*()` function behavior.
 
-`pub fn nextAllocMax(self: *@This(), allocator: Allocator, when: AllocWhen, max_value_len: usize) AllocError!Token`  
+`pub fn nextAllocMax(self: *@This(), allocator: Allocator, when: AllocWhen, max_value_len: usize) AllocError!Token`
 This function is only available after `endInput()` (or `initCompleteInput()`) has been called. See also `std.json.Token` for documentation of `nextAlloc*()` function behavior.
 
-`pub fn peekNextTokenType(self: *@This()) PeekError!TokenType`  
+`pub fn peekNextTokenType(self: *@This()) PeekError!TokenType`
 Seeks ahead in the input until the first byte of the next token (or the end of the input) determines which type of token will be returned from the next `next*()` call. This function is idempotent, only advancing past commas, colons, and inter-token whitespace.
 
-`pub fn skipUntilStackHeight(self: *@This(), terminal_stack_height: usize) NextError!void`  
+`pub fn skipUntilStackHeight(self: *@This(), terminal_stack_height: usize) NextError!void`
 Skip tokens until an `.object_end` or `.array_end` token results in a `stackHeight()` equal the given stack height. Unlike `skipValue()`, this function is available in streaming mode.
 
-`pub fn skipValue(self: *@This()) SkipError!void`  
+`pub fn skipValue(self: *@This()) SkipError!void`
 This function is only available after `endInput()` (or `initCompleteInput()`) has been called. If the next token type is `.object_begin` or `.array_begin`, this function calls `next()` repeatedly until the corresponding `.object_end` or `.array_end` is found. If the next token type is `.number` or `.string`, this function calls `next()` repeatedly until the (non `.partial_*`) `.number` or `.string` token is found. If the next token type is `.true`, `.false`, or `.null`, this function calls `next()` once. The next token type must not be `.object_end`, `.array_end`, or `.end_of_document`; see `peekNextTokenType()`.
 
-`pub fn stackHeight(self: *const @This()) usize`  
+`pub fn stackHeight(self: *const @This()) usize`
 The depth of `{}` or `[]` nesting levels at the current position.
 
-`pub fn validate(allocator: Allocator, s: []const u8) Allocator.Error!bool`  
+`pub fn validate(allocator: Allocator, s: []const u8) Allocator.Error!bool`
 Scan the input and check for malformed JSON. On `SyntaxError` or `UnexpectedEndOfInput`, returns `false`. Returns any errors from the allocator as-is, which is unlikely, but can be caused by extreme nesting depth in the input.
 
 ## Error Sets

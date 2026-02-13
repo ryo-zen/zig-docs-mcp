@@ -16,6 +16,6 @@
 
 ## Functions
 
-`pub fn deinit(block: WindowsBlock, gpa: Allocator) void`  
+`pub fn deinit(block: WindowsBlock, gpa: Allocator) void`
 
-`pub fn view(block: WindowsBlock) View`  
+`pub fn view(block: WindowsBlock) View`

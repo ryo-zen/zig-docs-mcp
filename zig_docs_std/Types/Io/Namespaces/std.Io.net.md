@@ -125,7 +125,7 @@ pub fn main() !void {
     var rbuf: [4096]u8 = undefined;
     var reader = stream.reader(io, &rbuf);
     const response = reader.interface.readUntilEof() catch |err| {
-        if (err == error.EndOfStream) &[_]u8{} else return err;
+  if (err == error.EndOfStream) &[_]u8{} else return err;
     };
 
     std.debug.print("{s}\n", .{response});
@@ -153,12 +153,12 @@ pub fn main() !void {
     std.debug.print("Listening on {}\n", .{addr});
 
     while (true) {
-        const client = try server.accept(io);
-        defer client.stream.close(io);
+  const client = try server.accept(io);
+  defer client.stream.close(io);
 
-        std.debug.print("Client connected from {}\n", .{client.address});
+  std.debug.print("Client connected from {}\n", .{client.address});
 
-        // Handle client...
+  // Handle client...
     }
 }
 ```

@@ -17,8 +17,8 @@ pub fn main() void {
     var it = std.fs.path.componentIterator(path);
 
     while (it.next()) |component| {
-        // Zig 0.16: component is a struct with .name field
-        std.debug.print("Component: {s}\n", .{component.name});
+  // Zig 0.16: component is a struct with .name field
+  std.debug.print("Component: {s}\n", .{component.name});
     }
     // Output:
     // Component: usr

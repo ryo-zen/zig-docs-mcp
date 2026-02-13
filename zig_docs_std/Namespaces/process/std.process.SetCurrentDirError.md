@@ -2,30 +2,30 @@
 
 ## Errors
 
-AccessDenied  
+AccessDenied
 
-BadPathName  
+BadPathName
 
-Canceled Cancelable  
+Canceled Cancelable
 Caller has requested the async operation to stop.
 
-FileNotFound  
+FileNotFound
 
-FileSystem  
+FileSystem
 
-NameTooLong  
+NameTooLong
 
-NoDevice  
+NoDevice
 
-NotDir  
+NotDir
 
-OperationUnsupported  
+OperationUnsupported
 
-Unexpected UnexpectedError  
+Unexpected UnexpectedError
 The Operating System returned an undocumented error code.
 
 This error is in theory not possible, but it would be better to handle this error than to invoke undefined behavior.
 
 When this error code is observed, it usually means the Zig Standard Library needs a small patch to add the error code to the error set for the respective function.
 
-UnrecognizedVolume  
+UnrecognizedVolume

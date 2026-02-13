@@ -21,7 +21,7 @@ pub fn main(init: std.process.Init) !void {
 
     // Iterate through remaining arguments
     while (args.next()) |arg| {
-        std.debug.print("Argument: {s}\n", .{arg});
+  std.debug.print("Argument: {s}\n", .{arg});
     }
 }
 ```
@@ -32,9 +32,9 @@ pub fn main(init: std.process.Init) !void {
 pub fn main(init: std.process.Init) !void {
     // Allocate a slice containing all arguments in an arena
     const args = try init.minimal.args.toSlice(init.arena.allocator());
-    
+
     for (args, 0..) |arg, i| {
-        std.debug.print("arg[{}]: {s}\n", .{i, arg});
+  std.debug.print("arg[{}]: {s}\n", .{i, arg});
     }
 }
 ```
@@ -77,7 +77,7 @@ A struct used to iterate over command-line arguments one by one.
 
 ### `pub fn iterate(a: Args) Iterator`
 
-Returns an iterator for the arguments. 
+Returns an iterator for the arguments.
 
 **Note:** On some platforms (like Windows and WASI), this may fail to provide access to all arguments if they require runtime fetching/allocation. Use `iterateAllocator` for cross-platform code.
 

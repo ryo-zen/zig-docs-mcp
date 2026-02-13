@@ -1,22 +1,18 @@
 # Compile Variables
 
 Compile variables are accessible by importing the `"builtin"` package,
-      which the compiler makes available to every Zig source file. It contains
-      compile-time constants such as the current target, endianness, and release mode.
-      
+which the compiler makes available to every Zig source file. It contains
+compile-time constants such as the current target, endianness, and release mode.
 
-      compile_variables.zig
+compile_variables.zig
 ```zig
 const builtin = @import("builtin");
 const separator = if (builtin.os.tag == .windows) '\\' else '/';
 ```
 
-      
+Example of what is imported with `@import("builtin")`:
 
-      Example of what is imported with `@import("builtin")`:
-      
-
-      @import("builtin")
+@import("builtin")
 ```zig
 const std = @import("std");
 /// Zig version. When writing code that supports multiple versions of Zig, prefer
@@ -35,91 +31,91 @@ pub const cpu: std.Target.Cpu = .{
     .arch = .x86_64,
     .model = &std.Target.x86.cpu.znver2,
     .features = std.Target.x86.featureSet(&.{
-        .@"64bit",
-        .adx,
-        .aes,
-        .allow_light_256_bit,
-        .avx,
-        .avx2,
-        .bmi,
-        .bmi2,
-        .branchfusion,
-        .clflushopt,
-        .clwb,
-        .clzero,
-        .cmov,
-        .crc32,
-        .cx16,
-        .cx8,
-        .f16c,
-        .fast_15bytenop,
-        .fast_bextr,
-        .fast_imm16,
-        .fast_lzcnt,
-        .fast_movbe,
-        .fast_scalar_fsqrt,
-        .fast_scalar_shift_masks,
-        .fast_variable_perlane_shuffle,
-        .fast_vector_fsqrt,
-        .fma,
-        .fsgsbase,
-        .fxsr,
-        .idivq_to_divl,
-        .lzcnt,
-        .mmx,
-        .movbe,
-        .mwaitx,
-        .nopl,
-        .pclmul,
-        .popcnt,
-        .prfchw,
-        .rdpid,
-        .rdpru,
-        .rdrnd,
-        .rdseed,
-        .sahf,
-        .sbb_dep_breaking,
-        .sha,
-        .slow_shld,
-        .smap,
-        .smep,
-        .sse,
-        .sse2,
-        .sse3,
-        .sse4_1,
-        .sse4_2,
-        .sse4a,
-        .ssse3,
-        .vzeroupper,
-        .wbnoinvd,
-        .x87,
-        .xsave,
-        .xsavec,
-        .xsaveopt,
-        .xsaves,
+  .@"64bit",
+  .adx,
+  .aes,
+  .allow_light_256_bit,
+  .avx,
+  .avx2,
+  .bmi,
+  .bmi2,
+  .branchfusion,
+  .clflushopt,
+  .clwb,
+  .clzero,
+  .cmov,
+  .crc32,
+  .cx16,
+  .cx8,
+  .f16c,
+  .fast_15bytenop,
+  .fast_bextr,
+  .fast_imm16,
+  .fast_lzcnt,
+  .fast_movbe,
+  .fast_scalar_fsqrt,
+  .fast_scalar_shift_masks,
+  .fast_variable_perlane_shuffle,
+  .fast_vector_fsqrt,
+  .fma,
+  .fsgsbase,
+  .fxsr,
+  .idivq_to_divl,
+  .lzcnt,
+  .mmx,
+  .movbe,
+  .mwaitx,
+  .nopl,
+  .pclmul,
+  .popcnt,
+  .prfchw,
+  .rdpid,
+  .rdpru,
+  .rdrnd,
+  .rdseed,
+  .sahf,
+  .sbb_dep_breaking,
+  .sha,
+  .slow_shld,
+  .smap,
+  .smep,
+  .sse,
+  .sse2,
+  .sse3,
+  .sse4_1,
+  .sse4_2,
+  .sse4a,
+  .ssse3,
+  .vzeroupper,
+  .wbnoinvd,
+  .x87,
+  .xsave,
+  .xsavec,
+  .xsaveopt,
+  .xsaves,
     }),
 };
 pub const os: std.Target.Os = .{
     .tag = .linux,
     .version_range = .{ .linux = .{
-        .range = .{
-            .min = .{
-                .major = 5,
-                .minor = 10,
-                .patch = 0,
-            },
-            .max = .{
-                .major = 5,
-                .minor = 10,
-                .patch = 0,
-            },
-        },
-        .glibc = .{
-            .major = 2,
-            .minor = 31,
-            .patch = 0,
-        },
-        .android = 29,
+  .range = .{
+      .min = .{
+          .major = 5,
+          .minor = 10,
+          .patch = 0,
+      },
+      .max = .{
+          .major = 5,
+          .minor = 10,
+          .patch = 0,
+      },
+  },
+  .glibc = .{
+      .major = 2,
+      .minor = 31,
+      .patch = 0,
+  },
+  .android = 29,
     }},
 };
 pub const target: std.Target = .{
@@ -143,8 +139,6 @@ pub const strip_debug_info = false;
 pub const code_model: std.builtin.CodeModel = .default;
 pub const omit_frame_pointer = false;
 ```
-
-      
 
 See also:
 

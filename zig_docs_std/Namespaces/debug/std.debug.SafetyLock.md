@@ -16,16 +16,16 @@ Its checks are meant for correctness diagnostics, not as a general-purpose synch
 
 ## Functions
 
-`pub fn assertLocked(l: SafetyLock) void`  
+`pub fn assertLocked(l: SafetyLock) void`
 Debug assertion that state is currently locked.
 
-`pub fn assertUnlocked(l: SafetyLock) void`  
+`pub fn assertUnlocked(l: SafetyLock) void`
 Debug assertion that state is currently unlocked.
 
-`pub fn lock(l: *SafetyLock) void`  
+`pub fn lock(l: *SafetyLock) void`
 Transitions to locked state (with safety assertions as applicable).
 
-`pub fn unlock(l: *SafetyLock) void`  
+`pub fn unlock(l: *SafetyLock) void`
 Transitions to unlocked state.
 
 ## Usage Notes

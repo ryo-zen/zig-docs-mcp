@@ -12,10 +12,10 @@ This is primarily used by stack-unwinding code paths that need register state fr
 
 ## Functions
 
-`pub fn fromPosixSignalContext(ctx_ptr: ?*const anyopaque) ?Native`  
+`pub fn fromPosixSignalContext(ctx_ptr: ?*const anyopaque) ?Native`
 Attempts to parse a POSIX signal context pointer into a `Native` CPU context.
 
-`pub fn fromWindowsContext(ctx: *const std.os.windows.CONTEXT) Native`  
+`pub fn fromWindowsContext(ctx: *const std.os.windows.CONTEXT) Native`
 Converts a Windows `CONTEXT` to `Native`.
 
 ## Error Sets

@@ -31,7 +31,7 @@ while (remaining.nonzero()) {
 
     // Reduce limit
     remaining = remaining.subtract(chunk.len) orelse {
-        return error.LimitExceeded;
+  return error.LimitExceeded;
     };
 }
 ```
@@ -280,17 +280,17 @@ pub fn handleRequest(reader: std.Io.Reader, io: std.Io) !void {
     var buffer: [8192]u8 = undefined;
 
     while (remaining.nonzero()) {
-        const chunk_buf = remaining.slice(&buffer);
-        const chunk = reader.interface.readAtLeast(chunk_buf, 1) catch |err| {
-            if (err == error.EndOfStream) break;
-            return err;
-        };
+  const chunk_buf = remaining.slice(&buffer);
+  const chunk = reader.interface.readAtLeast(chunk_buf, 1) catch |err| {
+      if (err == error.EndOfStream) break;
+      return err;
+  };
 
-        remaining = remaining.subtract(chunk.len) orelse {
-            return error.RequestTooLarge;
-        };
+  remaining = remaining.subtract(chunk.len) orelse {
+      return error.RequestTooLarge;
+  };
 
-        // Process chunk...
+  // Process chunk...
     }
 }
 ```

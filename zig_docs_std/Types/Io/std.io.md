@@ -1,6 +1,7 @@
 # std.Io
 
 📚 **[See Comprehensive Examples & Tests](../../Examples/test_io_threaded.zig)** - Runnable code showing initialization and basic usage.
+📘 **Reliability playbook:** [I/O Reliability and Backpressure](../../../zig_docs/io_reliability_backpressure.md)
 
 ## Quick Start
 
@@ -13,14 +14,14 @@ const std = @import("std");
 pub fn main() !void {
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
     defer _ = gpa.deinit();
-    
+
     // Initialize the Threaded backend
     var threaded = std.Io.Threaded.init(gpa.allocator(), .{ .environ = .empty });
     defer threaded.deinit();
 
     // Get the generic 'Io' interface
     const io = threaded.io();
-    
+
     // Pass 'io' to functions that need it
     try doWork(io);
 }

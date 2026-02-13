@@ -33,9 +33,9 @@ const std = @import("std");
 
 test "reader with multiple calls" {
     const calls = &[_]std.testing.Reader.Call{
-        .{ .buffer = "first chunk" },
-        .{ .buffer = "second chunk" },
-        .{ .buffer = "final chunk" },
+  .{ .buffer = "first chunk" },
+  .{ .buffer = "second chunk" },
+  .{ .buffer = "final chunk" },
     };
 
     var buffer: [256]u8 = undefined;

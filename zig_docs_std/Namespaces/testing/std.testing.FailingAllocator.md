@@ -112,8 +112,8 @@ const std = @import("std");
 
 test "fail after 3 allocations" {
     var failing = std.testing.FailingAllocator.init(
-        std.testing.allocator,
-        .{ .fail_index = 3 },
+  std.testing.allocator,
+  .{ .fail_index = 3 },
     );
     const allocator = failing.allocator();
 
@@ -158,16 +158,16 @@ Returns a stack trace captured at the point where the allocator induced its firs
 ```zig
 test "capture allocation failure stack trace" {
     var failing = std.testing.FailingAllocator.init(
-        std.testing.allocator,
-        .{ .fail_index = 0 },
+  std.testing.allocator,
+  .{ .fail_index = 0 },
     );
     const allocator = failing.allocator();
 
     _ = allocator.alloc(u8, 100) catch |err| {
-        try std.testing.expect(failing.has_induced_failure);
-        const trace = failing.getStackTrace();
-        std.debug.print("Failure stack trace:\n{}\n", .{trace});
-        return err;
+  try std.testing.expect(failing.has_induced_failure);
+  const trace = failing.getStackTrace();
+  std.debug.print("Failure stack trace:\n{}\n", .{trace});
+  return err;
     };
 }
 ```
@@ -182,8 +182,8 @@ test "capture allocation failure stack trace" {
 test "partial operation failure handling" {
     // Fail on the 2nd allocation
     var failing = std.testing.FailingAllocator.init(
-        std.testing.allocator,
-        .{ .fail_index = 1 },
+  std.testing.allocator,
+  .{ .fail_index = 1 },
     );
     const allocator = failing.allocator();
 
@@ -206,8 +206,8 @@ test "partial operation failure handling" {
 ```zig
 test "resize failure handling" {
     var failing = std.testing.FailingAllocator.init(
-        std.testing.allocator,
-        .{ .resize_fail_index = 0 },
+  std.testing.allocator,
+  .{ .resize_fail_index = 0 },
     );
     const allocator = failing.allocator();
 
@@ -239,4 +239,4 @@ test "resize failure handling" {
 ✅ **Use with defer** - Ensure cleanup happens even when testing error paths
 ✅ **Capture stack traces** - Use `getStackTrace()` for debugging complex failures
 ⚠️ **Wrap a real allocator** - Use `testing.allocator` or GPA as internal allocator
-❌ **Not for production** - Testing tool only, not meant for production use  
+❌ **Not for production** - Testing tool only, not meant for production use

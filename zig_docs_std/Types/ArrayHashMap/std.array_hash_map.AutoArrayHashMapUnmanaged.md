@@ -407,13 +407,13 @@ These accept a key-like value of a different type with its own context.
 ```zig
 const AdaptCtx = struct {
     pub fn hash(ctx: @This(), key: []const u8) u32 {
-        _ = ctx;
-        return std.array_hash_map.hashString(key);
+  _ = ctx;
+  return std.array_hash_map.hashString(key);
     }
     pub fn eql(ctx: @This(), a: []const u8, b: []const u8, b_index: usize) bool {
-        _ = ctx;
-        _ = b_index;
-        return std.mem.eql(u8, a, b);
+  _ = ctx;
+  _ = b_index;
+  return std.mem.eql(u8, a, b);
     }
 };
 
@@ -693,7 +693,7 @@ Sort entries by custom comparison (stable).
 const SortCtx = struct {
     keys: []const K,
     pub fn lessThan(ctx: @This(), a_idx: usize, b_idx: usize) bool {
-        return ctx.keys[a_idx] < ctx.keys[b_idx];
+  return ctx.keys[a_idx] < ctx.keys[b_idx];
     }
 };
 
@@ -771,11 +771,11 @@ pub fn countWords(
 
     var iter = std.mem.tokenizeAny(u8, text, " \t\n");
     while (iter.next()) |word| {
-        const result = try counts.getOrPut(allocator, word);
-        if (!result.found_existing) {
-            result.value_ptr.* = 0;
-        }
-        result.value_ptr.* += 1;
+  const result = try counts.getOrPut(allocator, word);
+  if (!result.found_existing) {
+      result.value_ptr.* = 0;
+  }
+  result.value_ptr.* += 1;
     }
 
     return counts;
@@ -791,19 +791,19 @@ pub const IdCache = struct {
     data: std.array_hash_map.AutoArrayHashMapUnmanaged(u64, []const u8) = .{},
 
     pub fn deinit(self: *IdCache, allocator: std.mem.Allocator) void {
-        self.data.deinit(allocator);
+  self.data.deinit(allocator);
     }
 
     pub fn put(self: *IdCache, allocator: std.mem.Allocator, id: u64, name: []const u8) !void {
-        try self.data.put(allocator, id, name);
+  try self.data.put(allocator, id, name);
     }
 
     pub fn get(self: *IdCache, id: u64) ?[]const u8 {
-        return self.data.get(id);
+  return self.data.get(id);
     }
 
     pub fn count(self: *IdCache) usize {
-        return self.data.count();
+  return self.data.count();
     }
 };
 ```
@@ -821,7 +821,7 @@ pub fn bulkInsert(
     try map.ensureUnusedCapacity(allocator, pairs.len);
 
     for (pairs) |pair| {
-        map.putAssumeCapacity(pair.key, pair.value);
+  map.putAssumeCapacity(pair.key, pair.value);
     }
 }
 ```
@@ -836,26 +836,26 @@ pub const StringPool = struct {
     allocator: std.mem.Allocator,
 
     pub fn init(allocator: std.mem.Allocator) StringPool {
-        return .{ .allocator = allocator };
+  return .{ .allocator = allocator };
     }
 
     pub fn deinit(self: *StringPool) void {
-        // Free all interned strings
-        const keys = self.strings.keys();
-        for (keys) |key| {
-            self.allocator.free(key);
-        }
-        self.strings.deinit(self.allocator);
+  // Free all interned strings
+  const keys = self.strings.keys();
+  for (keys) |key| {
+      self.allocator.free(key);
+  }
+  self.strings.deinit(self.allocator);
     }
 
     pub fn intern(self: *StringPool, str: []const u8) ![]const u8 {
-        const result = try self.strings.getOrPut(self.allocator, str);
-        if (!result.found_existing) {
-            // Allocate and store owned copy
-            const owned = try self.allocator.dupe(u8, str);
-            result.key_ptr.* = owned;
-        }
-        return result.key_ptr.*;
+  const result = try self.strings.getOrPut(self.allocator, str);
+  if (!result.found_existing) {
+      // Allocate and store owned copy
+      const owned = try self.allocator.dupe(u8, str);
+      result.key_ptr.* = owned;
+  }
+  return result.key_ptr.*;
     }
 };
 ```
@@ -900,7 +900,7 @@ When debugging AutoArrayHashMapUnmanaged issues:
    ```zig
    try map.ensureTotalCapacity(allocator, expected_size);
    for (items) |item| {
-       map.putAssumeCapacity(item.key, item.value);
+ map.putAssumeCapacity(item.key, item.value);
    }
    ```
 
@@ -920,7 +920,7 @@ When debugging AutoArrayHashMapUnmanaged issues:
 5. **Use getPtr for in-place modification**
    ```zig
    if (map.getPtr(key)) |ptr| {
-       ptr.* = new_value;
+ ptr.* = new_value;
    }
    ```
 
@@ -928,7 +928,7 @@ When debugging AutoArrayHashMapUnmanaged issues:
    ```zig
    try map.ensureUnusedCapacity(allocator, batch.len);
    for (batch) |item| {
-       map.putAssumeCapacity(item.key, item.value);
+ map.putAssumeCapacity(item.key, item.value);
    }
    ```
 

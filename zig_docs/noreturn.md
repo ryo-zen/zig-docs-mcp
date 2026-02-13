@@ -1,27 +1,21 @@
 # noreturn
 
 `noreturn` is the type of:
-      
 
-      
-          
 - `break`
-          
+
 - `continue`
-          
+
 - `return`
-          
+
 - `unreachable`
-          
+
 - `while (true) {}`
-      
-      
 
 When resolving types together, such as `if` clauses or `switch` prongs,
-              the `noreturn` type is compatible with every other type. Consider:
-      
+        the `noreturn` type is compatible with every other type. Consider:
 
-      test_noreturn.zig
+test_noreturn.zig
 ```zig
 fn foo(condition: bool, b: u32) void {
     const a = if (condition) b else return;
@@ -36,11 +30,9 @@ Shell$ zig test test_noreturn.zig
 1/1 test_noreturn.test.noreturn...OK
 All 1 tests passed.
 
-      
-
 Another use case for `noreturn` is the `exit` function:
 
-      test_noreturn_from_exit.zig
+test_noreturn_from_exit.zig
 ```zig
 const std = @import("std");
 const builtin = @import("builtin");

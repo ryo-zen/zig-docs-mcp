@@ -51,7 +51,7 @@ const std = @import("std");
 
 test "indirect reader behavior" {
     const calls = &[_]std.testing.Reader.Call{
-        .{ .buffer = "test data" },
+  .{ .buffer = "test data" },
     };
 
     var source_buf: [256]u8 = undefined;
@@ -59,8 +59,8 @@ test "indirect reader behavior" {
 
     var indirect_buf: [128]u8 = undefined;
     var indirect = std.testing.ReaderIndirect.init(
-        &source_reader.interface,
-        &indirect_buf,
+  &source_reader.interface,
+  &indirect_buf,
     );
 
     // Attempting to read from indirect.interface returns 0
@@ -81,7 +81,7 @@ test "indirect reader behavior" {
 ```zig
 test "handle zero-byte reads correctly" {
     const calls = &[_]std.testing.Reader.Call{
-        .{ .buffer = "data" },
+  .{ .buffer = "data" },
     };
 
     var source_buf: [256]u8 = undefined;
@@ -89,8 +89,8 @@ test "handle zero-byte reads correctly" {
 
     var indirect_buf: [128]u8 = undefined;
     var indirect = std.testing.ReaderIndirect.init(
-        &source_reader.interface,
-        &indirect_buf,
+  &source_reader.interface,
+  &indirect_buf,
     );
 
     // Test that your code handles 0-byte reads gracefully
@@ -116,4 +116,4 @@ test "handle zero-byte reads correctly" {
 ✅ **Test 0-byte handling** - Verify code handles readers that return 0 bytes
 ✅ **Use with other test readers** - Often wraps std.testing.Reader for complex scenarios
 ⚠️ **Understand indirection** - Data flows through `in`, not `interface` directly
-❌ **Not for production** - Testing tool only, use real readers in production  
+❌ **Not for production** - Testing tool only, use real readers in production

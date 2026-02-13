@@ -170,8 +170,8 @@ pub fn main() !void {
     const addr = try std.Io.net.UnixAddress.init(socket_path);
     var server = try addr.listen(io, .{ .kernel_backlog = 256 });
     defer {
-        server.deinit(io);
-        std.Io.Dir.cwd().deleteFile(io, socket_path) catch {};
+  server.deinit(io);
+  std.Io.Dir.cwd().deleteFile(io, socket_path) catch {};
     }
 
     std.debug.print("Server listening on {s}\n", .{socket_path});
@@ -247,8 +247,8 @@ pub fn main() !void {
     const addr = try std.Io.net.UnixAddress.init(socket_path);
     var server = try addr.listen(io, .{});
     defer {
-        server.deinit(io);
-        std.Io.Dir.cwd().deleteFile(io, socket_path) catch {};
+  server.deinit(io);
+  std.Io.Dir.cwd().deleteFile(io, socket_path) catch {};
     }
 
     std.debug.print("Echo server listening on {s}\n", .{socket_path});
@@ -265,12 +265,12 @@ pub fn main() !void {
     var writer = connection.stream.writer(&write_buf);
 
     while (true) {
-        const line = reader.interface.takeDelimiterInclusive('\n') catch |err| {
-            if (err == error.EndOfStream) break;
-            return err;
-        };
-        try writer.interface.writeAll(line);
-        try writer.interface.flush();
+  const line = reader.interface.takeDelimiterInclusive('\n') catch |err| {
+      if (err == error.EndOfStream) break;
+      return err;
+  };
+  try writer.interface.writeAll(line);
+  try writer.interface.flush();
     }
 }
 ```
@@ -310,8 +310,8 @@ pub fn runServer(io: std.Io) !void {
     const addr = try std.Io.net.UnixAddress.init(socket_path);
     var server = try addr.listen(io, .{});
     defer {
-        server.deinit(io);
-        std.Io.Dir.cwd().deleteFile(io, socket_path) catch {};
+  server.deinit(io);
+  std.Io.Dir.cwd().deleteFile(io, socket_path) catch {};
     }
 
     // Accept and handle connections...
@@ -417,8 +417,8 @@ If your Unix socket isn't working, check:
    ```zig
    var server = try addr.listen(io, .{});
    defer {
-       server.deinit(io);
-       std.Io.Dir.cwd().deleteFile(io, socket_path) catch {};  // Clean up!
+ server.deinit(io);
+ std.Io.Dir.cwd().deleteFile(io, socket_path) catch {};  // Clean up!
    }
    ```
 

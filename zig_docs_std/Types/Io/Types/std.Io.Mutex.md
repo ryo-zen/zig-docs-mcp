@@ -25,13 +25,13 @@ const std = @import("std");
 
 pub fn tryUpdate(mutex: *std.Io.Mutex, io: std.Io) !void {
     if (mutex.tryLock()) {
-        defer mutex.unlock(io);
+  defer mutex.unlock(io);
 
-        // Got the lock - do work
-        try performCriticalOperation();
+  // Got the lock - do work
+  try performCriticalOperation();
     } else {
-        // Lock is held by someone else - skip or retry later
-        std.debug.print("Lock busy, skipping update\n", .{});
+  // Lock is held by someone else - skip or retry later
+  std.debug.print("Lock busy, skipping update\n", .{});
     }
 }
 ```
@@ -229,18 +229,18 @@ const SharedQueue = struct {
     data: std.ArrayList(u32),
 
     pub fn push(self: *SharedQueue, io: std.Io, value: u32) !void {
-        try self.mutex.lock(io);
-        defer self.mutex.unlock(io);
+  try self.mutex.lock(io);
+  defer self.mutex.unlock(io);
 
-        try self.data.append(value);
+  try self.data.append(value);
     }
 
     pub fn pop(self: *SharedQueue, io: std.Io) !?u32 {
-        try self.mutex.lock(io);
-        defer self.mutex.unlock(io);
+  try self.mutex.lock(io);
+  defer self.mutex.unlock(io);
 
-        if (self.data.items.len == 0) return null;
-        return self.data.pop();
+  if (self.data.items.len == 0) return null;
+  return self.data.pop();
     }
 };
 ```
@@ -253,14 +253,14 @@ const std = @import("std");
 pub fn lockWithTimeout(mutex: *std.Io.Mutex, io: std.Io, max_attempts: u32) !void {
     var attempts: u32 = 0;
     while (attempts < max_attempts) : (attempts += 1) {
-        if (mutex.tryLock()) {
-            defer mutex.unlock(io);
-            performWork();
-            return;
-        }
+  if (mutex.tryLock()) {
+      defer mutex.unlock(io);
+      performWork();
+      return;
+  }
 
-        // Brief sleep before retry
-        std.time.sleep(10 * std.time.ns_per_ms);
+  // Brief sleep before retry
+  std.time.sleep(10 * std.time.ns_per_ms);
     }
 
     return error.LockTimeout;
@@ -321,11 +321,11 @@ const std = @import("std");
 
 pub fn cancellableUpdate(mutex: *std.Io.Mutex, io: std.Io) !void {
     mutex.lock(io) catch |err| {
-        if (err == error.Canceled) {
-            std.debug.print("Task cancelled while waiting for lock\n", .{});
-            return error.Canceled;
-        }
-        return err;
+  if (err == error.Canceled) {
+      std.debug.print("Task cancelled while waiting for lock\n", .{});
+      return error.Canceled;
+  }
+  return err;
     };
     defer mutex.unlock(io);
 

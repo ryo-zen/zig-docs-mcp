@@ -1,21 +1,16 @@
 # Identifiers
 
 Identifiers must start with an alphabetic character or underscore and may be followed
-      by any number of alphanumeric characters or underscores.
-      They must not overlap with any keywords. See [Keyword Reference](#Keyword-Reference).
-      
+by any number of alphanumeric characters or underscores.
+They must not overlap with any keywords. See [Keyword Reference](#Keyword-Reference).
 
-      
 ## [String Identifier Syntax](#toc-String-Identifier-Syntax) §
 
-      
+If a name that does not fit these requirements is needed, such as for
+linking with external libraries, the `@""` syntax
+may be used.
 
-      If a name that does not fit these requirements is needed, such as for
-      linking with external libraries, the `@""` syntax
-      may be used.
-      
-
-      identifiers.zig
+identifiers.zig
 ```zig
 const @"identifier with spaces in it" = 0xff;
 const @"1SmallStep4Man" = 112358;

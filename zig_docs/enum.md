@@ -67,7 +67,7 @@ const Suit = enum {
     hearts,
 
     pub fn isClubs(self: Suit) bool {
-        return self == Suit.clubs;
+  return self == Suit.clubs;
     }
 };
 test "enum method" {
@@ -84,9 +84,9 @@ const Foo = enum {
 test "enum switch" {
     const p = Foo.number;
     const what_is_it = switch (p) {
-        Foo.string => "this is a string",
-        Foo.number => "this is a number",
-        Foo.none => "this is a none",
+  Foo.string => "this is a string",
+  Foo.number => "this is a number",
+  Foo.none => "this is a none",
     };
     try expect(mem.eql(u8, what_is_it, "this is a number"));
 }
@@ -124,8 +124,6 @@ Shell$ zig test test_enums.zig
 8/8 test_enums.test.@tagName...OK
 All 8 tests passed.
 
-      
-
 See also:
 
 - [@typeInfo](#typeInfo)
@@ -134,15 +132,11 @@ See also:
 
 - [@sizeOf](#sizeOf)
 
-      
 ## [extern enum](#toc-extern-enum) §
 
-      
+By default, enums are not guaranteed to be compatible with the C ABI:
 
-      By default, enums are not guaranteed to be compatible with the C ABI:
-      
-
-      enum_export_error.zig
+enum_export_error.zig
 ```zig
 const Foo = enum { a, b, c };
 export fn entry(foo: Foo) void {
@@ -152,24 +146,21 @@ export fn entry(foo: Foo) void {
 Shell$ zig build-obj enum_export_error.zig -target x86_64-linux
 /home/ci/zig-bootstrap/zig/doc/langref/enum_export_error.zig:2:17: error: parameter of type 'enum_export_error.Foo' not allowed in function with calling convention 'x86_64_sysv'
 export fn entry(foo: Foo) void {
-                ^~~~~~~~
+          ^~~~~~~~
 /home/ci/zig-bootstrap/zig/doc/langref/enum_export_error.zig:2:17: note: enum tag type 'u2' is not extern compatible
 /home/ci/zig-bootstrap/zig/doc/langref/enum_export_error.zig:2:17: note: only integers with 0, 8, 16, 32, 64 and 128 bits are extern compatible
 /home/ci/zig-bootstrap/zig/doc/langref/enum_export_error.zig:1:13: note: enum declared here
 const Foo = enum { a, b, c };
-            ^~~~~~~~~~~~~~~~
+      ^~~~~~~~~~~~~~~~
 referenced by:
     root: /home/ci/zig-bootstrap/out/host/lib/zig/std/start.zig:13:22
     comptime: /home/ci/zig-bootstrap/out/host/lib/zig/std/start.zig:20:9
     2 reference(s) hidden; use '-freference-trace=4' to see all references
 
-      
+For a C-ABI-compatible enum, provide an explicit tag type to
+the enum:
 
-      For a C-ABI-compatible enum, provide an explicit tag type to
-      the enum:
-      
-
-      enum_export.zig
+enum_export.zig
 ```zig
 const Foo = enum(c_int) { a, b, c };
 export fn entry(foo: Foo) void {
@@ -178,17 +169,11 @@ export fn entry(foo: Foo) void {
 ```
 Shell$ zig build-obj enum_export.zig
 
-      
-
-      
 ## [Enum Literals](#toc-Enum-Literals) §
 
-      
+Enum literals allow specifying the name of an enum field without specifying the enum type:
 
-      Enum literals allow specifying the name of an enum field without specifying the enum type:
-      
-
-      test_enum_literals.zig
+test_enum_literals.zig
 ```zig
 const std = @import("std");
 const expect = std.testing.expect;
@@ -208,9 +193,9 @@ test "enum literals" {
 test "switch using enum literals" {
     const color = Color.on;
     const result = switch (color) {
-        .auto => false,
-        .on => true,
-        .off => false,
+  .auto => false,
+  .on => true,
+  .off => false,
     };
     try expect(result);
 }
@@ -220,31 +205,19 @@ Shell$ zig test test_enum_literals.zig
 2/2 test_enum_literals.test.switch using enum literals...OK
 All 2 tests passed.
 
-      
-
-      
 ## [Non-exhaustive enum](#toc-Non-exhaustive-enum) §
 
-      
+A non-exhaustive enum can be created by adding a trailing `_` field.
+The enum must specify a tag type and cannot consume every enumeration value.
 
-      A non-exhaustive enum can be created by adding a trailing `_` field.
-      The enum must specify a tag type and cannot consume every enumeration value.
-      
+[@enumFromInt](#enumFromInt) on a non-exhaustive enum involves the safety semantics
+of [@intCast](#intCast) to the integer tag type, but beyond that always results in
+a well-defined enum value.
 
-      
+A switch on a non-exhaustive enum can include a `_` prong as an alternative to an `else` prong.
+With a `_` prong the compiler errors if all the known tag names are not handled by the switch.
 
-      [@enumFromInt](#enumFromInt) on a non-exhaustive enum involves the safety semantics
-      of [@intCast](#intCast) to the integer tag type, but beyond that always results in
-      a well-defined enum value.
-      
-
-      
-
-      A switch on a non-exhaustive enum can include a `_` prong as an alternative to an `else` prong.
-      With a `_` prong the compiler errors if all the known tag names are not handled by the switch.
-      
-
-      test_switch_non-exhaustive.zig
+test_switch_non-exhaustive.zig
 ```zig
 const std = @import("std");
 const expect = std.testing.expect;
@@ -259,14 +232,14 @@ const Number = enum(u8) {
 test "switch on non-exhaustive enum" {
     const number = Number.one;
     const result = switch (number) {
-        .one => true,
-        .two, .three => false,
-        _ => false,
+  .one => true,
+  .two, .three => false,
+  _ => false,
     };
     try expect(result);
     const is_one = switch (number) {
-        .one => true,
-        else => false,
+  .one => true,
+  else => false,
     };
     try expect(is_one);
 }

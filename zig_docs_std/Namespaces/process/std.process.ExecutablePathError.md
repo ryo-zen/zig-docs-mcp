@@ -2,66 +2,66 @@
 
 ## Errors
 
-AccessDenied ExecutablePathBaseError  
+AccessDenied ExecutablePathBaseError
 
-AntivirusInterference ExecutablePathBaseError  
+AntivirusInterference ExecutablePathBaseError
 On Windows, antivirus software is enabled by default. It can be disabled, but Windows Update sometimes ignores the user's preference and re-enables it. When enabled, antivirus software on Windows intercepts file system operations and makes them significantly slower in addition to possibly failing with this error code.
 
-BadPathName ExecutablePathBaseError  
+BadPathName ExecutablePathBaseError
 
-Canceled Cancelable  
+Canceled Cancelable
 Caller has requested the async operation to stop.
 
-DeviceBusy ExecutablePathBaseError  
+DeviceBusy ExecutablePathBaseError
 
-FileNotFound ExecutablePathBaseError  
+FileNotFound ExecutablePathBaseError
 
-FileSystem ExecutablePathBaseError  
+FileSystem ExecutablePathBaseError
 
-FileTooBig ExecutablePathBaseError  
+FileTooBig ExecutablePathBaseError
 
-InputOutput ExecutablePathBaseError  
+InputOutput ExecutablePathBaseError
 
-IsDir ExecutablePathBaseError  
+IsDir ExecutablePathBaseError
 
-NameTooLong  
+NameTooLong
 
-NetworkNotFound ExecutablePathBaseError  
+NetworkNotFound ExecutablePathBaseError
 On Windows, `\\server` or `\\server\share` was not found.
 
-NoDevice ExecutablePathBaseError  
+NoDevice ExecutablePathBaseError
 
-NoSpaceLeft ExecutablePathBaseError  
+NoSpaceLeft ExecutablePathBaseError
 
-NotDir ExecutablePathBaseError  
+NotDir ExecutablePathBaseError
 
-NotLink ExecutablePathBaseError  
+NotLink ExecutablePathBaseError
 
-OperationUnsupported ExecutablePathBaseError  
+OperationUnsupported ExecutablePathBaseError
 The operating system does not support an executable learning its own path.
 
-PathAlreadyExists ExecutablePathBaseError  
+PathAlreadyExists ExecutablePathBaseError
 
-PermissionDenied ExecutablePathBaseError  
+PermissionDenied ExecutablePathBaseError
 
-PipeBusy ExecutablePathBaseError  
+PipeBusy ExecutablePathBaseError
 
-ProcessFdQuotaExceeded ExecutablePathBaseError  
+ProcessFdQuotaExceeded ExecutablePathBaseError
 
-ProcessNotFound ExecutablePathBaseError  
+ProcessNotFound ExecutablePathBaseError
 
-SymLinkLoop ExecutablePathBaseError  
+SymLinkLoop ExecutablePathBaseError
 
-SystemFdQuotaExceeded ExecutablePathBaseError  
+SystemFdQuotaExceeded ExecutablePathBaseError
 
-SystemResources ExecutablePathBaseError  
+SystemResources ExecutablePathBaseError
 
-Unexpected UnexpectedError  
+Unexpected UnexpectedError
 The Operating System returned an undocumented error code.
 
 This error is in theory not possible, but it would be better to handle this error than to invoke undefined behavior.
 
 When this error code is observed, it usually means the Zig Standard Library needs a small patch to add the error code to the error set for the respective function.
 
-UnrecognizedVolume ExecutablePathBaseError  
+UnrecognizedVolume ExecutablePathBaseError
 On Windows, the volume does not contain a recognized file system. File system drivers might not be loaded, or the volume may be corrupt.

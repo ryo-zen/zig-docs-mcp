@@ -272,7 +272,7 @@ if (map.getIndex("key")) |index| {
     const keys_array = map.keys();
     const values_array = map.values();
     std.debug.print("At index {d}: {s} = {d}\n",
-        .{index, keys_array[index], values_array[index]});
+  .{index, keys_array[index], values_array[index]});
 }
 ```
 
@@ -582,7 +582,7 @@ Sort entries by a custom comparison function (stable sort).
 const SortCtx = struct {
     keys: []const u64,
     pub fn lessThan(ctx: @This(), a_idx: usize, b_idx: usize) bool {
-        return ctx.keys[a_idx] < ctx.keys[b_idx];
+  return ctx.keys[a_idx] < ctx.keys[b_idx];
     }
 };
 
@@ -656,13 +656,13 @@ These functions accept a key-like value with a different type than `K`, along wi
 ```zig
 const AdaptCtx = struct {
     pub fn hash(ctx: @This(), key: []const u8) u32 {
-        _ = ctx;
-        return std.array_hash_map.hashString(key);
+  _ = ctx;
+  return std.array_hash_map.hashString(key);
     }
     pub fn eql(ctx: @This(), a: []const u8, b: []const u8, b_index: usize) bool {
-        _ = ctx;
-        _ = b_index;
-        return std.mem.eql(u8, a, b);
+  _ = ctx;
+  _ = b_index;
+  return std.mem.eql(u8, a, b);
     }
 };
 
@@ -685,11 +685,11 @@ pub fn countWords(allocator: std.mem.Allocator, text: []const u8) !std.StringArr
 
     var iter = std.mem.tokenizeAny(u8, text, " \t\n");
     while (iter.next()) |word| {
-        const result = try counts.getOrPut(word);
-        if (!result.found_existing) {
-            result.value_ptr.* = 0;
-        }
-        result.value_ptr.* += 1;
+  const result = try counts.getOrPut(word);
+  if (!result.found_existing) {
+      result.value_ptr.* = 0;
+  }
+  result.value_ptr.* += 1;
     }
 
     return counts;
@@ -703,29 +703,29 @@ const std = @import("std");
 
 pub fn LRUCache(comptime K: type, comptime V: type, comptime max_size: usize) type {
     return struct {
-        map: std.array_hash_map.AutoArrayHashMap(K, V),
+  map: std.array_hash_map.AutoArrayHashMap(K, V),
 
-        pub fn init(allocator: std.mem.Allocator) !@This() {
-            return .{
-                .map = std.array_hash_map.AutoArrayHashMap(K, V).init(allocator),
-            };
-        }
+  pub fn init(allocator: std.mem.Allocator) !@This() {
+      return .{
+          .map = std.array_hash_map.AutoArrayHashMap(K, V).init(allocator),
+      };
+  }
 
-        pub fn deinit(self: *@This()) void {
-            self.map.deinit();
-        }
+  pub fn deinit(self: *@This()) void {
+      self.map.deinit();
+  }
 
-        pub fn put(self: *@This(), key: K, value: V) !void {
-            // Evict oldest if at capacity
-            if (self.map.count() >= max_size and !self.map.contains(key)) {
-                _ = self.map.swapRemoveAt(0);  // Remove oldest
-            }
-            try self.map.put(key, value);
-        }
+  pub fn put(self: *@This(), key: K, value: V) !void {
+      // Evict oldest if at capacity
+      if (self.map.count() >= max_size and !self.map.contains(key)) {
+          _ = self.map.swapRemoveAt(0);  // Remove oldest
+      }
+      try self.map.put(key, value);
+  }
 
-        pub fn get(self: *@This(), key: K) ?V {
-            return self.map.get(key);
-        }
+  pub fn get(self: *@This(), key: K) ?V {
+      return self.map.get(key);
+  }
     };
 }
 ```
@@ -742,11 +742,11 @@ pub fn groupByCategory(
     var groups = std.array_hash_map.AutoArrayHashMap(Category, std.ArrayList(Item)).init(allocator);
 
     for (items) |item| {
-        const result = try groups.getOrPut(item.category);
-        if (!result.found_existing) {
-            result.value_ptr.* = std.ArrayList(Item).init(allocator);
-        }
-        try result.value_ptr.append(item);
+  const result = try groups.getOrPut(item.category);
+  if (!result.found_existing) {
+      result.value_ptr.* = std.ArrayList(Item).init(allocator);
+  }
+  try result.value_ptr.append(item);
     }
 
     return groups;
@@ -789,7 +789,7 @@ When debugging AutoArrayHashMap issues, verify:
    ```zig
    try map.ensureTotalCapacity(1000);
    for (items) |item| {
-       map.putAssumeCapacity(item.key, item.value);
+ map.putAssumeCapacity(item.key, item.value);
    }
    ```
 
@@ -809,7 +809,7 @@ When debugging AutoArrayHashMap issues, verify:
 5. **Use `getPtr` for in-place modification** - Avoids copying large values
    ```zig
    if (map.getPtr("key")) |ptr| {
-       ptr.* = new_value;  // No copy
+ ptr.* = new_value;  // No copy
    }
    ```
 
@@ -817,7 +817,7 @@ When debugging AutoArrayHashMap issues, verify:
    ```zig
    try map.ensureUnusedCapacity(batch.len);
    for (batch) |item| {
-       map.putAssumeCapacity(item.key, item.value);
+ map.putAssumeCapacity(item.key, item.value);
    }
    ```
 

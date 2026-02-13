@@ -118,17 +118,17 @@ const std = @import("std");
 pub fn sendHello(io: std.Io, socket: std.Io.net.Socket) !void {
     const target = try std.Io.net.Ip4Address.parse("127.0.0.1", 9000);
     const addr = std.Io.net.IpAddress{ .ip4 = target };
-    
+
     const payload = "Message body";
     var msg = std.Io.net.OutgoingMessage{
-        .address = &addr,
-        .data_ptr = payload.ptr,
-        .data_len = payload.len,
+  .address = &addr,
+  .data_ptr = payload.ptr,
+  .data_len = payload.len,
     };
 
     const sent = try socket.sendMany(io, (&msg)[0..1], .{});
     if (sent == 1) {
-        std.debug.print("Sent {d} bytes successfully\n", .{msg.data_len});
+  std.debug.print("Sent {d} bytes successfully\n", .{msg.data_len});
     }
 }
 ```
@@ -139,22 +139,22 @@ pub fn sendHello(io: std.Io, socket: std.Io.net.Socket) !void {
 pub fn broadcastToPeers(io: std.Io, socket: std.Io.net.Socket, peers: []const std.Io.net.IpAddress, data: []const u8) !void {
     // Allocate space for message headers on stack
     var messages: [32]std.Io.net.OutgoingMessage = undefined;
-    
+
     var i: usize = 0;
     while (i < peers.len) {
-        const batch_size = @min(32, peers.len - i);
-        const current_batch = messages[0..batch_size];
-        
-        for (current_batch, 0..) |*msg, j| {
-            msg.* = .{ 
-                .address = &peers[i + j],
-                .data_ptr = data.ptr,
-                .data_len = data.len,
-            };
-        }
-        
-        _ = try socket.sendMany(io, current_batch, .{});
-        i += batch_size;
+  const batch_size = @min(32, peers.len - i);
+  const current_batch = messages[0..batch_size];
+
+  for (current_batch, 0..) |*msg, j| {
+      msg.* = .{
+          .address = &peers[i + j],
+          .data_ptr = data.ptr,
+          .data_len = data.len,
+      };
+  }
+
+  _ = try socket.sendMany(io, current_batch, .{});
+  i += batch_size;
     }
 }
 ```
@@ -184,8 +184,8 @@ _ = try socket.sendMany(io, (&response)[0..1], .{});
    // ❌ BAD: addr goes out of scope before sendMany finishes
    var msg: std.Io.net.OutgoingMessage = undefined;
    {
-       var addr = try IpAddress.parse(...);
-       msg = .{ .address = &addr, ... };
+ var addr = try IpAddress.parse(...);
+ msg = .{ .address = &addr, ... };
    }
    _ = try socket.sendMany(io, (&msg)[0..1], .{}); // addr is invalid!
    ```
@@ -208,7 +208,7 @@ _ = try socket.sendMany(io, (&response)[0..1], .{});
    ```zig
    const count = try socket.sendMany(io, messages, .{});
    if (count < messages.len) {
-       // Only partial batch was sent
+ // Only partial batch was sent
    }
    ```
 

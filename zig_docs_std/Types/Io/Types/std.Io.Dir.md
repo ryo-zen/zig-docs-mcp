@@ -349,9 +349,9 @@ Tests whether `sub_path` exists and whether the specified access modes (read/wri
 ```zig
 dir.access(io, "config.txt", .{}) catch |err| {
     if (err == error.FileNotFound) {
-        // file doesn't exist, use defaults
+  // file doesn't exist, use defaults
     } else {
-        return err;
+  return err;
     }
 };
 ```

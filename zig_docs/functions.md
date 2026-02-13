@@ -10,7 +10,7 @@ const expect = std.testing.expect;
 // Functions are declared like this
 fn add(a: i8, b: i8) i8 {
     if (a == 0) {
-        return b;
+  return b;
     }
 
     return a + b;
@@ -69,32 +69,23 @@ Shell$ zig test test_functions.zig
 1/1 test_functions.test.function...OK
 All 1 tests passed.
 
-      
-
 There is a difference between a function *body* and a function *pointer*.
-      Function bodies are [comptime](#comptime)-only types while function [Pointers](#Pointers) may be
-      runtime-known.
+Function bodies are [comptime](#comptime)-only types while function [Pointers](#Pointers) may be
+runtime-known.
 
-      
 ## [Pass-by-value Parameters](#toc-Pass-by-value-Parameters) §
 
-      
+Primitive types such as [Integers](#Integers) and [Floats](#Floats) passed as parameters
+are copied, and then the copy is available in the function body. This is called "passing by value".
+Copying a primitive type is essentially free and typically involves nothing more than
+setting a register.
 
-      Primitive types such as [Integers](#Integers) and [Floats](#Floats) passed as parameters
-      are copied, and then the copy is available in the function body. This is called "passing by value".
-      Copying a primitive type is essentially free and typically involves nothing more than
-      setting a register.
-      
+Structs, unions, and arrays can sometimes be more efficiently passed as a reference, since a copy
+could be arbitrarily expensive depending on the size. When these types are passed
+as parameters, Zig may choose to copy and pass by value, or pass by reference, whichever way
+Zig decides will be faster. This is made possible, in part, by the fact that parameters are immutable.
 
-      
-
-      Structs, unions, and arrays can sometimes be more efficiently passed as a reference, since a copy
-      could be arbitrarily expensive depending on the size. When these types are passed
-      as parameters, Zig may choose to copy and pass by value, or pass by reference, whichever way
-      Zig decides will be faster. This is made possible, in part, by the fact that parameters are immutable.
-      
-
-      test_pass_by_reference_or_value.zig
+test_pass_by_reference_or_value.zig
 ```zig
 const Point = struct {
     x: i32,
@@ -119,23 +110,15 @@ Shell$ zig test test_pass_by_reference_or_value.zig
 1/1 test_pass_by_reference_or_value.test.pass struct to function...OK
 All 1 tests passed.
 
-      
+For extern functions, Zig follows the C ABI for passing structs and unions by value.
 
-      For extern functions, Zig follows the C ABI for passing structs and unions by value.
-      
-
-      
-      
 ## [Function Parameter Type Inference](#toc-Function-Parameter-Type-Inference) §
 
-      
+Function parameters can be declared with `anytype` in place of the type.
+In this case the parameter types will be inferred when the function is called.
+Use [@TypeOf](#TypeOf) and [@typeInfo](#typeInfo) to get information about the inferred type.
 
-      Function parameters can be declared with `anytype` in place of the type.
-      In this case the parameter types will be inferred when the function is called.
-      Use [@TypeOf](#TypeOf) and [@typeInfo](#typeInfo) to get information about the inferred type.
-      
-
-      test_fn_type_inference.zig
+test_fn_type_inference.zig
 ```zig
 const expect = @import("std").testing.expect;
 
@@ -155,33 +138,24 @@ Shell$ zig test test_fn_type_inference.zig
 1/1 test_fn_type_inference.test.fn type inference...OK
 All 1 tests passed.
 
-      
-
-      
 ## [inline fn](#toc-inline-fn) §
 
-      
+Adding the `inline` keyword to a function definition makes that
+function become *semantically inlined* at the callsite. This is
+not a hint to be possibly observed by optimization passes, but has
+implications on the types and values involved in the function call.
 
-      Adding the `inline` keyword to a function definition makes that
-      function become *semantically inlined* at the callsite. This is
-      not a hint to be possibly observed by optimization passes, but has
-      implications on the types and values involved in the function call.
-      
+Unlike normal function calls, arguments at an inline function callsite which are
+compile-time known are treated as [Compile Time Parameters](#Compile-Time-Parameters). This can potentially
+propagate all the way to the return value:
 
-      
-
-      Unlike normal function calls, arguments at an inline function callsite which are
-      compile-time known are treated as [Compile Time Parameters](#Compile-Time-Parameters). This can potentially
-      propagate all the way to the return value:
-      
-
-      inline_call.zig
+inline_call.zig
 ```zig
 const std = @import("std");
 
 pub fn main() void {
     if (foo(1200, 34) != 1234) {
-        @compileError("bad");
+  @compileError("bad");
     }
 }
 
@@ -194,36 +168,25 @@ Shell$ zig build-exe inline_call.zig
 $ ./inline_call
 runtime a = 1200 b = 34
 
-      
-
 If `inline` is removed, the test fails with the compile error
-      instead of passing.
-
-      
+instead of passing.
 
 It is generally better to let the compiler decide when to inline a
-      function, except for these scenarios:
+function, except for these scenarios:
 
-      
-        
 - To change how many stack frames are in the call stack, for debugging purposes.
-        
+
 - To force comptime-ness of the arguments to propagate to the return value of the function, as in the above example.
-        
+
 - Real world performance measurements demand it.
-      
-      
 
 Note that `inline` actually *restricts*
-      what the compiler is allowed to do. This can harm binary size,
-      compilation speed, and even runtime performance.
+what the compiler is allowed to do. This can harm binary size,
+compilation speed, and even runtime performance.
 
-      
-
-      
 ## [Function Reflection](#toc-Function-Reflection) §
 
-      test_fn_reflection.zig
+test_fn_reflection.zig
 ```zig
 const std = @import("std");
 const math = std.math;

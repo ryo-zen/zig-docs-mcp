@@ -14,16 +14,16 @@ const std = @import("std");
 
 pub fn main() void {
     const files = [_][]const u8{
-        "document.txt",           // → "document"
-        "archive.tar.gz",         // → "archive.tar" (keeps .tar!)
-        "src/main.zig",           // → "main"
-        ".bashrc",                // → ".bashrc" (no extension)
-        "hello/world/lib.tar.gz", // → "lib.tar"
+  "document.txt",           // → "document"
+  "archive.tar.gz",         // → "archive.tar" (keeps .tar!)
+  "src/main.zig",           // → "main"
+  ".bashrc",                // → ".bashrc" (no extension)
+  "hello/world/lib.tar.gz", // → "lib.tar"
     };
 
     for (files) |file| {
-        const name = std.fs.path.stem(file);
-        std.debug.print("{s} → {s}\n", .{ file, name });
+  const name = std.fs.path.stem(file);
+  std.debug.print("{s} → {s}\n", .{ file, name });
     }
 }
 ```

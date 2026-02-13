@@ -1,14 +1,13 @@
 # Blocks
 
 Blocks are used to limit the scope of variable declarations:
-      
 
-      test_blocks.zig
+test_blocks.zig
 ```zig
 test "access variable after block scope" {
     {
-        var x: i32 = 1;
-        _ = &x;
+  var x: i32 = 1;
+  _ = &x;
     }
     x += 1;
 }
@@ -18,13 +17,10 @@ Shell$ zig test test_blocks.zig
     x += 1;
     ^
 
-      
-
 Blocks are expressions. When labeled, `break` can be used
-      to return a value from the block:
-      
+to return a value from the block:
 
-      test_labeled_break.zig
+test_labeled_break.zig
 ```zig
 const std = @import("std");
 const expect = std.testing.expect;
@@ -33,8 +29,8 @@ test "labeled break from labeled block expression" {
     var y: i32 = 123;
 
     const x = blk: {
-        y += 1;
-        break :blk y;
+  y += 1;
+  break :blk y;
     };
     try expect(x == 124);
     try expect(y == 124);
@@ -44,11 +40,7 @@ Shell$ zig test test_labeled_break.zig
 1/1 test_labeled_break.test.labeled break from labeled block expression...OK
 All 1 tests passed.
 
-      
-
 Here, `blk` can be any name.
-
-      
 
 See also:
 
@@ -56,49 +48,43 @@ See also:
 
 - [Labeled for](#Labeled-for)
 
-      
 ## [Shadowing](#toc-Shadowing) §
-
-      
 
 [Identifiers](#Identifiers) are never allowed to "hide" other identifiers by using the same name:
 
-      test_shadowing.zig
+test_shadowing.zig
 ```zig
 const pi = 3.14;
 
 test "inside test block" {
     // Let's even go inside another block
     {
-        var pi: i32 = 1234;
+  var pi: i32 = 1234;
     }
 }
 ```
 Shell$ zig test test_shadowing.zig
 /home/ci/zig-bootstrap/zig/doc/langref/test_shadowing.zig:6:13: error: local variable shadows declaration of 'pi'
-        var pi: i32 = 1234;
-            ^~
+  var pi: i32 = 1234;
+      ^~
 /home/ci/zig-bootstrap/zig/doc/langref/test_shadowing.zig:1:1: note: declared here
 const pi = 3.14;
 ^~~~~~~~~~~~~~~
 
-      
+Because of this, when you read Zig code you can always rely on an identifier to consistently mean
+the same thing within the scope it is defined. Note that you can, however, use the same name if
+the scopes are separate:
 
-      Because of this, when you read Zig code you can always rely on an identifier to consistently mean
-      the same thing within the scope it is defined. Note that you can, however, use the same name if
-      the scopes are separate:
-      
-
-      test_scopes.zig
+test_scopes.zig
 ```zig
 test "separate scopes" {
     {
-        const pi = 3.14;
-        _ = pi;
+  const pi = 3.14;
+  _ = pi;
     }
     {
-        var pi: bool = true;
-        _ = π
+  var pi: bool = true;
+  _ = π
     }
 }
 ```
@@ -106,16 +92,11 @@ Shell$ zig test test_scopes.zig
 1/1 test_scopes.test.separate scopes...OK
 All 1 tests passed.
 
-      
-
-      
 ## [Empty Blocks](#toc-Empty-Blocks) §
-
-      
 
 An empty block is equivalent to `void{}`:
 
-      test_empty_block.zig
+test_empty_block.zig
 ```zig
 const std = @import("std");
 const expect = std.testing.expect;

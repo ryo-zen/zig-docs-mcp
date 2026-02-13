@@ -5,9 +5,9 @@ Controls how to deal with various inconsistencies between the JSON document and 
 ### Fields
 
     duplicate_field_behavior: enum {
-        use_first,
-        @"error",
-        use_last,
+  use_first,
+  @"error",
+  use_last,
     } = .@"error"
 
 Behaviour when a duplicate field is encountered. The default is to return `error.DuplicateField`.

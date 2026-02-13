@@ -12,10 +12,10 @@ A thin wrapper around `std.StringArrayHashMapUnmanaged` that implements `jsonPar
 
 ## Functions
 
-`pub fn deinit(self: *@This(), allocator: Allocator) void`  
+`pub fn deinit(self: *@This(), allocator: Allocator) void`
 
-`pub fn jsonParse(allocator: Allocator, source: anytype, options: ParseOptions) !@This()`  
+`pub fn jsonParse(allocator: Allocator, source: anytype, options: ParseOptions) !@This()`
 
-`pub fn jsonParseFromValue(allocator: Allocator, source: Value, options: ParseOptions) !@This()`  
+`pub fn jsonParseFromValue(allocator: Allocator, source: Value, options: ParseOptions) !@This()`
 
-`pub fn jsonStringify(self: @This(), jws: anytype) !void`  
+`pub fn jsonStringify(self: @This(), jws: anytype) !void`

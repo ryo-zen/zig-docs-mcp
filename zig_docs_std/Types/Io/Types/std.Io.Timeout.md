@@ -45,8 +45,8 @@ Converts an absolute `.deadline` to a relative `.duration` based on how much tim
 ```zig
 const timeout = std.Io.Timeout{
     .duration = .{
-        .raw = std.Io.Duration.fromSeconds(5),
-        .clock = .awake,
+  .raw = std.Io.Duration.fromSeconds(5),
+  .clock = .awake,
     },
 };
 
@@ -61,8 +61,8 @@ const deadline = now.addDuration(.fromMinutes(1));
 
 const timeout = std.Io.Timeout{
     .deadline = .{
-        .raw = deadline,
-        .clock = .awake,
+  .raw = deadline,
+  .clock = .awake,
     },
 };
 ```

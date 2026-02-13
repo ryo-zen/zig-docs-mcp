@@ -83,9 +83,9 @@ test "temporary directory usage" {
 
     // Read it back
     const contents = try tmp.dir.readFileAlloc(
-        std.testing.allocator,
-        "data.bin",
-        1024,
+  std.testing.allocator,
+  "data.bin",
+  1024,
     );
     defer std.testing.allocator.free(contents);
 
@@ -128,4 +128,4 @@ test "nested directories in tmpdir" {
 ✅ **Always cleanup** - Use `defer tmp.cleanup()` immediately after creation
 ✅ **Isolated tests** - Each test should create its own TmpDir
 ✅ **Don't hardcode paths** - Use the provided `dir` handle for operations
-⚠️ **Cleanup is manual** - Not RAII - must explicitly call cleanup()  
+⚠️ **Cleanup is manual** - Not RAII - must explicitly call cleanup()

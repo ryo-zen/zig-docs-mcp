@@ -12,10 +12,10 @@ const Protocol = std.Io.net.Protocol;
 
 pub fn identify(p: Protocol) []const u8 {
     return switch (p) {
-        .tcp => "TCP (Reliable Stream)",
-        .udp => "UDP (Datagram)",
-        .icmp => "ICMP (Diagnostics)",
-        else => "Other",
+  .tcp => "TCP (Reliable Stream)",
+  .udp => "UDP (Datagram)",
+  .icmp => "ICMP (Diagnostics)",
+  else => "Other",
     };
 }
 ```

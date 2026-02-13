@@ -14,4 +14,4 @@ Formats the given value using stringify.
 
 ## Functions
 
-`pub fn format(self: @This(), writer: *std.Io.Writer) std.Io.Writer.Error!void`  
+`pub fn format(self: @This(), writer: *std.Io.Writer) std.Io.Writer.Error!void`

@@ -193,8 +193,8 @@ fn increment(rc: *std.atomic.Value(usize)) void {
 
 fn decrement(rc: *std.atomic.Value(usize)) void {
     if (rc.fetchSub(1, .release) == 1) {  // Publish all uses
-        _ = rc.load(.acquire);  // Sync with other decrements
-        destroyObject();
+  _ = rc.load(.acquire);  // Sync with other decrements
+  destroyObject();
     }
 }
 ```
@@ -310,8 +310,8 @@ pub fn main() void {
     var acquired = std.atomic.Value(bool).init(false);
     const was_acquired = acquired.swap(true, .acquire);
     if (!was_acquired) {
-        std.debug.print("Successfully acquired flag\n", .{});
-        defer acquired.store(false, .release);
+  std.debug.print("Successfully acquired flag\n", .{});
+  defer acquired.store(false, .release);
     }
 }
 ```
@@ -346,13 +346,13 @@ pub fn main() !void {
     // Try to change 10 to 20
     const result1 = value.cmpxchgStrong(10, 20, .seq_cst, .seq_cst);
     if (result1 == null) {
-        std.debug.print("Successfully changed 10 to 20\n", .{});
+  std.debug.print("Successfully changed 10 to 20\n", .{});
     }
 
     // Try to change 10 to 30 (will fail because value is now 20)
     const result2 = value.cmpxchgStrong(10, 30, .seq_cst, .seq_cst);
     if (result2) |actual| {
-        std.debug.print("Failed - value was {} not 10\n", .{actual});
+  std.debug.print("Failed - value was {} not 10\n", .{actual});
     }
 
     // Lock-free stack push pattern
@@ -360,12 +360,12 @@ pub fn main() !void {
     var node = Node{ .next = null, .data = 42 };
 
     while (true) {
-        const current_head = head.load(.monotonic);
-        node.next = current_head;
-        if (head.cmpxchgStrong(current_head, &node, .release, .monotonic) == null) {
-            break; // Successfully pushed
-        }
-        // Retry - another thread modified head
+  const current_head = head.load(.monotonic);
+  node.next = current_head;
+  if (head.cmpxchgStrong(current_head, &node, .release, .monotonic) == null) {
+      break; // Successfully pushed
+  }
+  // Retry - another thread modified head
     }
 }
 
@@ -392,8 +392,8 @@ pub fn main() void {
 
     // Weak CAS in a retry loop (idiomatic usage)
     while (value.cmpxchgWeak(0, 1, .seq_cst, .seq_cst) != null) {
-        // Spurious failures are okay - we'll just retry
-        std.atomic.spinLoopHint();
+  // Spurious failures are okay - we'll just retry
+  std.atomic.spinLoopHint();
     }
 
     std.debug.print("Value is now 1\n", .{});
@@ -455,8 +455,8 @@ pub fn main() void {
 
     // Reference counting pattern
     if (counter.fetchSub(1, .release) == 1) {
-        // We were the last reference (count was 1, now 0)
-        std.debug.print("Last reference - cleanup time\n", .{});
+  // We were the last reference (count was 1, now 0)
+  std.debug.print("Last reference - cleanup time\n", .{});
     }
 }
 ```
@@ -727,7 +727,7 @@ const std = @import("std");
 
 pub fn waitForFlag(flag: *std.atomic.Value(bool)) void {
     while (!flag.load(.acquire)) {
-        std.atomic.spinLoopHint();  // Be nice to CPU and other threads
+  std.atomic.spinLoopHint();  // Be nice to CPU and other threads
     }
 }
 
@@ -736,7 +736,7 @@ pub fn main() void {
 
     // Busy-wait with CPU hint
     while (!ready.load(.acquire)) {
-        std.atomic.spinLoopHint();
+  std.atomic.spinLoopHint();
     }
 }
 ```
@@ -819,27 +819,27 @@ const RefCounted = struct {
     ref_count: std.atomic.Value(usize),
 
     fn create(data: i32) RefCounted {
-        return .{
-            .data = data,
-            .ref_count = std.atomic.Value(usize).init(1),
-        };
+  return .{
+      .data = data,
+      .ref_count = std.atomic.Value(usize).init(1),
+  };
     }
 
     fn retain(self: *RefCounted) void {
-        _ = self.ref_count.fetchAdd(1, .monotonic);
+  _ = self.ref_count.fetchAdd(1, .monotonic);
     }
 
     fn release(self: *RefCounted) void {
-        // Release ensures all uses happen-before count decrement
-        if (self.ref_count.fetchSub(1, .release) == 1) {
-            // Acquire synchronizes with all previous releases
-            _ = self.ref_count.load(.acquire);
-            self.destroy();
-        }
+  // Release ensures all uses happen-before count decrement
+  if (self.ref_count.fetchSub(1, .release) == 1) {
+      // Acquire synchronizes with all previous releases
+      _ = self.ref_count.load(.acquire);
+      self.destroy();
+  }
     }
 
     fn destroy(self: *RefCounted) void {
-        std.debug.print("Destroying object with data: {}\n", .{self.data});
+  std.debug.print("Destroying object with data: {}\n", .{self.data});
     }
 };
 
@@ -867,29 +867,29 @@ const LockFreeStack = struct {
     head: std.atomic.Value(?*Node) = std.atomic.Value(?*Node).init(null),
 
     fn push(self: *LockFreeStack, node: *Node) void {
-        while (true) {
-            const current_head = self.head.load(.monotonic);
-            node.next = current_head;
+  while (true) {
+      const current_head = self.head.load(.monotonic);
+      node.next = current_head;
 
-            // Try to swing head to new node
-            if (self.head.cmpxchgWeak(current_head, node, .release, .monotonic) == null) {
-                return;  // Success
-            }
-            // Retry - another thread modified head
-        }
+      // Try to swing head to new node
+      if (self.head.cmpxchgWeak(current_head, node, .release, .monotonic) == null) {
+          return;  // Success
+      }
+      // Retry - another thread modified head
+  }
     }
 
     fn pop(self: *LockFreeStack) ?*Node {
-        while (true) {
-            const current_head = self.head.load(.acquire) orelse return null;
-            const next = current_head.next;
+  while (true) {
+      const current_head = self.head.load(.acquire) orelse return null;
+      const next = current_head.next;
 
-            // Try to swing head to next
-            if (self.head.cmpxchgWeak(current_head, next, .acquire, .monotonic) == null) {
-                return current_head;  // Success
-            }
-            // Retry - another thread modified head
-        }
+      // Try to swing head to next
+      if (self.head.cmpxchgWeak(current_head, next, .acquire, .monotonic) == null) {
+          return current_head;  // Success
+      }
+      // Retry - another thread modified head
+  }
     }
 };
 
@@ -902,7 +902,7 @@ pub fn main() void {
     stack.push(&node2);
 
     if (stack.pop()) |n| {
-        std.debug.print("Popped: {}\n", .{n.value});  // 20
+  std.debug.print("Popped: {}\n", .{n.value});  // 20
     }
 }
 ```
@@ -918,20 +918,20 @@ const SpinLock = struct {
     locked: std.atomic.Value(bool) = std.atomic.Value(bool).init(false),
 
     fn lock(self: *SpinLock) void {
-        while (self.locked.swap(true, .acquire)) {
-            // Already locked, spin
-            while (self.locked.load(.monotonic)) {
-                std.atomic.spinLoopHint();
-            }
-        }
+  while (self.locked.swap(true, .acquire)) {
+      // Already locked, spin
+      while (self.locked.load(.monotonic)) {
+          std.atomic.spinLoopHint();
+      }
+  }
     }
 
     fn unlock(self: *SpinLock) void {
-        self.locked.store(false, .release);
+  self.locked.store(false, .release);
     }
 
     fn tryLock(self: *SpinLock) bool {
-        return !self.locked.swap(true, .acquire);
+  return !self.locked.swap(true, .acquire);
     }
 };
 
@@ -958,34 +958,34 @@ const Counter = struct {
     max_seen: std.atomic.Value(usize) align(std.atomic.cache_line),
 
     fn init() Counter {
-        return .{
-            .value = std.atomic.Value(usize).init(0),
-            .max_seen = std.atomic.Value(usize).init(0),
-        };
+  return .{
+      .value = std.atomic.Value(usize).init(0),
+      .max_seen = std.atomic.Value(usize).init(0),
+  };
     }
 
     fn increment(self: *Counter) usize {
-        const new_val = self.value.fetchAdd(1, .monotonic) + 1;
+  const new_val = self.value.fetchAdd(1, .monotonic) + 1;
 
-        // Update max if needed
-        while (true) {
-            const current_max = self.max_seen.load(.monotonic);
-            if (new_val <= current_max) break;
+  // Update max if needed
+  while (true) {
+      const current_max = self.max_seen.load(.monotonic);
+      if (new_val <= current_max) break;
 
-            if (self.max_seen.cmpxchgWeak(current_max, new_val, .monotonic, .monotonic) == null) {
-                break;
-            }
-        }
+      if (self.max_seen.cmpxchgWeak(current_max, new_val, .monotonic, .monotonic) == null) {
+          break;
+      }
+  }
 
-        return new_val;
+  return new_val;
     }
 
     fn get(self: *const Counter) usize {
-        return self.value.load(.monotonic);
+  return self.value.load(.monotonic);
     }
 
     fn getMax(self: *const Counter) usize {
-        return self.max_seen.load(.monotonic);
+  return self.max_seen.load(.monotonic);
     }
 };
 
@@ -1023,7 +1023,7 @@ fn producer(data: *SharedData) void {
 fn consumer(data: *SharedData) void {
     // Wait for ready with acquire (synchronizes with release)
     while (!data.ready.load(.acquire)) {
-        std.atomic.spinLoopHint();
+  std.atomic.spinLoopHint();
     }
 
     // Safe to read data.value
@@ -1077,7 +1077,7 @@ pub fn main() void {
 2. **Prefer `cmpxchgWeak` in loops** - On ARM and similar architectures, weak CAS can be 2-3x faster than strong. Always use weak in retry loops:
    ```zig
    while (value.cmpxchgWeak(old, new, .seq_cst, .seq_cst) != null) {
-       // Retry
+ // Retry
    }
    ```
 
@@ -1089,7 +1089,7 @@ pub fn main() void {
 4. **Use `spinLoopHint()` in busy-wait loops** - Dramatically reduces power consumption and improves performance on SMT (hyperthreading) systems:
    ```zig
    while (flag.load(.acquire)) {
-       std.atomic.spinLoopHint();
+ std.atomic.spinLoopHint();
    }
    ```
 

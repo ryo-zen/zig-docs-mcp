@@ -86,8 +86,8 @@ pub fn receiveUdpMessage(socket: std.Io.net.Socket, io: std.Io) ![]const u8 {
     const result = try socket.recv(io, &buffer, flags);
 
     if (result.truncated) {
-        std.debug.print("Warning: Message truncated! Actual size: {}\n", .{result.real_length});
-        return error.MessageTooLarge;
+  std.debug.print("Warning: Message truncated! Actual size: {}\n", .{result.real_length});
+  return error.MessageTooLarge;
     }
 
     return result.data;

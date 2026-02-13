@@ -153,4 +153,4 @@ else
 
 **Release builds**: Skip validation for performance
 - Tests still benefit from validation regardless of build mode
-- Production code typically uses the underlying allocator directly  
+- Production code typically uses the underlying allocator directly

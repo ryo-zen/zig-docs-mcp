@@ -10,17 +10,17 @@ test "for basics" {
 
     // For loops iterate over slices and arrays.
     for (items) |value| {
-        // Break and continue are supported.
-        if (value == 0) {
-            continue;
-        }
-        sum += value;
+  // Break and continue are supported.
+  if (value == 0) {
+      continue;
+  }
+  sum += value;
     }
     try expect(sum == 16);
 
     // To iterate over a portion of a slice, reslice.
     for (items[0..1]) |value| {
-        sum += value;
+  sum += value;
     }
     try expect(sum == 20);
 
@@ -28,8 +28,8 @@ test "for basics" {
     // as a second capture value.
     var sum2: i32 = 0;
     for (items, 0..) |_, i| {
-        try expect(@TypeOf(i) == usize);
-        sum2 += @as(i32, @intCast(i));
+  try expect(@TypeOf(i) == usize);
+  sum2 += @as(i32, @intCast(i));
     }
     try expect(sum2 == 10);
 
@@ -37,7 +37,7 @@ test "for basics" {
     // Unbounded range is always a compile error.
     var sum3: usize = 0;
     for (0..5) |i| {
-        sum3 += i;
+  sum3 += i;
     }
     try expect(sum3 == 10);
 }
@@ -51,7 +51,7 @@ test "multi object for" {
     // All lengths must be equal at the start of the loop, otherwise detectable
     // illegal behavior occurs.
     for (items, items2) |i, j| {
-        count += i + j;
+  count += i + j;
     }
 
     try expect(count == 21);
@@ -63,7 +63,7 @@ test "for reference" {
     // Iterate over the slice by reference by
     // specifying that the capture value is a pointer.
     for (&items) |*value| {
-        value.* += 1;
+  value.* += 1;
     }
 
     try expect(items[0] == 4);
@@ -79,12 +79,12 @@ test "for else" {
     // Similar to while loops, when you break from a for loop, the else branch is not evaluated.
     var sum: i32 = 0;
     const result = for (items) |value| {
-        if (value != null) {
-            sum += value.?;
-        }
+  if (value != null) {
+      sum += value.?;
+  }
     } else blk: {
-        try expect(sum == 12);
-        break :blk sum;
+  try expect(sum == 12);
+  break :blk sum;
     };
     try expect(result == 12);
 }
@@ -96,15 +96,12 @@ Shell$ zig test test_for.zig
 4/4 test_for.test.for else...OK
 All 4 tests passed.
 
-      
 ## [Labeled for](#toc-Labeled-for) §
 
-      
-
 When a `for` loop is labeled, it can be referenced from a `break`
-              or `continue` from within a nested loop:
+        or `continue` from within a nested loop:
 
-      test_for_nested_break.zig
+test_for_nested_break.zig
 ```zig
 const std = @import("std");
 const expect = std.testing.expect;
@@ -112,10 +109,10 @@ const expect = std.testing.expect;
 test "nested break" {
     var count: usize = 0;
     outer: for (1..6) |_| {
-        for (1..6) |_| {
-            count += 1;
-            break :outer;
-        }
+  for (1..6) |_| {
+      count += 1;
+      break :outer;
+  }
     }
     try expect(count == 1);
 }
@@ -123,10 +120,10 @@ test "nested break" {
 test "nested continue" {
     var count: usize = 0;
     outer: for (1..9) |_| {
-        for (1..6) |_| {
-            count += 1;
-            continue :outer;
-        }
+  for (1..6) |_| {
+      count += 1;
+      continue :outer;
+  }
     }
 
     try expect(count == 8);
@@ -137,20 +134,15 @@ Shell$ zig test test_for_nested_break.zig
 2/2 test_for_nested_break.test.nested continue...OK
 All 2 tests passed.
 
-      
-      
 ## [inline for](#toc-inline-for) §
 
-      
+For loops can be inlined. This causes the loop to be unrolled, which
+allows the code to do some things which only work at compile time,
+such as use types as first class values.
+The capture value and iterator value of inlined for loops are
+compile-time known.
 
-      For loops can be inlined. This causes the loop to be unrolled, which
-      allows the code to do some things which only work at compile time,
-      such as use types as first class values.
-      The capture value and iterator value of inlined for loops are
-      compile-time known.
-      
-
-      test_inline_for.zig
+test_inline_for.zig
 ```zig
 const expect = @import("std").testing.expect;
 
@@ -158,13 +150,13 @@ test "inline for loop" {
     const nums = [_]i32{ 2, 4, 6 };
     var sum: usize = 0;
     inline for (nums) |i| {
-        const T = switch (i) {
-            2 => f32,
-            4 => i8,
-            6 => bool,
-            else => unreachable,
-        };
-        sum += typeNameLength(T);
+  const T = switch (i) {
+      2 => f32,
+      4 => i8,
+      6 => bool,
+      else => unreachable,
+  };
+  sum += typeNameLength(T);
     }
     try expect(sum == 9);
 }
@@ -177,20 +169,11 @@ Shell$ zig test test_inline_for.zig
 1/1 test_inline_for.test.inline for loop...OK
 All 1 tests passed.
 
-      
+It is recommended to use `inline` loops only for one of these reasons:
 
-      It is recommended to use `inline` loops only for one of these reasons:
-      
-
-      
-        
 - You need the loop to execute at [comptime](#comptime) for the semantics to work.
-        
-        You have a benchmark to prove that forcibly unrolling the loop in this way is measurably faster.
-        
-      
-      
-      
+
+  You have a benchmark to prove that forcibly unrolling the loop in this way is measurably faster.
 
 See also:
 

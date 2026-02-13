@@ -55,8 +55,8 @@ pub fn queryWithFallback(io: std.Io) ![]const u8 {
     select_obj.cancel();
 
     return switch (first) {
-        .primary => |data| data,
-        .backup => |data| data,
+  .primary => |data| data,
+  .backup => |data| data,
     };
 }
 ```
@@ -259,8 +259,8 @@ pub fn operationWithTimeout(io: std.Io, timeout_ms: u64) !Data {
     sel.cancel();
 
     return switch (first) {
-        .operation => |data| data,
-        .timeout => error.Timeout,
+  .operation => |data| data,
+  .timeout => error.Timeout,
     };
 }
 ```
@@ -288,7 +288,7 @@ pub fn queryFirstResponder(io: std.Io) !Response {
     sel.cancel(); // Stop slower servers
 
     return switch (fastest) {
-        inline else => |response| response,
+  inline else => |response| response,
     };
 }
 ```
@@ -319,10 +319,10 @@ pub fn collectBoth(io: std.Io) !struct { u32, []const u8 } {
     var result_b: ?[]const u8 = null;
 
     for ([_]Result{ first, second }) |res| {
-        switch (res) {
-            .task_a => |val| result_a = val,
-            .task_b => |val| result_b = val,
-        }
+  switch (res) {
+      .task_a => |val| result_a = val,
+      .task_b => |val| result_b = val,
+  }
     }
 
     return .{ result_a.?, result_b.? };
@@ -351,16 +351,16 @@ pub fn fetchWithRetries(io: std.Io) !Data {
 
     // Return first successful result
     while (true) {
-        const result = try sel.await();
+  const result = try sel.await();
 
-        const maybe_data = switch (result) {
-            inline else => |attempt_result| attempt_result,
-        };
+  const maybe_data = switch (result) {
+      inline else => |attempt_result| attempt_result,
+  };
 
-        if (maybe_data) |data| {
-            sel.cancel();
-            return data;
-        }
+  if (maybe_data) |data| {
+      sel.cancel();
+      return data;
+  }
     }
 
     return error.AllAttemptsFailed;

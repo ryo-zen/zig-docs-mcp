@@ -142,10 +142,10 @@ pub fn main() !void {
     // Default configuration (safety checks enabled)
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
     defer {
-        const deinit_status = gpa.deinit();
-        if (deinit_status == .leak) {
-            std.debug.print("Memory leak detected!\n", .{});
-        }
+  const deinit_status = gpa.deinit();
+  if (deinit_status == .leak) {
+      std.debug.print("Memory leak detected!\n", .{});
+  }
     }
     const allocator = gpa.allocator();
 
@@ -154,7 +154,7 @@ pub fn main() !void {
     defer allocator.free(numbers);
 
     for (numbers, 0..) |*num, i| {
-        num.* = @intCast(i * 2);
+  num.* = @intCast(i * 2);
     }
 
     std.debug.print("Numbers: {any}\n", .{numbers});
@@ -507,8 +507,8 @@ pub fn main() !void {
     // Use GPA for development
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
     defer {
-        const deinit_status = gpa.deinit();
-        if (deinit_status == .leak) @panic("LEAK");
+  const deinit_status = gpa.deinit();
+  if (deinit_status == .leak) @panic("LEAK");
     }
     const allocator = gpa.allocator();
 

@@ -44,19 +44,19 @@ Current insertion position/state for the ring buffer.
 
 ## Functions
 
-`pub fn addAddr(t: *@This(), addr: usize, note: []const u8) void`  
+`pub fn addAddr(t: *@This(), addr: usize, note: []const u8) void`
 Adds a trace entry with an explicit address and note.
 
-`pub noinline fn addNoInline(t: *@This(), note: []const u8) void`  
+`pub noinline fn addNoInline(t: *@This(), note: []const u8) void`
 Adds a trace entry while discouraging inlining, useful for clearer stack provenance.
 
-`pub inline fn addNoOp(t: *@This(), note: []const u8) void`  
+`pub inline fn addNoOp(t: *@This(), note: []const u8) void`
 No-op entry point used in disabled/optimized configurations.
 
-`pub fn dump(t: @This()) void`  
+`pub fn dump(t: @This()) void`
 Prints collected trace information for debugging.
 
-`pub fn format( t: @This(), comptime fmt: []const u8, options: std.fmt.Options, writer: *Writer, ) !void`  
+`pub fn format( t: @This(), comptime fmt: []const u8, options: std.fmt.Options, writer: *Writer, ) !void`
 Formats the trace for writer-based output.
 
 ## Typical Usage

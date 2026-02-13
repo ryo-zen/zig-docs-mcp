@@ -10,12 +10,12 @@
 ```zig
 pub const Evented = switch (builtin.os.tag) {
     .linux => switch (builtin.cpu.arch) {
-        .x86_64, .aarch64 => std.Io.IoUring,
-        else => void,
+  .x86_64, .aarch64 => std.Io.IoUring,
+  else => void,
     },
     .dragonfly, .freebsd, .netbsd, .openbsd, .macos, .ios, .watchos, .tvos, .visionos => switch (builtin.cpu.arch) {
-        .x86_64, .aarch64 => std.Io.Kqueue,
-        else => void,
+  .x86_64, .aarch64 => std.Io.Kqueue,
+  else => void,
     },
     else => void,
 };
@@ -53,8 +53,8 @@ const builtin = @import("builtin");
 
 pub fn main() !void {
     if (std.Io.Evented == void) {
-        std.debug.print("Evented I/O not supported on this platform. Use Threaded.\n", .{});
-        return;
+  std.debug.print("Evented I/O not supported on this platform. Use Threaded.\n", .{});
+  return;
     }
 
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
@@ -62,20 +62,20 @@ pub fn main() !void {
     const allocator = gpa.allocator();
 
     var loop: std.Io.Evented = undefined;
-    
+
     // Initialization signatures differ by backend:
     if (builtin.os.tag == .linux) {
-        // IoUring initialization
-        try loop.init(allocator);
+  // IoUring initialization
+  try loop.init(allocator);
     } else {
-        // Kqueue initialization (requires options)
-        try loop.init(allocator, .{});
+  // Kqueue initialization (requires options)
+  try loop.init(allocator, .{});
     }
     defer loop.deinit();
 
     // Get the generic Io interface
     const io = loop.io();
-    
+
     // Now use 'io' for standard operations
     const file = try std.Io.Dir.cwd().openFile(io, "data.txt", .{});
     defer file.close(io);

@@ -196,12 +196,12 @@ pub fn operationWithCleanup(io: std.Io, resource: *Resource) !void {
 
     // Normal operation - cancellable
     const result = performWork(io, resource) catch |err| {
-        // Cleanup is protected, even if we're returning an error
-        const old = io.swapCancelProtection(.blocked);
-        defer _ = io.swapCancelProtection(old);
+  // Cleanup is protected, even if we're returning an error
+  const old = io.swapCancelProtection(.blocked);
+  defer _ = io.swapCancelProtection(old);
 
-        resource.release(io) catch {}; // Won't be cancelled
-        return err;
+  resource.release(io) catch {}; // Won't be cancelled
+  return err;
     };
 
     // Success path cleanup - also protected

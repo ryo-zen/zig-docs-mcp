@@ -13,4 +13,4 @@
 
 ## Functions
 
-`pub fn deinit(_: GlobalBlock, _: Allocator) void`  
+`pub fn deinit(_: GlobalBlock, _: Allocator) void`

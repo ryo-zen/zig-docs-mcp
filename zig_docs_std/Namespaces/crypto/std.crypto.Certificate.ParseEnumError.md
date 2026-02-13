@@ -2,6 +2,6 @@
 
 ## Errors
 
-CertificateFieldHasWrongDataType  
+CertificateFieldHasWrongDataType
 
-CertificateHasUnrecognizedObjectId  
+CertificateHasUnrecognizedObjectId

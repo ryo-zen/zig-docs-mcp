@@ -2,24 +2,24 @@
 
 ## Errors
 
-DuplicateField  
+DuplicateField
 
-InvalidCharacter ParseIntError  
+InvalidCharacter ParseIntError
 The input was empty or contained an invalid character.
 
-InvalidEnumTag  
+InvalidEnumTag
 
-InvalidNumber  
+InvalidNumber
 
-LengthMismatch  
+LengthMismatch
 
-MissingField  
+MissingField
 
-OutOfMemory Error  
+OutOfMemory Error
 
-Overflow ParseIntError  
+Overflow ParseIntError
 The result cannot fit in the type specified.
 
-UnexpectedToken  
+UnexpectedToken
 
-UnknownField  
+UnknownField

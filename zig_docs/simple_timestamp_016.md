@@ -93,11 +93,11 @@ const Transaction = struct {
     amount: u64,
 
     pub fn create(hash: [32]u8, amount: u64) Transaction {
-        return .{
-            .hash = hash,
-            .timestamp = getTime(),  // Simple!
-            .amount = amount,
-        };
+  return .{
+      .hash = hash,
+      .timestamp = getTime(),  // Simple!
+      .amount = amount,
+  };
     }
 };
 

@@ -82,8 +82,8 @@ const std = @import("std");
 
 test "reading from test reader" {
     const calls = &[_]std.testing.Reader.Call{
-        .{ .buffer = "hello " },
-        .{ .buffer = "world" },
+  .{ .buffer = "hello " },
+  .{ .buffer = "world" },
     };
 
     var buffer: [256]u8 = undefined;
@@ -116,7 +116,7 @@ test "reading from test reader" {
 test "parse with test reader" {
     const input = "header\nline1\nline2\n";
     const calls = &[_]std.testing.Reader.Call{
-        .{ .buffer = input },
+  .{ .buffer = input },
     };
 
     var buffer: [256]u8 = undefined;
@@ -133,8 +133,8 @@ test "parse with test reader" {
 ```zig
 test "handle partial reads" {
     const calls = &[_]std.testing.Reader.Call{
-        .{ .buffer = "par" },  // Partial chunk
-        .{ .buffer = "tial" }, // Rest of word
+  .{ .buffer = "par" },  // Partial chunk
+  .{ .buffer = "tial" }, // Rest of word
     };
 
     var buffer: [256]u8 = undefined;
@@ -146,9 +146,9 @@ test "handle partial reads" {
     var total: usize = 0;
 
     while (true) {
-        const n = try reader.interface.stream(full_buffer[total..]);
-        if (n == 0) break;
-        total += n;
+  const n = try reader.interface.stream(full_buffer[total..]);
+  if (n == 0) break;
+  total += n;
     }
 
     try std.testing.expectEqualStrings("partial", full_buffer[0..total]);
@@ -172,4 +172,4 @@ test "handle partial reads" {
 ✅ **Test both complete and partial reads** - Use artificial_limit for partial read scenarios
 ✅ **Provide realistic data** - Use actual protocol messages in calls
 ⚠️ **Buffer must be large enough** - Ensure buffer can hold the largest call
-❌ **Not for production** - Testing tool only, use real I/O in production  
+❌ **Not for production** - Testing tool only, use real I/O in production

@@ -81,15 +81,15 @@ const HttpRequest = struct {
 
     // Builder-style methods
     pub fn withMethod(self: @This(), method: []const u8) @This() {
-        var result = self;
-        result.method = method;
-        return result;
+  var result = self;
+  result.method = method;
+  return result;
     }
 
     pub fn withTimeout(self: @This(), ms: u32) @This() {
-        var result = self;
-        result.timeout_ms = ms;
-        return result;
+  var result = self;
+  result.timeout_ms = ms;
+  return result;
     }
 };
 
@@ -114,14 +114,14 @@ const CachedData = struct {
     cached_result: ?ComputedValue = null,
 
     pub fn get(self: *@This()) !ComputedValue {
-        if (self.cached_result) |result| {
-            return result; // Already computed
-        }
+  if (self.cached_result) |result| {
+      return result; // Already computed
+  }
 
-        // Lazy initialization on first access
-        const result = try expensiveComputation();
-        self.cached_result = result;
-        return result;
+  // Lazy initialization on first access
+  const result = try expensiveComputation();
+  self.cached_result = result;
+  return result;
     }
 };
 ```
@@ -144,9 +144,9 @@ These can be useful but may not be idiomatic Zig.
 // ✅ Simple factory in Zig
 fn createParser(format: Format) type {
     return switch (format) {
-        .json => JsonParser,
-        .xml => XmlParser,
-        .yaml => YamlParser,
+  .json => JsonParser,
+  .xml => XmlParser,
+  .yaml => YamlParser,
     };
 }
 
@@ -205,8 +205,8 @@ var initialized = false;
 
 pub fn getConfig() *Config {
     if (!initialized) {
-        global_config = Config.init();
-        initialized = true;
+  global_config = Config.init();
+  initialized = true;
     }
     return &global_config;
 }
@@ -231,14 +231,14 @@ fn processData(config: *const Config, data: []const u8) !void {
 // ✅ Zig alternative: comptime type generation
 fn createUITheme(comptime theme: Theme) type {
     return struct {
-        const Button = switch (theme) {
-            .dark => DarkButton,
-            .light => LightButton,
-        };
-        const Input = switch (theme) {
-            .dark => DarkInput,
-            .light => LightInput,
-        };
+  const Button = switch (theme) {
+      .dark => DarkButton,
+      .light => LightButton,
+  };
+  const Input = switch (theme) {
+      .dark => DarkInput,
+      .light => LightInput,
+  };
     };
 }
 
@@ -450,13 +450,13 @@ const EventEmitter = struct {
     listeners: std.ArrayList(*const fn(Event) void),
 
     pub fn on(self: *@This(), callback: *const fn(Event) void) !void {
-        try self.listeners.append(self.allocator, callback);
+  try self.listeners.append(self.allocator, callback);
     }
 
     pub fn emit(self: @This(), event: Event) void {
-        for (self.listeners.items) |listener| {
-            listener(event);
-        }
+  for (self.listeners.items) |listener| {
+      listener(event);
+  }
     }
 };
 ```
@@ -479,11 +479,11 @@ const Command = union(enum) {
     scale: f32,
 
     pub fn execute(self: Command, target: *Object) void {
-        switch (self) {
-            .move => |pos| target.moveTo(pos.x, pos.y),
-            .rotate => |angle| target.rotate(angle),
-            .scale => |factor| target.scale(factor),
-        }
+  switch (self) {
+      .move => |pos| target.moveTo(pos.x, pos.y),
+      .rotate => |angle| target.rotate(angle),
+      .scale => |factor| target.scale(factor),
+  }
     }
 };
 ```
@@ -524,9 +524,9 @@ if (logger) |l| l.log("message"); // Clean, type-safe
 ```zig
 fn handleRequest(handlers: []Handler, request: Request) !Response {
     for (handlers) |handler| {
-        if (handler.canHandle(request)) {
-            return handler.handle(request);
-        }
+  if (handler.canHandle(request)) {
+      return handler.handle(request);
+  }
     }
     return error.NoHandlerFound;
 }
@@ -548,10 +548,10 @@ const Connection = union(enum) {
     connected: struct { socket: Socket },
 
     pub fn send(self: *@This(), data: []const u8) !void {
-        switch (self.*) {
-            .connected => |conn| try conn.socket.write(data),
-            else => return error.NotConnected,
-        }
+  switch (self.*) {
+      .connected => |conn| try conn.socket.write(data),
+      else => return error.NotConnected,
+  }
     }
 };
 ```

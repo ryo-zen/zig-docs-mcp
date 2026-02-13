@@ -13,10 +13,10 @@ pub fn build(b: *std.Build) void {
     const optimize = b.standardOptimizeOption(.{});
 
     const exe = b.addExecutable(.{
-        .name = "myapp",
-        .root_source_file = b.path("src/main.zig"),
-        .target = target,
-        .optimize = optimize,
+  .name = "myapp",
+  .root_source_file = b.path("src/main.zig"),
+  .target = target,
+  .optimize = optimize,
     });
 
     b.installArtifact(exe);
@@ -30,16 +30,16 @@ pub fn build(b: *std.Build) void {
     const optimize = b.standardOptimizeOption(.{});
 
     const exe = b.addExecutable(.{
-        .name = "myapp",
-        .root_source_file = b.path("src/main.zig"),
-        .target = target,
-        .optimize = optimize,
+  .name = "myapp",
+  .root_source_file = b.path("src/main.zig"),
+  .target = target,
+  .optimize = optimize,
     });
 
     // Add external dependency
     const dep = b.dependency("some_package", .{
-        .target = target,
-        .optimize = optimize,
+  .target = target,
+  .optimize = optimize,
     });
     exe.root_module.addImport("pkg", dep.module("pkg"));
 
@@ -55,18 +55,18 @@ pub fn build(b: *std.Build) void {
 
     // Build library
     const lib = b.addLibrary(.{
-        .name = "mylib",
-        .root_source_file = b.path("src/lib.zig"),
-        .target = target,
-        .optimize = optimize,
+  .name = "mylib",
+  .root_source_file = b.path("src/lib.zig"),
+  .target = target,
+  .optimize = optimize,
     });
     b.installArtifact(lib);
 
     // Build tests
     const tests = b.addTest(.{
-        .root_source_file = b.path("src/lib.zig"),
-        .target = target,
-        .optimize = optimize,
+  .root_source_file = b.path("src/lib.zig"),
+  .target = target,
+  .optimize = optimize,
     });
 
     const run_tests = b.addRunArtifact(tests);
@@ -81,8 +81,8 @@ pub fn build(b: *std.Build) void {
     const gen_step = b.step("gen", "Generate code");
 
     const gen_cmd = b.addSystemCommand(&.{
-        "python3",
-        "scripts/codegen.py",
+  "python3",
+  "scripts/codegen.py",
     });
     gen_step.dependOn(&gen_cmd.step);
 }
@@ -501,23 +501,23 @@ pub fn build(b: *std.Build) void {
 
     // Build for multiple targets
     const targets = [_]std.Target.Query{
-        .{ .cpu_arch = .x86_64, .os_tag = .linux },
-        .{ .cpu_arch = .aarch64, .os_tag = .macos },
-        .{ .cpu_arch = .wasm32, .os_tag = .wasi },
+  .{ .cpu_arch = .x86_64, .os_tag = .linux },
+  .{ .cpu_arch = .aarch64, .os_tag = .macos },
+  .{ .cpu_arch = .wasm32, .os_tag = .wasi },
     };
 
     for (targets) |target_query| {
-        const target = b.resolveTargetQuery(target_query);
-        const exe = b.addExecutable(.{
-            .name = b.fmt("myapp-{s}-{s}", .{
-                @tagName(target_query.cpu_arch.?),
-                @tagName(target_query.os_tag.?),
-            }),
-            .root_source_file = b.path("src/main.zig"),
-            .target = target,
-            .optimize = optimize,
-        });
-        b.installArtifact(exe);
+  const target = b.resolveTargetQuery(target_query);
+  const exe = b.addExecutable(.{
+      .name = b.fmt("myapp-{s}-{s}", .{
+          @tagName(target_query.cpu_arch.?),
+          @tagName(target_query.os_tag.?),
+      }),
+      .root_source_file = b.path("src/main.zig"),
+      .target = target,
+      .optimize = optimize,
+  });
+  b.installArtifact(exe);
     }
 }
 ```
@@ -532,18 +532,18 @@ pub fn build(b: *std.Build) void {
     const enable_tls = b.option(bool, "tls", "Enable TLS support") orelse true;
 
     const exe = b.addExecutable(.{
-        .name = "myapp",
-        .root_source_file = b.path("src/main.zig"),
-        .target = target,
-        .optimize = optimize,
+  .name = "myapp",
+  .root_source_file = b.path("src/main.zig"),
+  .target = target,
+  .optimize = optimize,
     });
 
     if (enable_tls) {
-        const tls_dep = b.dependency("tls", .{
-            .target = target,
-            .optimize = optimize,
-        });
-        exe.root_module.addImport("tls", tls_dep.module("tls"));
+  const tls_dep = b.dependency("tls", .{
+      .target = target,
+      .optimize = optimize,
+  });
+  exe.root_module.addImport("tls", tls_dep.module("tls"));
     }
 
     b.installArtifact(exe);
@@ -560,20 +560,20 @@ pub fn build(b: *std.Build) void {
     // Generate code
     const gen = b.addWriteFiles();
     const generated_file = gen.addFile("generated.zig",
-        \\pub const VERSION = "1.0.0";
-        \\pub const BUILD_DATE = "2026-02-04";
+  \\pub const VERSION = "1.0.0";
+  \\pub const BUILD_DATE = "2026-02-04";
     );
 
     const exe = b.addExecutable(.{
-        .name = "myapp",
-        .root_source_file = b.path("src/main.zig"),
-        .target = target,
-        .optimize = optimize,
+  .name = "myapp",
+  .root_source_file = b.path("src/main.zig"),
+  .target = target,
+  .optimize = optimize,
     });
 
     // Add generated file as anonymous module
     exe.root_module.addAnonymousImport("build_info", .{
-        .root_source_file = generated_file,
+  .root_source_file = generated_file,
     });
 
     b.installArtifact(exe);
@@ -589,16 +589,16 @@ pub fn build(b: *std.Build) void {
 
     // Unit tests
     const unit_tests = b.addTest(.{
-        .root_source_file = b.path("src/lib.zig"),
-        .target = target,
-        .optimize = optimize,
+  .root_source_file = b.path("src/lib.zig"),
+  .target = target,
+  .optimize = optimize,
     });
 
     // Integration tests
     const integration_tests = b.addTest(.{
-        .root_source_file = b.path("tests/integration.zig"),
-        .target = target,
-        .optimize = optimize,
+  .root_source_file = b.path("tests/integration.zig"),
+  .target = target,
+  .optimize = optimize,
     });
 
     const run_unit = b.addRunArtifact(unit_tests);

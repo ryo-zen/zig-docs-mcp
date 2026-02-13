@@ -662,7 +662,7 @@ fn createAndFill(allocator: std.mem.Allocator, size: usize) ![]u8 {
     errdefer allocator.free(buffer);
 
     for (buffer, 0..) |*byte, i| {
-        byte.* = @intCast(i % 256);
+  byte.* = @intCast(i % 256);
     }
 
     return buffer;
@@ -670,9 +670,9 @@ fn createAndFill(allocator: std.mem.Allocator, size: usize) ![]u8 {
 
 test "checkAllAllocationFailures - exhaustive OOM testing" {
     try std.testing.checkAllAllocationFailures(
-        std.testing.allocator,
-        createAndFill,
-        .{10}
+  std.testing.allocator,
+  createAndFill,
+  .{10}
     );
 }
 ```
@@ -704,11 +704,11 @@ test "fuzz - property-based testing" {
     const Context = struct {};
 
     try std.testing.fuzz(Context{}, struct {
-        fn testOne(ctx: Context, input: []const u8) !void {
-            _ = ctx;
-            // Test that parsing never crashes
-            _ = parseNonNegative(input) catch {};
-        }
+  fn testOne(ctx: Context, input: []const u8) !void {
+      _ = ctx;
+      // Test that parsing never crashes
+      _ = parseNonNegative(input) catch {};
+  }
     }.testOne, .{});
 }
 ```
@@ -818,15 +818,15 @@ const Buffer = struct {
     allocator: std.mem.Allocator,
 
     pub fn init(allocator: std.mem.Allocator, size: usize) !Buffer {
-        const data = try allocator.alloc(u8, size);
-        return Buffer{
-            .data = data,
-            .allocator = allocator,
-        };
+  const data = try allocator.alloc(u8, size);
+  return Buffer{
+      .data = data,
+      .allocator = allocator,
+  };
     }
 
     pub fn deinit(self: *Buffer) void {
-        self.allocator.free(self.data);
+  self.allocator.free(self.data);
     }
 };
 
@@ -856,15 +856,15 @@ const ArrayList = struct {
     allocator: std.mem.Allocator,
 
     pub fn init(allocator: std.mem.Allocator, size: usize) !ArrayList {
-        const items = try allocator.alloc(i32, size);
-        return ArrayList{
-            .items = items,
-            .allocator = allocator,
-        };
+  const items = try allocator.alloc(i32, size);
+  return ArrayList{
+      .items = items,
+      .allocator = allocator,
+  };
     }
 
     pub fn deinit(self: *ArrayList) void {
-        self.allocator.free(self.items);
+  self.allocator.free(self.items);
     }
 };
 
@@ -955,9 +955,9 @@ fn testBuildMessage(allocator: std.mem.Allocator, name: []const u8, count: usize
 test "buildMessage - exhaustive OOM testing" {
     // Tests all allocation failure points
     try std.testing.checkAllAllocationFailures(
-        std.testing.allocator,
-        testBuildMessage,
-        .{"Alice", 42}
+  std.testing.allocator,
+  testBuildMessage,
+  .{"Alice", 42}
     );
 }
 ```
@@ -1053,28 +1053,28 @@ Testing reader types for IO testing.
 3. **Batch related tests** - Group setup/teardown for related tests to amortize initialization cost:
    ```zig
    test "batch operations" {
-       const allocator = std.testing.allocator;
+ const allocator = std.testing.allocator;
 
-       // Test 1
-       {
-           const data = try allocator.alloc(u8, 100);
-           defer allocator.free(data);
-           // ... test ...
-       }
+ // Test 1
+ {
+     const data = try allocator.alloc(u8, 100);
+     defer allocator.free(data);
+     // ... test ...
+ }
 
-       // Test 2
-       {
-           const data = try allocator.alloc(u8, 200);
-           defer allocator.free(data);
-           // ... test ...
-       }
+ // Test 2
+ {
+     const data = try allocator.alloc(u8, 200);
+     defer allocator.free(data);
+     // ... test ...
+ }
    }
    ```
 
 4. **Use `refAllDecls` once per module** - Don't call it in every test - one test per module is sufficient:
    ```zig
    test "API completeness" {
-       std.testing.refAllDecls(@This());
+ std.testing.refAllDecls(@This());
    }
    ```
 

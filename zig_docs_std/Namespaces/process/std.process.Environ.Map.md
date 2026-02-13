@@ -12,17 +12,17 @@ const std = @import("std");
 pub fn main(init: std.process.Init) !void {
     // 1. Get a value
     const path = init.environ_map.get("PATH") orelse "/bin:/usr/bin";
-    
+
     // 2. Add or update a value
     try init.environ_map.put("MY_VAR", "my_value");
-    
+
     // 3. Remove a value
     _ = init.environ_map.swapRemove("OLD_VAR");
-    
+
     // 4. Create a child process with this map
     var child = try std.process.spawn(init.io, .{
-        .argv = &[_][]const u8{"sh", "-c", "echo $MY_VAR"},
-        .environ_map = init.environ_map,
+  .argv = &[_][]const u8{"sh", "-c", "echo $MY_VAR"},
+  .environ_map = init.environ_map,
     });
     _ = try child.wait(init.io);
 }

@@ -319,12 +319,12 @@ fn captureEnvironment(allocator: Allocator, environ: [][*:0]u8) !std.BufMap {
     errdefer env_map.deinit();
 
     for (environ) |entry| {
-        const line = std.mem.span(entry);
-        if (std.mem.indexOfScalar(u8, line, '=')) |eq_index| {
-            const key = line[0..eq_index];
-            const value = line[eq_index + 1 ..];
-            try env_map.put(key, value);
-        }
+  const line = std.mem.span(entry);
+  if (std.mem.indexOfScalar(u8, line, '=')) |eq_index| {
+      const key = line[0..eq_index];
+      const value = line[eq_index + 1 ..];
+      try env_map.put(key, value);
+  }
     }
 
     return env_map;
@@ -339,11 +339,11 @@ fn parseHeaders(allocator: Allocator, header_lines: []const []const u8) !std.Buf
     errdefer headers.deinit();
 
     for (header_lines) |line| {
-        if (std.mem.indexOfScalar(u8, line, ':')) |colon_index| {
-            const key = std.mem.trim(u8, line[0..colon_index], " \t");
-            const value = std.mem.trim(u8, line[colon_index + 1 ..], " \t");
-            try headers.put(key, value);
-        }
+  if (std.mem.indexOfScalar(u8, line, ':')) |colon_index| {
+      const key = std.mem.trim(u8, line[0..colon_index], " \t");
+      const value = std.mem.trim(u8, line[colon_index + 1 ..], " \t");
+      try headers.put(key, value);
+  }
     }
 
     return headers;
@@ -358,15 +358,15 @@ fn buildMapEfficiently(allocator: Allocator, data: []const KeyValue) !std.BufMap
     errdefer map.deinit();
 
     for (data) |kv| {
-        // Allocate once and transfer ownership
-        const key = try allocator.dupe(u8, kv.key);
-        errdefer allocator.free(key);
+  // Allocate once and transfer ownership
+  const key = try allocator.dupe(u8, kv.key);
+  errdefer allocator.free(key);
 
-        const value = try allocator.dupe(u8, kv.value);
-        errdefer allocator.free(value);
+  const value = try allocator.dupe(u8, kv.value);
+  errdefer allocator.free(value);
 
-        // Transfer ownership - avoid double copy
-        try map.putMove(key, value);
+  // Transfer ownership - avoid double copy
+  try map.putMove(key, value);
     }
 
     return map;

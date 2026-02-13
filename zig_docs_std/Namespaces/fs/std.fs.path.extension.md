@@ -14,17 +14,17 @@ const std = @import("std");
 
 pub fn main() void {
     const files = [_][]const u8{
-        "document.txt",      // → ".txt"
-        "archive.tar.gz",    // → ".gz" (only last extension!)
-        ".gitignore",        // → "" (dotfiles have no extension)
-        ".config.json",      // → ".json"
-        "no_extension",      // → ""
-        "trailing.",         // → "."
+  "document.txt",      // → ".txt"
+  "archive.tar.gz",    // → ".gz" (only last extension!)
+  ".gitignore",        // → "" (dotfiles have no extension)
+  ".config.json",      // → ".json"
+  "no_extension",      // → ""
+  "trailing.",         // → "."
     };
 
     for (files) |file| {
-        const ext = std.fs.path.extension(file);
-        std.debug.print("{s} → '{s}'\n", .{ file, ext });
+  const ext = std.fs.path.extension(file);
+  std.debug.print("{s} → '{s}'\n", .{ file, ext });
     }
 }
 ```

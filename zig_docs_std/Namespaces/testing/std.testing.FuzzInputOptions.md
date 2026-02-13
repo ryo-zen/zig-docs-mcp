@@ -33,15 +33,15 @@ const std = @import("std");
 
 test "fuzz with corpus" {
     const corpus = &[_][]const u8{
-        "hello",
-        "world",
-        "\x00\xff\x00",  // Binary data
-        "edge case with unicode: 👋",
+  "hello",
+  "world",
+  "\x00\xff\x00",  // Binary data
+  "edge case with unicode: 👋",
     };
 
     // Configure fuzzing with corpus
     const options: std.testing.FuzzInputOptions = .{
-        .corpus = corpus,
+  .corpus = corpus,
     };
 
     // Use with fuzz testing framework (when available)

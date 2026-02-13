@@ -2,43 +2,43 @@
 
 ## Errors
 
-AccessDenied  
+AccessDenied
 
-BadPathName PathNameError  
+BadPathName PathNameError
 File system cannot encode the requested file name bytes. Could be due to invalid WTF-8 on Windows, invalid UTF-8 on WASI, invalid characters on Windows, etc. Filesystem and operating specific.
 
-Canceled Cancelable  
+Canceled Cancelable
 Caller has requested the async operation to stop.
 
-FileBusy  
+FileBusy
 
-FileNotFound  
+FileNotFound
 
-FileSystem  
+FileSystem
 
-InvalidExe  
+InvalidExe
 
-IsDir  
+IsDir
 
-NameTooLong PathNameError  
+NameTooLong PathNameError
 Returned when an insufficient buffer is provided that cannot fit the path name.
 
-NotDir  
+NotDir
 
-OperationUnsupported  
+OperationUnsupported
 The target operating system cannot replace the process image with a new one.
 
-OutOfMemory Error  
+OutOfMemory Error
 
-PermissionDenied  
+PermissionDenied
 
-ProcessFdQuotaExceeded  
+ProcessFdQuotaExceeded
 
-SystemFdQuotaExceeded  
+SystemFdQuotaExceeded
 
-SystemResources  
+SystemResources
 
-Unexpected UnexpectedError  
+Unexpected UnexpectedError
 The Operating System returned an undocumented error code.
 
 This error is in theory not possible, but it would be better to handle this error than to invoke undefined behavior.

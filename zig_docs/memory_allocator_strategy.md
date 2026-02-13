@@ -31,17 +31,17 @@ If you are unsure, start with `GeneralPurposeAllocator` and move only after meas
 
 Use this order:
 
-1. Do you need allocator ABI compatibility with C code ownership?  
+1. Do you need allocator ABI compatibility with C code ownership?
 Use `c_allocator`.
-2. Do you have strict memory limits and known maximum usage?  
+2. Do you have strict memory limits and known maximum usage?
 Use `FixedBufferAllocator`.
-3. Are allocations naturally phase-scoped (request/frame/task)?  
+3. Are allocations naturally phase-scoped (request/frame/task)?
 Use `ArenaAllocator`.
-4. Are allocations general-purpose with mixed lifetimes?  
+4. Are allocations general-purpose with mixed lifetimes?
 Use `GeneralPurposeAllocator`.
-5. Are allocations mostly large page-granular blocks?  
+5. Are allocations mostly large page-granular blocks?
 Use `page_allocator`.
-6. Do you need policy not provided above (quotas, accounting, controlled failures)?  
+6. Do you need policy not provided above (quotas, accounting, controlled failures)?
 Introduce a custom allocator wrapper.
 
 ## Ownership and Lifetime Checklist

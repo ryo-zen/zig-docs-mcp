@@ -30,7 +30,7 @@ const std = @import("std");
 pub fn printPathEntries(path_var: []const u8) void {
     var it = std.mem.splitScalar(u8, path_var, std.fs.path.delimiter);
     while (it.next()) |entry| {
-        std.debug.print("PATH entry: {s}\n", .{entry});
+  std.debug.print("PATH entry: {s}\n", .{entry});
     }
 }
 ```

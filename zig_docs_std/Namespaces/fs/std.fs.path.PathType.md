@@ -21,8 +21,8 @@ const std = @import("std");
 
 pub fn main() void {
     const path_type = switch (@import("builtin").os.tag) {
-        .windows => std.fs.path.PathType.windows,
-        else => std.fs.path.PathType.posix,
+  .windows => std.fs.path.PathType.windows,
+  else => std.fs.path.PathType.posix,
     };
     std.debug.print("Path type: {}\n", .{path_type});
 }

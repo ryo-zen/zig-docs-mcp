@@ -2,14 +2,14 @@
 
 ## Errors
 
-CertificateFieldHasInvalidLength ParseError  
+CertificateFieldHasInvalidLength ParseError
 
-CertificateFieldHasWrongDataType ParseTimeError  
+CertificateFieldHasWrongDataType ParseTimeError
 
-CertificateHasInvalidBitString ParseBitStringError  
+CertificateHasInvalidBitString ParseBitStringError
 
-CertificateHasUnrecognizedObjectId ParseEnumError  
+CertificateHasUnrecognizedObjectId ParseEnumError
 
-CertificateTimeInvalid ParseTimeError  
+CertificateTimeInvalid ParseTimeError
 
-UnsupportedCertificateVersion ParseVersionError  
+UnsupportedCertificateVersion ParseVersionError

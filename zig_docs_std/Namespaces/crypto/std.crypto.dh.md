@@ -94,8 +94,8 @@ pub fn establishSession(peer_public_key: [32]u8, io: std.Io) !struct {
     Hkdf.expand(&encryption_key, prk, "encryption", .{});
 
     return .{
-        .our_public_key = our_kp.public_key,
-        .encryption_key = encryption_key,
+  .our_public_key = our_kp.public_key,
+  .encryption_key = encryption_key,
     };
 }
 ```

@@ -44,8 +44,8 @@ var queue = std.Io.TypeErasedQueue.init(&backing_buffer);
 fn producer(io: std.Io) !void {
     var i: u8 = 0;
     while (i < 10) : (i += 1) {
-        const byte = [_]u8{i};
-        _ = try queue.put(io, &byte, 1);
+  const byte = [_]u8{i};
+  _ = try queue.put(io, &byte, 1);
     }
     queue.close(io);
 }
@@ -54,11 +54,11 @@ fn producer(io: std.Io) !void {
 fn consumer(io: std.Io) !void {
     var buffer: [16]u8 = undefined;
     while (true) {
-        const count = queue.get(io, &buffer, 1) catch |err| {
-            if (err == error.QueueClosed) break;
-            return err;
-        };
-        // Process buffer[0..count]
+  const count = queue.get(io, &buffer, 1) catch |err| {
+      if (err == error.QueueClosed) break;
+      return err;
+  };
+  // Process buffer[0..count]
     }
 }
 ```
@@ -276,8 +276,8 @@ pub fn partialWrite(queue: *std.Io.TypeErasedQueue, io: std.Io) !void {
     const written = try queue.put(io, &large_data, 1);
 
     if (written < large_data.len) {
-        std.debug.print("Partial write: {}/{} bytes\n", .{written, large_data.len});
-        // Handle remaining bytes...
+  std.debug.print("Partial write: {}/{} bytes\n", .{written, large_data.len});
+  // Handle remaining bytes...
     }
 }
 ```
@@ -291,16 +291,16 @@ pub fn consumer(queue: *std.Io.TypeErasedQueue, io: std.Io) !void {
     var buffer: [512]u8 = undefined;
 
     while (true) {
-        const count = queue.get(io, &buffer, 1) catch |err| {
-            if (err == error.QueueClosed) {
-                std.debug.print("Queue closed, exiting consumer\n", .{});
-                return;
-            }
-            return err;
-        };
+  const count = queue.get(io, &buffer, 1) catch |err| {
+      if (err == error.QueueClosed) {
+          std.debug.print("Queue closed, exiting consumer\n", .{});
+          return;
+      }
+      return err;
+  };
 
-        // Process buffer[0..count]
-        processBytes(buffer[0..count]);
+  // Process buffer[0..count]
+  processBytes(buffer[0..count]);
     }
 }
 ```

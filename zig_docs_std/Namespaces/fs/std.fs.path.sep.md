@@ -34,15 +34,15 @@ const std = @import("std");
 pub fn splitPath(path: []const u8) void {
     var start: usize = 0;
     for (path, 0..) |c, i| {
-        if (c == std.fs.path.sep) {
-            if (i > start) {
-                std.debug.print("Component: {s}\n", .{path[start..i]});
-            }
-            start = i + 1;
-        }
+  if (c == std.fs.path.sep) {
+      if (i > start) {
+          std.debug.print("Component: {s}\n", .{path[start..i]});
+      }
+      start = i + 1;
+  }
     }
     if (start < path.len) {
-        std.debug.print("Component: {s}\n", .{path[start..]});
+  std.debug.print("Component: {s}\n", .{path[start..]});
     }
 }
 ```

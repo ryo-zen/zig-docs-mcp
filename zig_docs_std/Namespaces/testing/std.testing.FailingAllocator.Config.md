@@ -63,8 +63,8 @@ const std = @import("std");
 
 test "fail on second allocation" {
     var failing = std.testing.FailingAllocator.init(
-        std.testing.allocator,
-        .{ .fail_index = 1 }, // Fail on index 1 (second allocation)
+  std.testing.allocator,
+  .{ .fail_index = 1 }, // Fail on index 1 (second allocation)
     );
     const allocator = failing.allocator();
 
@@ -81,8 +81,8 @@ test "fail on second allocation" {
 ```zig
 test "fail on resize" {
     var failing = std.testing.FailingAllocator.init(
-        std.testing.allocator,
-        .{ .resize_fail_index = 0 }, // Fail on first resize
+  std.testing.allocator,
+  .{ .resize_fail_index = 0 }, // Fail on first resize
     );
     const allocator = failing.allocator();
 
@@ -100,11 +100,11 @@ test "fail on resize" {
 ```zig
 test "multiple failure points" {
     var failing = std.testing.FailingAllocator.init(
-        std.testing.allocator,
-        .{
-            .fail_index = 5,         // Fail allocations starting at index 5
-            .resize_fail_index = 2,  // Fail resizes starting at index 2
-        },
+  std.testing.allocator,
+  .{
+      .fail_index = 5,         // Fail allocations starting at index 5
+      .resize_fail_index = 2,  // Fail resizes starting at index 2
+  },
     );
     const allocator = failing.allocator();
 

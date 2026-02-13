@@ -16,8 +16,8 @@ pub const SelfInfo = if (@hasDecl(root, "debug") and @hasDecl(root.debug, "SelfI
 else switch (std.Target.ObjectFormat.default(native_os, native_arch)) {
     .coff => if (native_os == .windows) @import("debug/SelfInfo/Windows.zig") else void,
     .elf => switch (native_os) {
-        .freestanding, .other => void,
-        else => @import("debug/SelfInfo/Elf.zig"),
+  .freestanding, .other => void,
+  else => @import("debug/SelfInfo/Elf.zig"),
     },
     .macho => @import("debug/SelfInfo/MachO.zig"),
     .plan9, .spirv, .wasm => void,

@@ -3,17 +3,17 @@
 ### Fields
 
     async: *const fn (
-        /// Corresponds to `Io.userdata`.
-        userdata: ?*anyopaque,
-        /// The pointer of this slice is an "eager" result value.
-        /// The length is the size in bytes of the result type.
-        /// This pointer's lifetime expires directly after the call to this function.
-        result: []u8,
-        result_alignment: std.mem.Alignment,
-        /// Copied and then passed to `start`.
-        context: []const u8,
-        context_alignment: std.mem.Alignment,
-        start: *const fn (context: *const anyopaque, result: *anyopaque) void,
+  /// Corresponds to `Io.userdata`.
+  userdata: ?*anyopaque,
+  /// The pointer of this slice is an "eager" result value.
+  /// The length is the size in bytes of the result type.
+  /// This pointer's lifetime expires directly after the call to this function.
+  result: []u8,
+  result_alignment: std.mem.Alignment,
+  /// Copied and then passed to `start`.
+  context: []const u8,
+  context_alignment: std.mem.Alignment,
+  start: *const fn (context: *const anyopaque, result: *anyopaque) void,
     ) ?*AnyFuture
 
 If it returns `null` it means `result` has been already populated and `await` will be a no-op.
@@ -23,27 +23,27 @@ When this function returns non-null, the implementation guarantees that a unit o
 Thread-safe.
 
     concurrent: *const fn (
-        /// Corresponds to `Io.userdata`.
-        userdata: ?*anyopaque,
-        result_len: usize,
-        result_alignment: std.mem.Alignment,
-        /// Copied and then passed to `start`.
-        context: []const u8,
-        context_alignment: std.mem.Alignment,
-        start: *const fn (context: *const anyopaque, result: *anyopaque) void,
+  /// Corresponds to `Io.userdata`.
+  userdata: ?*anyopaque,
+  result_len: usize,
+  result_alignment: std.mem.Alignment,
+  /// Copied and then passed to `start`.
+  context: []const u8,
+  context_alignment: std.mem.Alignment,
+  start: *const fn (context: *const anyopaque, result: *anyopaque) void,
     ) ConcurrentError!*AnyFuture
 
 Thread-safe.
 
     await: *const fn (
-        /// Corresponds to `Io.userdata`.
-        userdata: ?*anyopaque,
-        /// The same value that was returned from `async`.
-        any_future: *AnyFuture,
-        /// Points to a buffer where the result is written.
-        /// The length is equal to size in bytes of result type.
-        result: []u8,
-        result_alignment: std.mem.Alignment,
+  /// Corresponds to `Io.userdata`.
+  userdata: ?*anyopaque,
+  /// The same value that was returned from `async`.
+  any_future: *AnyFuture,
+  /// Points to a buffer where the result is written.
+  /// The length is equal to size in bytes of result type.
+  result: []u8,
+  result_alignment: std.mem.Alignment,
     ) void
 
 This function is only called when `async` returns a non-null value.
@@ -51,14 +51,14 @@ This function is only called when `async` returns a non-null value.
 Thread-safe.
 
     cancel: *const fn (
-        /// Corresponds to `Io.userdata`.
-        userdata: ?*anyopaque,
-        /// The same value that was returned from `async`.
-        any_future: *AnyFuture,
-        /// Points to a buffer where the result is written.
-        /// The length is equal to size in bytes of result type.
-        result: []u8,
-        result_alignment: std.mem.Alignment,
+  /// Corresponds to `Io.userdata`.
+  userdata: ?*anyopaque,
+  /// The same value that was returned from `async`.
+  any_future: *AnyFuture,
+  /// Points to a buffer where the result is written.
+  /// The length is equal to size in bytes of result type.
+  result: []u8,
+  result_alignment: std.mem.Alignment,
     ) void
 
 Equivalent to `await` but initiates cancel request.
@@ -68,14 +68,14 @@ This function is only called when `async` returns a non-null value.
 Thread-safe.
 
     groupAsync: *const fn (
-        /// Corresponds to `Io.userdata`.
-        userdata: ?*anyopaque,
-        /// Owner of the spawned async task.
-        group: *Group,
-        /// Copied and then passed to `start`.
-        context: []const u8,
-        context_alignment: std.mem.Alignment,
-        start: *const fn (context: *const anyopaque) Cancelable!void,
+  /// Corresponds to `Io.userdata`.
+  userdata: ?*anyopaque,
+  /// Owner of the spawned async task.
+  group: *Group,
+  /// Copied and then passed to `start`.
+  context: []const u8,
+  context_alignment: std.mem.Alignment,
+  start: *const fn (context: *const anyopaque) Cancelable!void,
     ) void
 
 When this function returns, implementation guarantees that `start` has either already been called, or a unit of concurrency has been assigned to the task of calling the function.
@@ -83,14 +83,14 @@ When this function returns, implementation guarantees that `start` has either al
 Thread-safe.
 
     groupConcurrent: *const fn (
-        /// Corresponds to `Io.userdata`.
-        userdata: ?*anyopaque,
-        /// Owner of the spawned async task.
-        group: *Group,
-        /// Copied and then passed to `start`.
-        context: []const u8,
-        context_alignment: std.mem.Alignment,
-        start: *const fn (context: *const anyopaque) Cancelable!void,
+  /// Corresponds to `Io.userdata`.
+  userdata: ?*anyopaque,
+  /// Owner of the spawned async task.
+  group: *Group,
+  /// Copied and then passed to `start`.
+  context: []const u8,
+  context_alignment: std.mem.Alignment,
+  start: *const fn (context: *const anyopaque) Cancelable!void,
     ) ConcurrentError!void
 
 Thread-safe.

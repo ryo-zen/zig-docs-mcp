@@ -26,9 +26,9 @@ const argon2 = std.crypto.pwhash.argon2;
 pub fn hashPassword(password: []const u8, buf: []u8) !void {
     const salt = "random16bytesalt";  // Use crypto.random in production!
     try argon2.strHash(password, .{
-        .allocator = std.heap.page_allocator,
-        .params = argon2.Params.interactive,
-        .encoding = .phc,
+  .allocator = std.heap.page_allocator,
+  .params = argon2.Params.interactive,
+  .encoding = .phc,
     }, buf);
 }
 ```
@@ -262,9 +262,9 @@ pub fn hashFile(path: []const u8) ![32]u8 {
     var buffer: [4096]u8 = undefined;
 
     while (true) {
-        const n = try file.read(&buffer);
-        if (n == 0) break;
-        hasher.update(buffer[0..n]);
+  const n = try file.read(&buffer);
+  if (n == 0) break;
+  hasher.update(buffer[0..n]);
     }
 
     var hash: [32]u8 = undefined;
@@ -309,9 +309,9 @@ pub fn encryptMessage(plaintext: []const u8, key: [32]u8) !struct {
     ChaCha20Poly1305.encrypt(ciphertext, &tag, plaintext, "", nonce, key);
 
     return .{
-        .ciphertext = ciphertext,
-        .nonce = nonce,
-        .tag = tag
+  .ciphertext = ciphertext,
+  .nonce = nonce,
+  .tag = tag
     };
 }
 
@@ -359,16 +359,16 @@ pub fn hashAndVerifyPassword() !void {
     // Hash password (produces PHC format string)
     var hash_buf: [128]u8 = undefined;
     const hash_str = try argon2.strHash(password, .{
-        .allocator = allocator,
-        .params = argon2.Params.interactive,  // For interactive logins
-        .encoding = .phc,
+  .allocator = allocator,
+  .params = argon2.Params.interactive,  // For interactive logins
+  .encoding = .phc,
     }, &hash_buf);
 
     std.debug.print("Password hash: {s}\n", .{hash_str});
 
     // Verify password
     const valid = try argon2.strVerify(hash_str, password, .{
-        .allocator = allocator,
+  .allocator = allocator,
     });
 
     std.debug.print("Password valid: {}\n", .{valid});
@@ -663,9 +663,9 @@ pub fn registerUser(username: []const u8, password: []const u8) ![]u8 {
     // Hash password with Argon2
     var hash_buf: [128]u8 = undefined;
     const hash_str = try argon2.strHash(password, .{
-        .allocator = allocator,
-        .params = argon2.Params.interactive,
-        .encoding = .phc,
+  .allocator = allocator,
+  .params = argon2.Params.interactive,
+  .encoding = .phc,
     }, &hash_buf);
 
     // Store hash_str in database associated with username
@@ -680,13 +680,13 @@ pub fn loginUser(username: []const u8, password: []const u8, stored_hash: []cons
 
     // Verify password against stored hash
     const valid = try argon2.strVerify(stored_hash, password, .{
-        .allocator = allocator,
+  .allocator = allocator,
     });
 
     if (valid) {
-        std.debug.print("User {s} logged in successfully\n", .{username});
+  std.debug.print("User {s} logged in successfully\n", .{username});
     } else {
-        std.debug.print("Invalid password for user {s}\n", .{username});
+  std.debug.print("Invalid password for user {s}\n", .{username});
     }
 
     return valid;
@@ -727,9 +727,9 @@ pub fn encryptAndSend(plaintext: []const u8, shared_key: [32]u8) !EncryptedMessa
     ChaCha20Poly1305.encrypt(ciphertext, &tag, plaintext, "", nonce, shared_key);
 
     return EncryptedMessage{
-        .nonce = nonce,
-        .ciphertext = ciphertext,
-        .tag = tag,
+  .nonce = nonce,
+  .ciphertext = ciphertext,
+  .tag = tag,
     };
 }
 
@@ -740,15 +740,15 @@ pub fn receiveAndDecrypt(msg: EncryptedMessage, shared_key: [32]u8) ![]u8 {
 
     // Decrypt and verify
     ChaCha20Poly1305.decrypt(
-        plaintext,
-        msg.ciphertext,
-        msg.tag,
-        "",
-        msg.nonce,
-        shared_key
+  plaintext,
+  msg.ciphertext,
+  msg.tag,
+  "",
+  msg.nonce,
+  shared_key
     ) catch |err| {
-        allocator.free(plaintext);
-        return error.AuthenticationFailed;
+  allocator.free(plaintext);
+  return error.AuthenticationFailed;
     };
 
     return plaintext;
@@ -777,9 +777,9 @@ pub fn computeFileHash(path: []const u8) ![32]u8 {
     var buffer: [8192]u8 = undefined;
 
     while (true) {
-        const bytes_read = try file.read(&buffer);
-        if (bytes_read == 0) break;
-        hasher.update(buffer[0..bytes_read]);
+  const bytes_read = try file.read(&buffer);
+  if (bytes_read == 0) break;
+  hasher.update(buffer[0..bytes_read]);
     }
 
     var hash: [32]u8 = undefined;
@@ -800,20 +800,20 @@ pub fn checksumDirectory(dir_path: []const u8) !void {
 
     var iter = dir.iterate();
     while (try iter.next()) |entry| {
-        if (entry.kind == .file) {
-            const full_path = try std.fs.path.join(
-                std.heap.page_allocator,
-                &.{ dir_path, entry.name }
-            );
-            defer std.heap.page_allocator.free(full_path);
+  if (entry.kind == .file) {
+      const full_path = try std.fs.path.join(
+          std.heap.page_allocator,
+          &.{ dir_path, entry.name }
+      );
+      defer std.heap.page_allocator.free(full_path);
 
-            const hash = try computeFileHash(full_path);
-            std.debug.print("{s}: ", .{entry.name});
-            for (hash) |byte| {
-                std.debug.print("{x:0>2}", .{byte});
-            }
-            std.debug.print("\n", .{});
-        }
+      const hash = try computeFileHash(full_path);
+      std.debug.print("{s}: ", .{entry.name});
+      for (hash) |byte| {
+          std.debug.print("{x:0>2}", .{byte});
+      }
+      std.debug.print("\n", .{});
+  }
     }
 }
 ```
@@ -852,9 +852,9 @@ pub fn deriveKeys(master_key: [32]u8) !struct {
     hkdf.Hkdf(Sha256).extract(&iv_key, &master_key, "iv");
 
     return .{
-        .encryption_key = encryption_key,
-        .mac_key = mac_key,
-        .iv_key = iv_key,
+  .encryption_key = encryption_key,
+  .mac_key = mac_key,
+  .iv_key = iv_key,
     };
 }
 ```
@@ -944,9 +944,9 @@ Default configuration for side-channel mitigations (enabled by default for secur
    ```zig
    const hasAESNI = std.Target.x86.featureSetHas(builtin.cpu.features, .aes);
    const AEAD = if (hasAESNI)
-       std.crypto.aead.aes_gcm.Aes256Gcm
+ std.crypto.aead.aes_gcm.Aes256Gcm
    else
-       std.crypto.aead.chacha_poly.ChaCha20Poly1305;
+ std.crypto.aead.chacha_poly.ChaCha20Poly1305;
    ```
 
 2. **Use BLAKE3 for high-performance hashing** - Significantly faster than SHA-256 with parallel processing:
@@ -960,7 +960,7 @@ Default configuration for side-channel mitigations (enabled by default for secur
    ```zig
    var hasher = Sha256.init(.{});
    for (chunks) |chunk| {
-       hasher.update(chunk);  // Incremental
+ hasher.update(chunk);  // Incremental
    }
    hasher.final(&hash);
    ```
@@ -983,9 +983,9 @@ Default configuration for side-channel mitigations (enabled by default for secur
 7. **Consider memory constraints for pwhash** - Argon2 uses significant RAM; tune for your environment:
    ```zig
    const params = argon2.Params{
-       .t = 3,      // Time cost (iterations)
-       .m = 65536,  // Memory cost (64 MB)
-       .p = 4,      // Parallelism
+ .t = 3,      // Time cost (iterations)
+ .m = 65536,  // Memory cost (64 MB)
+ .p = 4,      // Parallelism
    };
    ```
 

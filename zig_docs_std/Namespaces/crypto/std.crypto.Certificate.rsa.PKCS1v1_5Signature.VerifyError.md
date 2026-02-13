@@ -2,6 +2,6 @@
 
 ## Errors
 
-InvalidSignature  
+InvalidSignature
 
-MessageTooLong EncryptError  
+MessageTooLong EncryptError

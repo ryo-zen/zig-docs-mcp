@@ -16,10 +16,10 @@ pub fn main() !void {
     const allocator = std.heap.page_allocator;
 
     const path = try std.fs.path.join(allocator, &.{
-        "projects",
-        "myapp",
-        "src",
-        "main.zig",
+  "projects",
+  "myapp",
+  "src",
+  "main.zig",
     });
     defer allocator.free(path); // Must free!
 

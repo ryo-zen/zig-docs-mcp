@@ -59,22 +59,22 @@ const MyStreams = enum { stdout, stderr };
 
 pub fn main() !void {
     // ... setup io and get files ...
-    
+
     const files = std.Io.PollFiles(MyStreams){
-        .stdout = child_process.stdout,
-        .stderr = child_process.stderr,
+  .stdout = child_process.stdout,
+  .stderr = child_process.stderr,
     };
 
     var poller = std.Io.poll(allocator, MyStreams, files);
     defer poller.deinit();
 
     while (try poller.poll()) {
-        if (poller.reader(.stdout).bufferedLen() > 0) {
-            const out = try poller.toOwnedSlice(.stdout);
-            defer allocator.free(out);
-            std.debug.print("Stdout: {s}", .{out});
-        }
-        // ... check stderr ...
+  if (poller.reader(.stdout).bufferedLen() > 0) {
+      const out = try poller.toOwnedSlice(.stdout);
+      defer allocator.free(out);
+      std.debug.print("Stdout: {s}", .{out});
+  }
+  // ... check stderr ...
     }
 }
 ```

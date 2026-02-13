@@ -165,7 +165,7 @@ const builtin = @import("builtin");
 
 comptime {
     if (builtin.zig_version.minor < 16) {
-        @compileError("This code requires Zig 0.16+");
+  @compileError("This code requires Zig 0.16+");
     }
 }
 ```

@@ -2,4 +2,4 @@
 
 ## Errors
 
-CertificatePublicKeyInvalid  
+CertificatePublicKeyInvalid

@@ -33,12 +33,12 @@ try hn.lookup(io, &queue, .{
 
 while (true) {
     const result = queue.getOneUncancelable(io) catch |err| {
-        if (err == error.Closed) break;
-        return err;
+  if (err == error.Closed) break;
+  return err;
     };
     switch (result) {
-        .address => |addr| std.debug.print("Address: {}\n", .{addr}),
-        .canonical_name => |canon| std.debug.print("CNAME: {s}\n", .{canon.bytes}),
+  .address => |addr| std.debug.print("Address: {}\n", .{addr}),
+  .canonical_name => |canon| std.debug.print("CNAME: {s}\n", .{canon.bytes}),
     }
 }
 ```
@@ -152,8 +152,8 @@ try hn.lookup(io, &queue, .{
 
 while (true) {
     const result = queue.getOneUncancelable(io) catch |err| {
-        if (err == error.Closed) break;
-        return err;
+  if (err == error.Closed) break;
+  return err;
     };
     // Process addresses...
 }
@@ -165,7 +165,7 @@ while (true) {
 fn isSafeDomain(input: []const u8) bool {
     const hn = HostName.init(input) catch return false;
     const trusted = HostName.init("internal.corp") catch return false;
-    
+
     return trusted.sameParentDomain(hn);
 }
 ```

@@ -4,13 +4,13 @@ The tokens emitted by `std.json.Scanner` and `std.json.Reader` `.next*()` functi
 
      <document> = <value> .end_of_document
      <value> =
-       | <object>
-       | <array>
-       | <number>
-       | <string>
-       | .true
-       | .false
-       | .null
+ | <object>
+ | <array>
+ | <number>
+ | <string>
+ | .true
+ | .false
+ | .null
      <object> = .object_begin ( <string> <value> )* .object_end
      <array> = .array_begin ( <value> )* .array_end
      <number> = <It depends. See below.>
@@ -22,11 +22,11 @@ What you get for `<number>` and `<string>` values depends on which `next*()` met
      <number> = ( .partial_number )* .number
      <string> = ( <partial_string> )* .string
      <partial_string> =
-       | .partial_string
-       | .partial_string_escaped_1
-       | .partial_string_escaped_2
-       | .partial_string_escaped_3
-       | .partial_string_escaped_4
+ | .partial_string
+ | .partial_string_escaped_1
+ | .partial_string_escaped_2
+ | .partial_string_escaped_3
+ | .partial_string_escaped_4
 
     nextAlloc*(..., .alloc_always):
      <number> = .allocated_number
@@ -34,11 +34,11 @@ What you get for `<number>` and `<string>` values depends on which `next*()` met
 
     nextAlloc*(..., .alloc_if_needed):
      <number> =
-       | .number
-       | .allocated_number
+ | .number
+ | .allocated_number
      <string> =
-       | .string
-       | .allocated_string
+ | .string
+ | .allocated_string
 
 For all tokens with a `[]const u8`, `[]u8`, or `[n]u8` payload, the payload represents the content of the value. For number values, this is the representation of the number exactly as it appears in the input. For strings, this is the content of the string after resolving escape sequences.
 

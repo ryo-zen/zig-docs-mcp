@@ -24,9 +24,9 @@ pub fn main() void {
 
     // boolean
     print("{}\n{}\n{}\n", .{
-        true and false,
-        true or false,
-        !true,
+  true and false,
+  true or false,
+  !true,
     });
 
     // optional
@@ -34,28 +34,28 @@ pub fn main() void {
     assert(optional_value == null);
 
     print("\noptional 1\ntype: {}\nvalue: {?s}\n", .{
-        @TypeOf(optional_value), optional_value,
+  @TypeOf(optional_value), optional_value,
     });
 
     optional_value = "hi";
     assert(optional_value != null);
 
     print("\noptional 2\ntype: {}\nvalue: {?s}\n", .{
-        @TypeOf(optional_value), optional_value,
+  @TypeOf(optional_value), optional_value,
     });
 
     // error union
     var number_or_error: ExampleErrorSet!i32 = ExampleErrorSet.ExampleErrorVariant;
 
     print("\nerror union 1\ntype: {}\nvalue: {!}\n", .{
-        @TypeOf(number_or_error),
-        number_or_error,
+  @TypeOf(number_or_error),
+  number_or_error,
     });
 
     number_or_error = 1234;
 
     print("\nerror union 2\ntype: {}\nvalue: {!}\n", .{
-        @TypeOf(number_or_error), number_or_error,
+  @TypeOf(number_or_error), number_or_error,
     });
 }
 ```
@@ -83,209 +83,158 @@ error union 2
 type: error{ExampleErrorVariant}!i32
 value: 1234
 
-      
 ## [Primitive Types](#toc-Primitive-Types) §
 
-      
-      
-        Primitive Types
-        
-            
-            Type
-            C Equivalent
-            Description
-        
-        
-        
-        
-            `i8`
-          int8_t
-          signed 8-bit integer
-        
-        
-            `u8`
-          uint8_t
-          unsigned 8-bit integer
-        
-        
-            `i16`
-          int16_t
-          signed 16-bit integer
-        
-        
-            `u16`
-          uint16_t
-          unsigned 16-bit integer
-        
-        
-            `i32`
-          int32_t
-          signed 32-bit integer
-        
-        
-            `u32`
-          uint32_t
-          unsigned 32-bit integer
-        
-        
-            `i64`
-          int64_t
-          signed 64-bit integer
-        
-        
-            `u64`
-          uint64_t
-          unsigned 64-bit integer
-        
-        
-            `i128`
-          __int128
-          signed 128-bit integer
-        
-        
-            `u128`
-          unsigned __int128
-          unsigned 128-bit integer
-        
-        
-            `isize`
-          intptr_t
-          signed pointer sized integer
-        
-        
-            `usize`
-          uintptr_t, size_t
-          unsigned pointer sized integer. Also see [#5185](https://github.com/ziglang/zig/issues/5185)
-        
+  Primitive Types
 
-        
-            `c_char`
-          char
-          for ABI compatibility with C
-        
-        
-            `c_short`
-          short
-          for ABI compatibility with C
-        
-        
-            `c_ushort`
-          unsigned short
-          for ABI compatibility with C
-        
-        
-            `c_int`
-          int
-          for ABI compatibility with C
-        
-        
-            `c_uint`
-          unsigned int
-          for ABI compatibility with C
-        
-        
-            `c_long`
-          long
-          for ABI compatibility with C
-        
-        
-            `c_ulong`
-          unsigned long
-          for ABI compatibility with C
-        
-        
-            `c_longlong`
-          long long
-          for ABI compatibility with C
-        
-        
-            `c_ulonglong`
-          unsigned long long
-          for ABI compatibility with C
-        
-        
-            `c_longdouble`
-          long double
-          for ABI compatibility with C
-        
+      Type
+      C Equivalent
+      Description
 
-        
-            `f16`
-          _Float16
-          16-bit floating point (10-bit mantissa) IEEE-754-2008 binary16
-        
-        
-            `f32`
-          float
-          32-bit floating point (23-bit mantissa) IEEE-754-2008 binary32
-        
-        
-            `f64`
-          double
-          64-bit floating point (52-bit mantissa) IEEE-754-2008 binary64
-        
-        
-            `f80`
-          long double
-          80-bit floating point (64-bit mantissa) IEEE-754-2008 80-bit extended precision
-        
-        
-            `f128`
-            _Float128
-          128-bit floating point (112-bit mantissa) IEEE-754-2008 binary128
-        
-        
-            `bool`
-          bool
-          `true` or `false`
-        
-        
-            `anyopaque`
-          void
-          Used for type-erased pointers.
-        
-        
-            `void`
-          (none)
-          Always the value `void{}`
-        
-        
-            `noreturn`
-          (none)
-          the type of `break`, `continue`, `return`, `unreachable`, and `while (true) {}`
-        
-        
-            `type`
-          (none)
-          the type of types
-        
-        
-            `anyerror`
-          (none)
-          an error code
-        
-        
-            `comptime_int`
-          (none)
-          Only allowed for [comptime](#comptime)-known values. The type of integer literals.
-        
-        
-            `comptime_float`
-          (none)
-          Only allowed for [comptime](#comptime)-known values. The type of float literals.
-        
-        
-      
-      
-      
+      `i8`
+    int8_t
+    signed 8-bit integer
 
-      In addition to the integer types above, arbitrary bit-width integers can be referenced by using
-      an identifier of `i` or `u` followed by digits. For example, the identifier
-      `i7` refers to a signed 7-bit integer. The maximum allowed bit-width of an
-      integer type is `65535`.
-      
+      `u8`
+    uint8_t
+    unsigned 8-bit integer
 
-      
+      `i16`
+    int16_t
+    signed 16-bit integer
+
+      `u16`
+    uint16_t
+    unsigned 16-bit integer
+
+      `i32`
+    int32_t
+    signed 32-bit integer
+
+      `u32`
+    uint32_t
+    unsigned 32-bit integer
+
+      `i64`
+    int64_t
+    signed 64-bit integer
+
+      `u64`
+    uint64_t
+    unsigned 64-bit integer
+
+      `i128`
+    __int128
+    signed 128-bit integer
+
+      `u128`
+    unsigned __int128
+    unsigned 128-bit integer
+
+      `isize`
+    intptr_t
+    signed pointer sized integer
+
+      `usize`
+    uintptr_t, size_t
+    unsigned pointer sized integer. Also see [#5185](https://github.com/ziglang/zig/issues/5185)
+
+      `c_char`
+    char
+    for ABI compatibility with C
+
+      `c_short`
+    short
+    for ABI compatibility with C
+
+      `c_ushort`
+    unsigned short
+    for ABI compatibility with C
+
+      `c_int`
+    int
+    for ABI compatibility with C
+
+      `c_uint`
+    unsigned int
+    for ABI compatibility with C
+
+      `c_long`
+    long
+    for ABI compatibility with C
+
+      `c_ulong`
+    unsigned long
+    for ABI compatibility with C
+
+      `c_longlong`
+    long long
+    for ABI compatibility with C
+
+      `c_ulonglong`
+    unsigned long long
+    for ABI compatibility with C
+
+      `c_longdouble`
+    long double
+    for ABI compatibility with C
+
+      `f16`
+    _Float16
+    16-bit floating point (10-bit mantissa) IEEE-754-2008 binary16
+
+      `f32`
+    float
+    32-bit floating point (23-bit mantissa) IEEE-754-2008 binary32
+
+      `f64`
+    double
+    64-bit floating point (52-bit mantissa) IEEE-754-2008 binary64
+
+      `f80`
+    long double
+    80-bit floating point (64-bit mantissa) IEEE-754-2008 80-bit extended precision
+
+      `f128`
+      _Float128
+    128-bit floating point (112-bit mantissa) IEEE-754-2008 binary128
+
+      `bool`
+    bool
+    `true` or `false`
+
+      `anyopaque`
+    void
+    Used for type-erased pointers.
+
+      `void`
+    (none)
+    Always the value `void{}`
+
+      `noreturn`
+    (none)
+    the type of `break`, `continue`, `return`, `unreachable`, and `while (true) {}`
+
+      `type`
+    (none)
+    the type of types
+
+      `anyerror`
+    (none)
+    an error code
+
+      `comptime_int`
+    (none)
+    Only allowed for [comptime](#comptime)-known values. The type of integer literals.
+
+      `comptime_float`
+    (none)
+    Only allowed for [comptime](#comptime)-known values. The type of float literals.
+
+In addition to the integer types above, arbitrary bit-width integers can be referenced by using
+an identifier of `i` or `u` followed by digits. For example, the identifier
+`i7` refers to a signed 7-bit integer. The maximum allowed bit-width of an
+integer type is `65535`.
 
 See also:
 
@@ -299,36 +248,21 @@ See also:
 
 - [@Int](#Int)
 
-      
-      
 ## [Primitive Values](#toc-Primitive-Values) §
 
-      
-      
-        Primitive Values
-        
-        
-          Name
-          Description
-        
-        
-        
-        
-            `true` and `false`
-            `bool` values
-        
-        
-            `null`
-            used to set an optional type to `null`
-        
-        
-            `undefined`
-          used to leave a value unspecified
-        
-        
-      
-      
-      
+  Primitive Values
+
+    Name
+    Description
+
+      `true` and `false`
+      `bool` values
+
+      `null`
+      used to set an optional type to `null`
+
+      `undefined`
+    used to leave a value unspecified
 
 See also:
 
@@ -336,41 +270,28 @@ See also:
 
 - [undefined](#undefined)
 
-      
-      
 ## [String Literals and Unicode Code Point Literals](#toc-String-Literals-and-Unicode-Code-Point-Literals) §
 
-      
+String literals are constant single-item [Pointers](#Pointers) to null-terminated byte arrays.
+The type of string literals encodes both the length, and the fact that they are null-terminated,
+and thus they can be [coerced](#Type-Coercion) to both [Slices](#Slices) and
+[Null-Terminated Pointers](#Sentinel-Terminated-Pointers).
+Dereferencing string literals converts them to [Arrays](#Arrays).
 
-      String literals are constant single-item [Pointers](#Pointers) to null-terminated byte arrays.
-      The type of string literals encodes both the length, and the fact that they are null-terminated,
-      and thus they can be [coerced](#Type-Coercion) to both [Slices](#Slices) and
-      [Null-Terminated Pointers](#Sentinel-Terminated-Pointers).
-      Dereferencing string literals converts them to [Arrays](#Arrays).
-      
-
-      
-
-      Because Zig source code is [UTF-8 encoded](#Source-Encoding), any
-      non-ASCII bytes appearing within a string literal in source code carry
-      their UTF-8 meaning into the content of the string in the Zig program;
-      the bytes are not modified by the compiler. It is possible to embed
-      non-UTF-8 bytes into a string literal using `\xNN` notation.
-      
-
-      
+Because Zig source code is [UTF-8 encoded](#Source-Encoding), any
+non-ASCII bytes appearing within a string literal in source code carry
+their UTF-8 meaning into the content of the string in the Zig program;
+the bytes are not modified by the compiler. It is possible to embed
+non-UTF-8 bytes into a string literal using `\xNN` notation.
 
 Indexing into a string containing non-ASCII bytes returns individual
-      bytes, whether valid UTF-8 or not.
+bytes, whether valid UTF-8 or not.
 
-      
+Unicode code point literals have type `comptime_int`, the same as
+[Integer Literals](#Integer-Literals). All [Escape Sequences](#Escape-Sequences) are valid in both string literals
+and Unicode code point literals.
 
-      Unicode code point literals have type `comptime_int`, the same as
-      [Integer Literals](#Integer-Literals). All [Escape Sequences](#Escape-Sequences) are valid in both string literals
-      and Unicode code point literals.
-      
-
-      string_literals.zig
+string_literals.zig
 ```zig
 const print = @import("std").debug.print;
 const mem = @import("std").mem; // will be used to compare bytes
@@ -407,84 +328,58 @@ true
 0xfe
 0x9f
 
-      
-
 See also:
 
 - [Arrays](#Arrays)
 
 - [Source Encoding](#Source-Encoding)
 
-      
 ### [Escape Sequences](#toc-Escape-Sequences) §
 
-      
-      
-        Escape Sequences
-        
-        
-          Escape Sequence
-          Name
-        
-        
-        
-        
-            `\n`
-          Newline
-        
-        
-            `\r`
-          Carriage Return
-        
-        
-            `\t`
-          Tab
-        
-        
-            `\\`
-          Backslash
-        
-        
-            `\'`
-          Single Quote
-        
-        
-            `\"`
-          Double Quote
-        
-        
-            `\xNN`
-          hexadecimal 8-bit byte value (2 digits)
-        
-        
-            `\u{NNNNNN}`
-          hexadecimal Unicode scalar value UTF-8 encoded (1 or more digits)
-        
-        
-      
-      
-      
+  Escape Sequences
+
+    Escape Sequence
+    Name
+
+      `\n`
+    Newline
+
+      `\r`
+    Carriage Return
+
+      `\t`
+    Tab
+
+      `\\`
+    Backslash
+
+      `\'`
+    Single Quote
+
+      `\"`
+    Double Quote
+
+      `\xNN`
+    hexadecimal 8-bit byte value (2 digits)
+
+      `\u{NNNNNN}`
+    hexadecimal Unicode scalar value UTF-8 encoded (1 or more digits)
 
 Note that the maximum valid Unicode scalar value is `0x10ffff`.
 
-      
-      
 ### [Multiline String Literals](#toc-Multiline-String-Literals) §
 
-      
+Multiline string literals have no escapes and can span across multiple lines.
+To start a multiline string literal, use the `\\` token. Just like a comment,
+the string literal goes until the end of the line. The end of the line is
+not included in the string literal.
+However, if the next line begins with `\\` then a newline is appended and
+the string literal continues.
 
-      Multiline string literals have no escapes and can span across multiple lines.
-      To start a multiline string literal, use the `\\` token. Just like a comment,
-      the string literal goes until the end of the line. The end of the line is
-      not included in the string literal.
-      However, if the next line begins with `\\` then a newline is appended and
-      the string literal continues.
-      
-
-      multiline_string_literals.zig
+multiline_string_literals.zig
 ```zig
 const hello_world_in_c =
-    \\#include 
+    \\#include
     \\
     \\int main(int argc, char **argv) {
     \\    printf("hello world\n");
@@ -493,22 +388,15 @@ const hello_world_in_c =
 ;
 ```
 
-      
-
 See also:
 
 - [@embedFile](#embedFile)
 
-      
-      
-      
 ## [Assignment](#toc-Assignment) §
-
-      
 
 Use the `const` keyword to assign a value to an identifier:
 
-      constant_identifier_cannot_change.zig
+constant_identifier_cannot_change.zig
 ```zig
 const x = 1234;
 
@@ -535,15 +423,11 @@ referenced by:
     posixCallMainAndExit: /home/ci/zig-bootstrap/out/host/lib/zig/std/start.zig:583:38
     2 reference(s) hidden; use '-freference-trace=6' to see all references
 
-      
-
 `const` applies to all of the bytes that the identifier immediately addresses. [Pointers](#Pointers) have their own const-ness.
-
-      
 
 If you need a variable that you can modify, use the `var` keyword:
 
-      mutable_var.zig
+mutable_var.zig
 ```zig
 const print = @import("std").debug.print;
 
@@ -559,11 +443,9 @@ Shell$ zig build-exe mutable_var.zig
 $ ./mutable_var
 5679
 
-      
-
 Variables must be initialized:
 
-      var_must_be_initialized.zig
+var_must_be_initialized.zig
 ```zig
 pub fn main() void {
     var x: i32;
@@ -574,16 +456,13 @@ pub fn main() void {
 Shell$ zig build-exe var_must_be_initialized.zig
 /home/ci/zig-bootstrap/zig/doc/langref/var_must_be_initialized.zig:2:15: error: expected '=', found ';'
     var x: i32;
-              ^
+        ^
 
-      
 ### [undefined](#toc-undefined) §
-
-      
 
 Use `undefined` to leave variables uninitialized:
 
-      assign_undefined.zig
+assign_undefined.zig
 ```zig
 const print = @import("std").debug.print;
 
@@ -597,34 +476,22 @@ Shell$ zig build-exe assign_undefined.zig
 $ ./assign_undefined
 1
 
-      
+`undefined` can be [coerced](#Type-Coercion) to any type.
+    Once this happens, it is no longer possible to detect that the value is `undefined`.
+        `undefined` means the value could be anything, even something that is nonsense
+            according to the type. Translated into English, `undefined` means "Not a meaningful
+value. Using this value would be a bug. The value will be unused, or overwritten before being used."
 
-      `undefined` can be [coerced](#Type-Coercion) to any type.
-          Once this happens, it is no longer possible to detect that the value is `undefined`.
-              `undefined` means the value could be anything, even something that is nonsense
-                  according to the type. Translated into English, `undefined` means "Not a meaningful
-      value. Using this value would be a bug. The value will be unused, or overwritten before being used."
-      
+In [Debug](#Debug) and [ReleaseSafe](#ReleaseSafe) mode, Zig writes `0xaa` bytes to undefined memory. This is to catch
+bugs early, and to help detect use of undefined memory in a debugger. However, this behavior is only an
+implementation feature, not a language semantic, so it is not guaranteed to be observable to code.
 
-      
-
-      In [Debug](#Debug) and [ReleaseSafe](#ReleaseSafe) mode, Zig writes `0xaa` bytes to undefined memory. This is to catch
-      bugs early, and to help detect use of undefined memory in a debugger. However, this behavior is only an
-      implementation feature, not a language semantic, so it is not guaranteed to be observable to code.
-      
-
-      
-
-      
 ### [Destructuring](#toc-Destructuring) §
 
-      
+  A destructuring assignment can separate elements of indexable aggregate types
+  ([Tuples](#Tuples), [Arrays](#Arrays), [Vectors](#Vectors)):
 
-        A destructuring assignment can separate elements of indexable aggregate types
-        ([Tuples](#Tuples), [Arrays](#Arrays), [Vectors](#Vectors)):
-      
-
-      destructuring_to_existing.zig
+destructuring_to_existing.zig
 ```zig
 const print = @import("std").debug.print;
 
@@ -658,14 +525,11 @@ tuple: x = 1, y = 2, z = 3
 array: x = 4, y = 5, z = 6
 vector: x = 7, y = 8, z = 9
 
-      
+  A destructuring expression may only appear within a block (i.e. not at container scope).
+  The left hand side of the assignment must consist of a comma separated list,
+  each element of which may be either an lvalue (for instance, an existing `var`) or a variable declaration:
 
-        A destructuring expression may only appear within a block (i.e. not at container scope).
-        The left hand side of the assignment must consist of a comma separated list,
-        each element of which may be either an lvalue (for instance, an existing `var`) or a variable declaration:
-      
-
-      destructuring_mixed.zig
+destructuring_mixed.zig
 ```zig
 const print = @import("std").debug.print;
 
@@ -692,15 +556,10 @@ $ ./destructuring_mixed
 x = 1, y = 2, z = 3
 x = 2
 
-      
-
-        A destructure may be prefixed with the `comptime` keyword, in which case the entire
-        destructure expression is evaluated at [comptime](#comptime). All `var`s declared would
-        be `comptime var`s and all expressions (both result locations and the assignee
-        expression) are evaluated at [comptime](#comptime).
-      
-
-      
+  A destructure may be prefixed with the `comptime` keyword, in which case the entire
+  destructure expression is evaluated at [comptime](#comptime). All `var`s declared would
+  be `comptime var`s and all expressions (both result locations and the assignee
+  expression) are evaluated at [comptime](#comptime).
 
 See also:
 

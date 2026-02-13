@@ -22,11 +22,11 @@ test "if boolean" {
     const a: u32 = 5;
     const b: u32 = 4;
     if (a != b) {
-        try expect(true);
+  try expect(true);
     } else if (a == 9) {
-        unreachable;
+  unreachable;
     } else {
-        unreachable;
+  unreachable;
     }
 }
 
@@ -36,42 +36,42 @@ test "if error union" {
 
     const a: anyerror!u32 = 0;
     if (a) |value| {
-        try expect(value == 0);
+  try expect(value == 0);
     } else |err| {
-        _ = err;
-        unreachable;
+  _ = err;
+  unreachable;
     }
 
     const b: anyerror!u32 = error.BadValue;
     if (b) |value| {
-        _ = value;
-        unreachable;
+  _ = value;
+  unreachable;
     } else |err| {
-        try expect(err == error.BadValue);
+  try expect(err == error.BadValue);
     }
 
     // The else and |err| capture is strictly required.
     if (a) |value| {
-        try expect(value == 0);
+  try expect(value == 0);
     } else |_| {}
 
     // To check only the error value, use an empty block expression.
     if (b) |_| {} else |err| {
-        try expect(err == error.BadValue);
+  try expect(err == error.BadValue);
     }
 
     // Access the value by reference using a pointer capture.
     var c: anyerror!u32 = 3;
     if (c) |*value| {
-        value.* = 9;
+  value.* = 9;
     } else |_| {
-        unreachable;
+  unreachable;
     }
 
     if (c) |value| {
-        try expect(value == 9);
+  try expect(value == 9);
     } else |_| {
-        unreachable;
+  unreachable;
     }
 }
 ```
@@ -81,10 +81,9 @@ Shell$ zig test test_if.zig
 3/3 test_if.test.if error union...OK
 All 3 tests passed.
 
-      
 ## [if with Optionals](#toc-if-with-Optionals) §
 
-      test_if_optionals.zig
+test_if_optionals.zig
 ```zig
 const expect = @import("std").testing.expect;
 
@@ -93,38 +92,38 @@ test "if optional" {
 
     const a: ?u32 = 0;
     if (a) |value| {
-        try expect(value == 0);
+  try expect(value == 0);
     } else {
-        unreachable;
+  unreachable;
     }
 
     const b: ?u32 = null;
     if (b) |_| {
-        unreachable;
+  unreachable;
     } else {
-        try expect(true);
+  try expect(true);
     }
 
     // The else is not required.
     if (a) |value| {
-        try expect(value == 0);
+  try expect(value == 0);
     }
 
     // To test against null only, use the binary equality operator.
     if (b == null) {
-        try expect(true);
+  try expect(true);
     }
 
     // Access the value by reference using a pointer capture.
     var c: ?u32 = 3;
     if (c) |*value| {
-        value.* = 2;
+  value.* = 2;
     }
 
     if (c) |value| {
-        try expect(value == 2);
+  try expect(value == 2);
     } else {
-        unreachable;
+  unreachable;
     }
 }
 
@@ -134,41 +133,41 @@ test "if error union with optional" {
 
     const a: anyerror!?u32 = 0;
     if (a) |optional_value| {
-        try expect(optional_value.? == 0);
+  try expect(optional_value.? == 0);
     } else |err| {
-        _ = err;
-        unreachable;
+  _ = err;
+  unreachable;
     }
 
     const b: anyerror!?u32 = null;
     if (b) |optional_value| {
-        try expect(optional_value == null);
+  try expect(optional_value == null);
     } else |_| {
-        unreachable;
+  unreachable;
     }
 
     const c: anyerror!?u32 = error.BadValue;
     if (c) |optional_value| {
-        _ = optional_value;
-        unreachable;
+  _ = optional_value;
+  unreachable;
     } else |err| {
-        try expect(err == error.BadValue);
+  try expect(err == error.BadValue);
     }
 
     // Access the value by reference by using a pointer capture each time.
     var d: anyerror!?u32 = 3;
     if (d) |*optional_value| {
-        if (optional_value.*) |*value| {
-            value.* = 9;
-        }
+  if (optional_value.*) |*value| {
+      value.* = 9;
+  }
     } else |_| {
-        unreachable;
+  unreachable;
     }
 
     if (d) |optional_value| {
-        try expect(optional_value.? == 9);
+  try expect(optional_value.? == 9);
     } else |_| {
-        unreachable;
+  unreachable;
     }
 }
 ```
@@ -176,9 +175,6 @@ Shell$ zig test test_if_optionals.zig
 1/2 test_if_optionals.test.if optional...OK
 2/2 test_if_optionals.test.if error union with optional...OK
 All 2 tests passed.
-
-      
-      
 
 See also:
 
