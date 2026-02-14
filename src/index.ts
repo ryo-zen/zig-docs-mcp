@@ -1057,7 +1057,10 @@ Try searching for:
       for (let i = 0; i < lines.length; i++) {
         const line = lines[i];
 
-        if (line.startsWith('### @') && line.includes(normalizedName.substring(1))) {
+        // Match exact builtin name from format: "## [@import](#toc-import) §"
+        // Extract builtin name from within brackets
+        const headingMatch = line.match(/^##\s+\[(@\w+)\]/);
+        if (headingMatch && headingMatch[1] === normalizedName) {
           inSection = true;
           foundSection = true;
           builtinSection.push(line);
@@ -1065,7 +1068,8 @@ Try searching for:
         }
 
         if (inSection) {
-          if (line.startsWith('### @') && !line.includes(normalizedName.substring(1))) {
+          // Stop when we hit another builtin heading
+          if (line.match(/^##\s+\[@\w+\]/)) {
             break;
           }
           builtinSection.push(line);
@@ -1659,18 +1663,22 @@ This type expression may be invalid or requires additional context.`;
 
   async validateCode(code: string, codeType: string = 'test'): Promise<string> {
     try {
+      // Check if code already imports std to avoid duplicate imports
+      const hasStdImport = /const\s+std\s*=\s*@import\s*\(\s*"std"\s*\)/.test(code);
+      const stdImport = hasStdImport ? '' : 'const std = @import("std");\n\n';
+
       let fullCode: string;
 
       switch (codeType) {
         case 'main':
-          fullCode = `const std = @import("std");\n\n${code}`;
+          fullCode = `${stdImport}${code}`;
           break;
         case 'function':
-          fullCode = `const std = @import("std");\n\n${code}\n\ntest "validate" { _ = &main; }`;
+          fullCode = `${stdImport}${code}\n\ntest "validate" { _ = &main; }`;
           break;
         case 'test':
         default:
-          fullCode = `const std = @import("std");\n\n${code}`;
+          fullCode = `${stdImport}${code}`;
           break;
       }
 

@@ -16,11 +16,11 @@
 | Namespace | Description | Status |
 |-----------|-------------|--------|
 | `json` | JSON parsing and serialization | ✅ Done |
-| `math` | Math operations, min/max, clamp, overflow | Not started |
+| `math` | Math operations, min/max, clamp, overflow | ✅ Done |
 | `sort` | Sorting algorithms | Not started |
 | `ascii` | ASCII character classification and manipulation | Not started |
 | `os` | OS-level interfaces (env, signals) | Not started |
-| `process` | Child processes, environment, args | Not started |
+| `process` | Child processes, environment, args | ✅ Done |
 | `debug` | Stack traces, assert, panic handling | ✅ Done |
 | `time` | Timers, timestamps, sleep | Not started |
 | `http` | HTTP client/server | Not started |
