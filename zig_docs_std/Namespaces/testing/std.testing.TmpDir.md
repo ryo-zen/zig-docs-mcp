@@ -118,7 +118,7 @@ test "nested directories in tmpdir" {
 ## Related
 
 - **[std.testing.tmpDir](./std.testing.md#tmpDir)** - Function to create a TmpDir instance
-- **[std.Io.Dir](../../io/std.io.md)** - Directory handle operations
+- **[std.Io.Dir](../../Types/Io/std.io.md)** - Directory handle operations
 - **[std.testing main docs](./std.testing.md)** - Complete testing guide
 
 ---

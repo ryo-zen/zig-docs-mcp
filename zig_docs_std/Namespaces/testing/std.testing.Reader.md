@@ -161,7 +161,7 @@ test "handle partial reads" {
 
 - **[std.testing.Reader.Call](./std.testing.Reader.Call.md)** - Configuration for individual read operations
 - **[std.testing.ReaderIndirect](./std.testing.ReaderIndirect.md)** - Reader that wraps another reader
-- **[std.Io.Reader](../../io/std.io.md)** - The actual reader interface
+- **[std.Io.Reader](../../Types/Io/std.io.md)** - The actual reader interface
 - **[std.testing main docs](./std.testing.md)** - Complete testing guide
 
 ---

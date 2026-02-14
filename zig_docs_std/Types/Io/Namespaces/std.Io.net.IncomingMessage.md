@@ -460,4 +460,4 @@ If your message receiving isn't working correctly, check:
 - [std.Io.net.OutgoingMessage](std.Io.net.OutgoingMessage.md) - For sending datagrams
 - [std.Io.net.Socket](std.Io.net.Socket.md) - Socket operations including receive()
 - [std.Io.net.IpAddress](std.Io.net.IpAddress.md) - IP address types
-- [std.Io.Timeout](std.Io.Timeout.md) - Timeout configuration
+- [std.Io.Timeout](../Types/std.Io.Timeout.md) - Timeout configuration

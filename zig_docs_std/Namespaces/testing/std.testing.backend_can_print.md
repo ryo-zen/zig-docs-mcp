@@ -57,7 +57,7 @@ pub const backend_can_print = switch (builtin.zig_backend) {
 ## Related
 
 - **[std.testing main docs](./std.testing.md)** - Complete testing guide
-- **[std.builtin.zig_backend](../../builtin/std.builtin.md)** - Compiler backend information
+- **[std.builtin.zig_backend](../../../zig_docs/compile_variables.md)** - Compiler backend information
 
 ---
 

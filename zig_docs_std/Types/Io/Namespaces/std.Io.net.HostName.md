@@ -186,5 +186,5 @@ fn isSafeDomain(input: []const u8) bool {
 ## See Also
 
 - [std.Io.net.IpAddress](std.Io.net.IpAddress.md) - IP address management
-- [std.Io.Queue](std.Io.Queue.md) - For processing lookup results
+- [std.Io.Queue](../Types/std.Io.Queue.md) - For processing lookup results
 - [std.Io.net.Stream](std.Io.net.Stream.md) - Network streams returned by `connect`

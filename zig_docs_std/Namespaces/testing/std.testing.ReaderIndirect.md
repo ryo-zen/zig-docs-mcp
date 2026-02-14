@@ -106,7 +106,7 @@ test "handle zero-byte reads correctly" {
 ## Related
 
 - **[std.testing.Reader](./std.testing.Reader.md)** - Direct test reader with predetermined data
-- **[std.Io.Reader](../../io/std.io.md)** - The reader interface being wrapped
+- **[std.Io.Reader](../../Types/Io/std.io.md)** - The reader interface being wrapped
 - **[std.testing main docs](./std.testing.md)** - Complete testing guide
 
 ---

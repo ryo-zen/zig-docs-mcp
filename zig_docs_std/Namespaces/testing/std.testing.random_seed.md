@@ -45,7 +45,7 @@ pub var random_seed: u32 = 0;
 
 ## Related
 
-- **[std.Random](../../random/std.random.md)** - Random number generation utilities
+- **[std.Random](./std.testing.md)** - Random number generation utilities
 - **[std.testing main docs](./std.testing.md)** - Complete testing guide
 
 ---

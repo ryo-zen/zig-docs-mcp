@@ -81,4 +81,4 @@ const timeout = std.Io.Timeout{
 
 - [std.Io.Clock](std.Io.Clock.md) - For reading time sources.
 - [std.Io.Duration](std.Io.Duration.md) - For constructing time spans.
-- [std.Io.net.Socket](std.Io.net.Socket.md) - Consumer of timeouts.
+- [std.Io.net.Socket](../Namespaces/std.Io.net.Socket.md) - Consumer of timeouts.

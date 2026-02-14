@@ -47,8 +47,8 @@ pub var log_level = std.log.Level.warn;
 
 ## Related
 
-- **[std.log.Level](../../log/std.log.md)** - Log level enumeration
-- **[std.log](../../log/std.log.md)** - Logging utilities
+- **[std.log.Level](../log/std.log.md)** - Log level enumeration
+- **[std.log](../log/std.log.md)** - Logging utilities
 - **[std.testing main docs](./std.testing.md)** - Complete testing guide
 
 ---

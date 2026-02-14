@@ -187,5 +187,5 @@ The `global_single_threaded` pattern is a pragmatic compromise - simple like the
 ## See Also
 
 - [Migration: Time](migration_time.md) - Full time migration guide
-- [std.Io.Clock](../zig_docs_std/Io/Clock.md) - Clock API reference
-- [std.Io.Threaded](../zig_docs_std/Io/Threaded.md) - Threaded Io documentation
+- [std.Io.Clock](../zig_docs_std/Types/Io/Types/std.Io.Clock.md) - Clock API reference
+- [std.Io.Threaded](../zig_docs_std/Types/Io/Types/std.Io.Threaded.md) - Threaded Io documentation

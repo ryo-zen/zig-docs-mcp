@@ -5,31 +5,96 @@ Zig acknowledges the importance of interacting with existing C code.
 
 There are a few ways that Zig facilitates C interop.
 
+## Overview
+
+C interop in Zig is powerful, but most production issues come from ABI mismatches,
+unclear ownership contracts, and inconsistent error translation.
+
+Treat C boundaries as explicit unsafe boundaries with documented contracts.
+
+## Runnable Examples
+
+- `zig_docs_std/Examples/c_interop.tests.zig` (19 tests covering ABI, strings, pointers, errors, ownership)
+- `zig_docs_std/Examples/c_interop_abi.tests.zig`
+- `zig_docs_std/Examples/std.process.tests.zig`
+- `zig_docs_std/Examples/test_socket_basic.zig`
+
+## Quick Start
+
+1. Define and verify ABI assumptions (`extern struct`, sizes, alignments, field offsets).
+2. Document ownership transfer at every C/Zig boundary.
+3. Translate C error codes to explicit Zig error sets at the boundary layer.
+4. Keep `[*c]T` pointers contained to thin interop shims where possible.
+
+## ABI Pitfalls Checklist
+
+1. Validate size and alignment with compile-time checks when mirroring C types.
+2. Use `extern struct` for C-layout structs and avoid relying on Zig default layout.
+3. Ensure `-target` and C flags match what the C objects/libraries were compiled with.
+4. Revalidate ABI assumptions per target (pointer width, `c_long` width, packing rules).
+
+See `c_interop.tests.zig` tests 1-2 for extern struct validation patterns.
+
+## Ownership Transfer Rules
+
+1. If C allocates and Zig frees, define and use one canonical free function.
+2. If Zig allocates and C keeps a pointer, document lifetime ownership and invalidation points.
+3. Avoid “sometimes borrowed, sometimes owned” APIs without explicit naming and docs.
+4. On errors, specify who owns partially initialized memory.
+
+## Error Translation Pattern
+
+Translate numeric return codes immediately into Zig error sets.
+Do not leak raw C status codes through public Zig APIs.
+
+```zig
+const CCallError = error{ InvalidInput, Busy, Unknown };
+
+fn fromCStatus(code: c_int) CCallError!void {
+    return switch (code) {
+        0 => {},
+        22 => error.InvalidInput, // EINVAL-like
+        16 => error.Busy, // EBUSY-like
+        else => error.Unknown,
+    };
+}
+```
+
+See `c_interop.tests.zig` tests 12-13 for comprehensive error translation examples.
+
+## Decision Guide
+
+- Use `@cImport` for fast integration when you want direct header-driven bindings.
+- Use `zig translate-c` when you need stable generated code, reviewability, or custom edits.
+- Wrap translated symbols with a Zig façade that enforces ownership and typed errors.
+
+## Gotchas
+
+1. `[*c]T` is convenient but weakly constrained; prefer stronger pointer types after boundary validation.
+2. Mismatched target/cflags between translation and compile/link can produce subtle ABI bugs.
+3. Assuming C integer widths without checks causes cross-platform breakage.
+4. Leaving raw C error codes in upper layers makes policy handling inconsistent.
+
 ## [C Type Primitives](#toc-C-Type-Primitives) §
 
 These have guaranteed C ABI compatibility and can be used like any other type.
 
-- `c_char`
-
-- `c_short`
-
-- `c_ushort`
-
-- `c_int`
-
-- `c_uint`
-
-- `c_long`
-
-- `c_ulong`
-
-- `c_longlong`
-
-- `c_ulonglong`
-
-- `c_longdouble`
+| Zig Type | C Type |
+|----------|--------|
+| `c_char` | `char` |
+| `c_short` | `short` |
+| `c_ushort` | `unsigned short` |
+| `c_int` | `int` |
+| `c_uint` | `unsigned int` |
+| `c_long` | `long` |
+| `c_ulong` | `unsigned long` |
+| `c_longlong` | `long long` |
+| `c_ulonglong` | `unsigned long long` |
+| `c_longdouble` | `long double` |
 
 To interop with the C `void` type, use `anyopaque`.
+
+See `c_interop.tests.zig` test "C type primitive sizes" for platform validation examples.
 
 See also:
 
@@ -97,22 +162,13 @@ forwarded to clang. It writes the translated file to stdout.
 
 ### [Command line flags](#toc-Command-line-flags) §
 
-    -I:
-    Specify a search directory for include files. May be used multiple times. Equivalent to
+- **`-I`**: Specify a search directory for include files. May be used multiple times. Equivalent to clang's `-I` flag. The current directory is *not* included by default; use `-I.` to include it.
 
-    clang's -I flag. The current directory is *not* included by default;
-    use -I. to include it.
+- **`-D`**: Define a preprocessor macro. Equivalent to clang's `-D` flag.
 
-    -D: Define a preprocessor macro. Equivalent to
+- **`-cflags [flags] --`**: Pass arbitrary additional command line flags to clang. Note: the list of flags must end with `--`
 
-    clang's -D flag.
-
-    -cflags [flags] --: Pass arbitrary additional
-    command line
-    flags to clang. Note: the list of flags must end with --
-
-    -target: The [target triple](#Targets) for the translated Zig code.
-    If no target is specified, the current host target will be used.
+- **`-target`**: The [target triple](#Targets) for the translated Zig code. If no target is specified, the current host target will be used.
 
 ### [Using -target and -cflags](#toc-Using--target-and--cflags) §
 
@@ -305,6 +361,8 @@ C pointers are a compromise so that Zig code can utilize translated header files
 
 `[*c]T` - C pointer.
 
+**See `c_interop.tests.zig` tests 8-11 for `[*c]T` usage, coercion, and indexing examples.**
+
 - Supports all the syntax of the other two pointer types (`*T`) and (`[*]T`).
   Coerces to other pointer types, as well as [Optional Pointers](#Optional-Pointers).
       When a C pointer is coerced to a non-optional pointer, safety-checked
@@ -405,6 +463,8 @@ const terminated: [:0]const u8 = try allocator.dupeZ(u8, slice);
 defer allocator.free(terminated);
 c_function(terminated);
 ```
+
+**See `c_interop.tests.zig` tests 3-7 for all null-termination patterns proven with runnable code.**
 
 ### Common Errors
 

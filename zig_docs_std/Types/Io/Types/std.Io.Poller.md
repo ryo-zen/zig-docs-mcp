@@ -83,4 +83,4 @@ pub fn main() !void {
 
 - [std.Io.PollFiles](std.Io.PollFiles.md) - Helper for generating the input struct.
 - [std.Io.Reader](std.Io.Reader.md) - The interface for reading data from the poller.
-- [std.Io](std.io.md) - The `std.Io.poll` factory function.
+- [std.Io](../std.io.md) - The `std.Io.poll` factory function.

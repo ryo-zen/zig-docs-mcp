@@ -31,7 +31,7 @@ pub var io_instance: Io.Threaded = undefined;
 ## Related
 
 - **[std.testing.io](./std.testing.io.md)** - The public I/O interface (use this in tests)
-- **[std.Io.Threaded](../../io/std.io.md)** - Async I/O runtime documentation
+- **[std.Io.Threaded](../../Types/Io/std.io.md)** - Async I/O runtime documentation
 - **[std.testing main docs](./std.testing.md)** - Complete testing guide
 
 ---

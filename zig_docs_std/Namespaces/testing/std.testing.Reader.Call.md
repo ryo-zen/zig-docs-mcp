@@ -70,7 +70,7 @@ pub const Call = struct {
 ## Related
 
 - **[std.testing.Reader](./std.testing.Reader.md)** - Test reader that uses Call sequences
-- **[std.Io.Reader](../../io/std.io.md)** - The reader interface being simulated
+- **[std.Io.Reader](../../Types/Io/std.io.md)** - The reader interface being simulated
 - **[std.testing main docs](./std.testing.md)** - Complete testing guide
 
 ---

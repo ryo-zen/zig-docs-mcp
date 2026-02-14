@@ -109,15 +109,19 @@ A document is "done" when it has:
 ## B-Tier: Completeness
 
 ### 9) C Interop and ABI Pitfalls
+- Status: Done ✅ Completed
 - Deliverables:
   - Upgrade: `zig_docs/c.md`
   - Add examples: struct layout checks, ownership transfer rules, error translation
+  - Added runnable example: `zig_docs_std/Examples/c_interop_abi.tests.zig`
 
 ### 10) Doc Architecture + Navigation
+- Status: Done ✅ Completed
 - Deliverables:
   - Global cross-link cleanup (replace broken anchors with local file links where needed).
   - Add "runnable examples" line to core concept docs (like `arrays.md`).
   - Add status trackers per area similar to `documentation_status.md`.
+  - Added trackers: `zig_docs/documentation_status.md`, `zig_docs_std/Namespaces/documentation_status.md`, `zig_docs_std/Types/documentation_status.md`
 
 ## Execution Plan (Phased)
 
@@ -156,7 +160,6 @@ Use this checklist per document:
 
 ## Immediate Next Targets
 
-1. `zig_docs/c.md`
-2. Cross-link cleanup for core docs and playbooks
-3. Per-area status trackers (matching `documentation_status.md` style)
-4. Remaining stubs in `zig_docs_std/Namespaces/` and `zig_docs_std/Types/`
+1. Remaining stubs in `zig_docs_std/Namespaces/` and `zig_docs_std/Types/`
+2. Cross-link maintenance as new docs are added
+3. Expand runnable example coverage for long-tail std docs

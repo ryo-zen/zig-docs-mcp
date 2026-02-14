@@ -52,7 +52,7 @@ The underlying instance is stored in `io_instance` (see `std.testing.io_instance
 ## Related
 
 - **[std.testing.io_instance](./std.testing.io_instance.md)** - The underlying Io.Threaded global
-- **[std.Io](../../io/std.io.md)** - Async I/O runtime documentation
+- **[std.Io](../../Types/Io/std.io.md)** - Async I/O runtime documentation
 - **[std.testing main docs](./std.testing.md)** - Complete testing guide
 
 ---
