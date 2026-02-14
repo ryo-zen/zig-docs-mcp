@@ -4,7 +4,7 @@ Search this page for your error message to find the fix immediately.
 
 Related guides:
 - [Unsafe Boundaries and Invariants](unsafe_boundaries.md)
-- [Error Handling Playbook](error_handling_playbook.md)
+- [Error Handling Playbook](error_handling.md)
 
 ## Table of Contents
 - [Pointer and Mutability Errors](#pointer-and-mutability-errors)

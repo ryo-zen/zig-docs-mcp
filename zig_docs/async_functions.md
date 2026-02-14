@@ -23,6 +23,6 @@ In Zig 0.16-dev, application-level async workflows are typically written through
 
 ## See Also
 
-- [Concurrency Playbook](concurrency_playbook.md)
+- [Concurrency Playbook](concurrency.md)
 - [I/O Reliability and Backpressure](io_reliability_backpressure.md)
 - [std.Io](../zig_docs_std/Types/Io/std.io.md)

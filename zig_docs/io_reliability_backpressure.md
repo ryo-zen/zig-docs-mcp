@@ -64,8 +64,8 @@ Backpressure is the mechanism that pushes back on producers so overload is handl
 
 ## Related Docs
 
-- [Concurrency Playbook](concurrency_playbook.md)
-- [Error Handling Playbook](error_handling_playbook.md)
+- [Concurrency Playbook](concurrency.md)
+- [Error Handling Playbook](error_handling.md)
 - [std.Io](../zig_docs_std/Types/Io/std.io.md)
 - [std.Io.Reader](../zig_docs_std/Types/Io/Types/std.Io.Reader.md)
 - [std.Io.Writer](../zig_docs_std/Types/Io/Types/std.Io.Writer.md)

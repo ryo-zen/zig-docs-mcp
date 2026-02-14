@@ -78,4 +78,4 @@ Define and document one global order.
 - [Atomics](atomics.md)
 - [Async Functions](async_functions.md)
 - [I/O Reliability and Backpressure](io_reliability_backpressure.md)
-- [Error Handling Playbook](error_handling_playbook.md)
+- [Error Handling Playbook](error_handling.md)

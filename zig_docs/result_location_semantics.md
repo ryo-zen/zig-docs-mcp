@@ -1,226 +1,169 @@
 # Result Location Semantics
 
-During compilation, every Zig expression and sub-expression is assigned optional result location
-information. This information dictates what type the expression should have (its result type), and
-where the resulting value should be placed in memory (its result location). The information is
-optional in the sense that not every expression has this information: assignment to
-`_`, for instance, does not provide any information about the type of an
-expression, nor does it provide a concrete memory location to place it in.
+Result Location Semantics (RLS) is Zig's model for how expression context flows through code.
+For each expression, the compiler may track:
 
-As a motivating example, consider the statement `const x: u32 = 42;`. The type
-annotation here provides a result type of `u32` to the initialization expression
-`42`, instructing the compiler to coerce this integer (initially of type
-`comptime_int`) to this type. We will see more examples shortly.
+- A **result type** (what type should be produced).
+- A **result location** (where the produced value should be written).
 
-This is not an implementation detail: the logic outlined above is codified into the Zig language
-specification, and is the primary mechanism of type inference in the language. This system is
-collectively referred to as "Result Location Semantics".
+Not every expression has this information. For example, assigning to `_` provides neither a concrete destination nor a useful type target.
+
+A simple example:
+
+```zig
+const x: u32 = 42;
+```
+
+Here, `42` begins as `comptime_int`, and the declaration context provides a result type of `u32`.
+
+This behavior is part of Zig's language semantics, not an internal optimizer trick. RLS is one of the main mechanisms behind Zig's type inference and aggregate initialization behavior.
+
+## Overview
+
+RLS affects both correctness and performance characteristics:
+
+- Correctness: overlapping reads/writes can behave differently than expected.
+- Performance: aggregate initialization can avoid unnecessary temporaries.
+
+Understanding this model helps avoid subtle bugs in in-place updates and makes cast behavior more predictable.
+
+## Runnable Examples
+
+- `zig_docs_std/Examples/comptime_api_design.tests.zig`
+- `zig_docs_std/Examples/performance_methodology.tests.zig`
+- `zig_docs_std/Examples/arrays.tests.zig`
+
+## Quick Start
+
+1. Assume assignment gives a destination to the right-hand expression.
+2. Treat aggregate updates that both read and write the same object with care.
+3. Use explicit temporaries when overlap might affect evaluation.
+4. Use explicit casts when result type context is ambiguous.
 
 ## [Result Types](#toc-Result-Types) §
 
-Result types are propagated recursively through expressions where possible. For instance, if the
-expression `&e` has result type `*u32`, then
-`e` is given a result type of `u32`, allowing the
-language to perform this coercion before taking a reference.
+Result types propagate recursively where language rules allow it.
 
-The result type mechanism is utilized by casting builtins such as `@intCast`.
-Rather than taking as an argument the type to cast to, these builtins use their result type to
-determine this information. The result type is often known from context; where it is not, the
-`@as` builtin can be used to explicitly provide a result type.
+Example: if `&e` has result type `*u32`, then `e` is given result type `u32` before the reference is formed.
 
-We can break down the result types for each component of a simple expression as follows:
+This is why builtins such as `@intCast` can omit an explicit destination type argument: the destination type often comes from surrounding expression context. If that context is missing, use `@as`.
 
 result_type_propagation.zig
 ```zig
 const expectEqual = @import("std").testing.expectEqual;
+
 test "result type propagates through struct initializer" {
     const S = struct { x: u32 };
     const val: u64 = 123;
     const s: S = .{ .x = @intCast(val) };
-    // .{ .x = @intCast(val) }   has result type `S` due to the type annotation
-    //         @intCast(val)     has result type `u32` due to the type of the field `S.x`
-    //                  val      has no result type, as it is permitted to be any integer type
+    // .{ .x = @intCast(val) } has result type `S` from declaration context.
+    // @intCast(val) has result type `u32` from field `S.x`.
+    // val has no extra result type requirement beyond being an integer.
     try expectEqual(@as(u32, 123), s.x);
 }
 ```
-Shell$ zig test result_type_propagation.zig
-1/1 result_type_propagation.test.result type propagates through struct initializer...OK
-All 1 tests passed.
 
-This result type information is useful for the aforementioned cast builtins, as well as to avoid
-the construction of pre-coercion values, and to avoid the need for explicit type coercions in some
-cases. The following table details how some common expressions propagate result types, where
-`x` and `y` are arbitrary sub-expressions.
+Shell$ `zig test result_type_propagation.zig`
+Expected: test passes.
 
-      Expression
-      Parent Result Type
-      Sub-expression Result Type
+### Result Type Propagation Table
 
-      `const val: T = x`
-      -
-      `x` is a `T`
+For these rows, `x` and `y` are arbitrary sub-expressions.
 
-      `var val: T = x`
-      -
-      `x` is a `T`
-
-      `val = x`
-      -
-      `x` is a `@TypeOf(val)`
-
-      `@as(T, x)`
-      -
-      `x` is a `T`
-
-      `&x`
-      `*T`
-      `x` is a `T`
-
-      `&x`
-      `[]T`
-      `x` is some array of `T`
-
-      `f(x)`
-      -
-      `x` has the type of the first parameter of `f`
-
-      `.{x}`
-      `T`
-      `x` is a `@FieldType(T, "0")`
-
-      `.{ .a = x }`
-      `T`
-      `x` is a `@FieldType(T, "a")`
-
-      `T{x}`
-      -
-      `x` is a `@FieldType(T, "0")`
-
-      `T{ .a = x }`
-      -
-      `x` is a `@FieldType(T, "a")`
-
-      `@Int(x, y)`
-      -
-      `x` is a `std.builtin.Signedness`, `y` is a `u16`
-
-      `@typeInfo(x)`
-      -
-      `x` is a `type`
-
-      `x << y`
-      -
-      `y` is a `std.math.Log2IntCeil(@TypeOf(x))`
+| Expression | Parent result type | Sub-expression result type |
+|---|---|---|
+| `const val: T = x` | none | `x` is `T` |
+| `var val: T = x` | none | `x` is `T` |
+| `val = x` | none | `x` is `@TypeOf(val)` |
+| `@as(T, x)` | none | `x` is `T` |
+| `&x` | `*T` | `x` is `T` |
+| `&x` | `[]T` | `x` is some array of `T` |
+| `f(x)` | none | `x` is the first parameter type of `f` |
+| `.{x}` | `T` | `x` is `@FieldType(T, "0")` |
+| `.{ .a = x }` | `T` | `x` is `@FieldType(T, "a")` |
+| `T{x}` | none | `x` is `@FieldType(T, "0")` |
+| `T{ .a = x }` | none | `x` is `@FieldType(T, "a")` |
+| `@Int(x, y)` | none | `x` is `std.builtin.Signedness`, `y` is `u16` |
+| `@typeInfo(x)` | none | `x` is `type` |
+| `x << y` | none | `y` is `std.math.Log2IntCeil(@TypeOf(x))` |
 
 ## [Result Locations](#toc-Result-Locations) §
 
-In addition to result type information, every expression may be optionally assigned a result
-location: a pointer to which the value must be directly written. This system can be used to prevent
-intermediate copies when initializing data structures, which can be important for types which must
-have a fixed memory address ("pinned" types).
+Result location tracks where a value should be written.
 
-When compiling the simple assignment expression `x = e`, many languages would
-create the temporary value `e` on the stack, and then assign it to
-`x`, potentially performing a type coercion in the process. Zig approaches this
-differently. The expression `e` is given a result type matching the type of
-`x`, and a result location of `&x`. For many syntactic
-forms of `e`, this has no practical impact. However, it can have important
-semantic effects when working with more complex syntax forms.
+For assignment `x = e`, Zig conceptually gives `e`:
 
-For instance, if the expression `.{ .a = x, .b = y }` has a result location of
-`ptr`, then `x` is given a result location of
-`&ptr.a`, and `y` a result location of `&ptr.b`.
-Without this system, this expression would construct a temporary struct value entirely on the stack, and
-only then copy it to the destination address. In essence, Zig desugars the assignment
-`foo = .{ .a = x, .b = y }` to the two statements `foo.a = x; foo.b = y;`.
+- Result type: `@TypeOf(x)`
+- Result location: `&x`
 
-This can sometimes be important when assigning an aggregate value where the initialization
-expression depends on the previous value of the aggregate. The easiest way to demonstrate this is by
-attempting to swap fields of a struct or array - the following logic looks sound, but in fact is not:
+This can avoid constructing intermediate aggregate temporaries.
+
+Example:
+
+- If `.{ .a = x, .b = y }` has destination `ptr`, then:
+  - `x` writes to `&ptr.a`
+  - `y` writes to `&ptr.b`
+
+So `foo = .{ .a = x, .b = y }` behaves like field assignments, not necessarily like "build full temporary then copy".
+
+That matters when source and destination overlap.
 
 result_location_interfering_with_swap.zig
 ```zig
 const expect = @import("std").testing.expect;
+
 test "attempt to swap array elements with array initializer" {
     var arr: [2]u32 = .{ 1, 2 };
     arr = .{ arr[1], arr[0] };
-    // The previous line is equivalent to the following two lines:
+    // Equivalent behavior:
     //   arr[0] = arr[1];
     //   arr[1] = arr[0];
-    // So this fails!
+    // So this does not perform a true swap.
     try expect(arr[0] == 2); // succeeds
     try expect(arr[1] == 1); // fails
 }
 ```
-Shell$ zig test result_location_interfering_with_swap.zig
-1/1 result_location_interfering_with_swap.test.attempt to swap array elements with array initializer...FAIL (TestUnexpectedResult)
-/home/ci/zig-bootstrap/out/host/lib/zig/std/testing.zig:615:14: 0x102d019 in expect (std.zig)
-    if (!ok) return error.TestUnexpectedResult;
-       ^
-/home/ci/zig-bootstrap/zig/doc/langref/result_location_interfering_with_swap.zig:10:5: 0x102d16b in test.attempt to swap array elements with array initializer (result_location_interfering_with_swap.zig)
-    try expect(arr[1] == 1); // fails
-    ^
-0 passed; 0 skipped; 1 failed.
-error: the following test command failed with exit code 1:
-/home/ci/zig-bootstrap/out/zig-local-cache/o/8383ec94797d828be47a45856ad0bd28/test --seed=0x8c80dc9b
 
-The following table details how some common expressions propagate result locations, where
-`x` and `y` are arbitrary sub-expressions. Note that
-some expressions cannot provide meaningful result locations to sub-expressions, even if they
-themselves have a result location.
+Shell$ `zig test result_location_interfering_with_swap.zig`
+Expected: failure, demonstrating overlap/write-order semantics.
 
-      Expression
-      Result Location
-      Sub-expression Result Locations
+### Result Location Propagation Table
 
-      `const val: T = x`
-      -
-      `x` has result location `&val`
+For these rows, `x` and `y` are arbitrary sub-expressions.
 
-      `var val: T = x`
-      -
-      `x` has result location `&val`
+| Expression | Expression result location | Sub-expression result locations |
+|---|---|---|
+| `const val: T = x` | none | `x` has `&val` |
+| `var val: T = x` | none | `x` has `&val` |
+| `val = x` | none | `x` has `&val` |
+| `@as(T, x)` | `ptr` | `x` has no result location |
+| `&x` | `ptr` | `x` has no result location |
+| `f(x)` | `ptr` | `x` has no result location |
+| `.{x}` | `ptr` | `x` has `&ptr[0]` |
+| `.{ .a = x }` | `ptr` | `x` has `&ptr.a` |
+| `T{x}` | `ptr` | `x` has no result location (typed initializers do not propagate it) |
+| `T{ .a = x }` | `ptr` | `x` has no result location (typed initializers do not propagate it) |
+| `@Int(x, y)` | none | `x` and `y` have no result locations |
+| `@typeInfo(x)` | `ptr` | `x` has no result location |
+| `x << y` | `ptr` | `x` and `y` have no result locations |
 
-      `val = x`
-      -
-      `x` has result location `&val`
+## Decision Guidance
 
-      `@as(T, x)`
-      `ptr`
-      `x` has no result location
+- Use inferred initializers (`.{}`) when destination type is already clear.
+- Use typed initializers (`T{}`) when explicit type at the expression site improves readability.
+- Use explicit temporaries for in-place transformations to avoid overlap surprises.
+- Be explicit about copy-vs-in-place behavior in API design.
 
-      `&x`
-      `ptr`
-      `x` has no result location
+## Gotchas
 
-      `f(x)`
-      `ptr`
-      `x` has no result location
+1. Swap-like aggregate assignment can fail due to write ordering.
+2. Typed and inferred initializers propagate context differently.
+3. Missing type context can make cast diagnostics harder to interpret.
+4. Assuming copy behavior without measuring can mislead optimization decisions.
 
-      `.{x}`
-      `ptr`
-      `x` has result location `&ptr[0]`
+## Related Docs
 
-      `.{ .a = x }`
-      `ptr`
-      `x` has result location `&ptr.a`
-
-      `T{x}`
-      `ptr`
-      `x` has no result location (typed initializers do not propagate result locations)
-
-      `T{ .a = x }`
-      `ptr`
-      `x` has no result location (typed initializers do not propagate result locations)
-
-      `@Int(x, y)`
-      -
-      `x` and `y` do not have result locations
-
-      `@typeInfo(x)`
-      `ptr`
-      `x` has no result location
-
-      `x << y`
-      `ptr`
-      `x` and `y` do not have result locations
+- [Comptime](comptime.md)
+- [Arrays](arrays.md)
+- [Memory](memory.md)
+- [Performance Methodology](performance.md)

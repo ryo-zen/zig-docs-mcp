@@ -51,7 +51,7 @@ Common read-modify-write methods on `std.atomic.Value(T)`:
 
 ## See Also
 
-- [Concurrency Playbook](concurrency_playbook.md)
+- [Concurrency Playbook](concurrency.md)
 - [Unsafe Boundaries and Invariants](unsafe_boundaries.md)
 - [@atomicLoad](builtin_functions.md#atomicLoad)
 - [@atomicStore](builtin_functions.md#atomicStore)

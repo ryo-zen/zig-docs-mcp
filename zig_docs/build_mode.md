@@ -1,16 +1,24 @@
 # Build Mode
 
-Zig has four build modes:
+Zig supports four optimization/safety modes. Mode selection directly affects runtime safety checks, performance characteristics, and binary size.
 
-- [Debug](#Debug) (default)
+## Overview
 
-- [ReleaseFast](#ReleaseFast)
+Build mode is a policy decision, not just a compiler flag. Choose the mode based on deployment goals, then test and benchmark in that same mode.
 
-- [ReleaseSafe](#ReleaseSafe)
+## Runnable Examples
 
-- [ReleaseSmall](#ReleaseSmall)
+- `zig_docs_std/Examples/build_release_modes.tests.zig`
+- `zig_docs_std/Examples/testing.tests.zig`
 
-To add standard build options to a build.zig file:
+## Quick Start
+
+1. Use `Debug` for day-to-day development and diagnostics.
+2. Use `ReleaseSafe` for production when safety checks are still valuable.
+3. Use `ReleaseFast` for performance-focused production binaries with mature test coverage.
+4. Use `ReleaseSmall` when artifact size is a hard requirement.
+
+## Standard `build.zig` Pattern
 
 build.zig
 ```zig
@@ -18,84 +26,82 @@ const std = @import("std");
 
 pub fn build(b: *std.Build) void {
     const optimize = b.standardOptimizeOption(.{});
+    const target = b.standardTargetOptions(.{});
+
     const exe = b.addExecutable(.{
-  .name = "example",
-  .root_module = b.createModule(.{
-      .root_source_file = b.path("example.zig"),
-      .optimize = optimize,
-  }),
+        .name = "example",
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("example.zig"),
+            .target = target,
+            .optimize = optimize,
+        }),
     });
+
     b.default_step.dependOn(&exe.step);
 }
 ```
 
-This causes these options to be available:
+This enables standard CLI options:
 
-  -Doptimize=DebugOptimizations off and safety on (default)
-  -Doptimize=ReleaseSafeOptimizations on and safety on
-  -Doptimize=ReleaseFastOptimizations on and safety off
-  -Doptimize=ReleaseSmallSize optimizations on and safety off
+- `-Doptimize=Debug`
+- `-Doptimize=ReleaseSafe`
+- `-Doptimize=ReleaseFast`
+- `-Doptimize=ReleaseSmall`
 
-## [Debug](#toc-Debug) §
+## Mode Summary
 
-Shell$ zig build-exe example.zig
+### [Debug](#toc-Debug) §
 
-- Fast compilation speed
+Shell$ `zig build-exe example.zig`
 
-- Safety checks enabled
+- Fastest compile times.
+- Safety checks enabled.
+- Slowest runtime among the four modes.
+- Usually larger binaries.
 
-- Slow runtime performance
+### [ReleaseFast](#toc-ReleaseFast) §
 
-- Large binary size
+Shell$ `zig build-exe example.zig -O ReleaseFast`
 
-- No reproducible build requirement
+- Highest runtime optimization focus.
+- Most safety checks disabled.
+- Slower compile time than `Debug`.
+- Good default for performance-critical, well-tested services.
 
-## [ReleaseFast](#toc-ReleaseFast) §
+### [ReleaseSafe](#toc-ReleaseSafe) §
 
-Shell$ zig build-exe example.zig -O ReleaseFast
+Shell$ `zig build-exe example.zig -O ReleaseSafe`
 
-- Fast runtime performance
+- High optimization with runtime safety checks retained.
+- Strong option for production rollouts where diagnostics still matter.
+- Slower compile time than `Debug`.
 
-- Safety checks disabled
+### [ReleaseSmall](#toc-ReleaseSmall) §
 
-- Slow compilation speed
+Shell$ `zig build-exe example.zig -O ReleaseSmall`
 
-- Large binary size
+- Optimizes for smaller binary size.
+- Most safety checks disabled.
+- Useful for constrained deployment environments.
 
-- Reproducible build
+## Decision Guide
 
-## [ReleaseSafe](#toc-ReleaseSafe) §
+- Choose `Debug` for development workflows and bug investigation.
+- Choose `ReleaseSafe` for first production deployments or reliability-sensitive systems.
+- Choose `ReleaseFast` for throughput/latency-sensitive binaries after correctness confidence is high.
+- Choose `ReleaseSmall` when distribution footprint is the primary requirement.
 
-Shell$ zig build-exe example.zig -O ReleaseSafe
+## Gotchas
 
-- Medium runtime performance
+1. Benchmarking in `Debug` gives non-representative production numbers.
+2. Switching to unsafe release modes can expose latent undefined behavior.
+3. Mixing mode assumptions across docs, CI, and deployment causes hard-to-debug regressions.
+4. Late mode changes in a release cycle can invalidate prior verification.
 
-- Safety checks enabled
+## Related Docs
 
-- Slow compilation speed
-
-- Large binary size
-
-- Reproducible build
-
-## [ReleaseSmall](#toc-ReleaseSmall) §
-
-Shell$ zig build-exe example.zig -O ReleaseSmall
-
-- Medium runtime performance
-
-- Safety checks disabled
-
-- Slow compilation speed
-
-- Small binary size
-
-- Reproducible build
-
-See also:
-
-- [Compile Variables](#Compile-Variables)
-
-- [Zig Build System](#Zig-Build-System)
-
-- [Illegal Behavior](#Illegal-Behavior)
+- [Compilation Model](compilation_model.md)
+- [Targets](targets.md)
+- [Release Checklist](release_checklist.md)
+- [Performance Methodology](performance.md)
+- [Illegal Behavior](illegal_behavior.md)

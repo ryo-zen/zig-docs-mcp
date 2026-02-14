@@ -51,7 +51,7 @@ A document is "done" when it has:
 - Status: Done ✅ Completed
 - Deliverables:
   - Upgrade: `zig_docs/errors.md`, `zig_docs/error_patterns.md`, `zig_docs/common_errors.md`
-  - New guide: `zig_docs/error_handling_playbook.md`
+  - New guide: `zig_docs/error_handling.md`
   - Add examples: retry/backoff, classify-recoverable vs fatal, context propagation
 - Acceptance criteria:
   - Includes policy templates for CLI/server/library styles.
@@ -61,7 +61,7 @@ A document is "done" when it has:
 - Why: Race conditions and lock discipline are core systems risks.
 - Status: Done ✅ Completed
 - Deliverables:
-  - New guide: `zig_docs/concurrency_playbook.md`
+  - New guide: `zig_docs/concurrency.md`
   - Upgrade: `zig_docs/atomics.md`, async docs, relevant `std.Io` docs
   - Add examples: lock ordering, cancellation, timeout handling, producer-consumer
 - Acceptance criteria:
@@ -80,23 +80,29 @@ A document is "done" when it has:
 ## A-Tier: High Leverage
 
 ### 6) Performance Methodology
+- Status: Done ✅ Completed
 - Deliverables:
-  - New guide: `zig_docs/performance_playbook.md`
+  - New guide: `zig_docs/performance.md`
   - Add examples: benchmark harness patterns, allocation profiling, cache-friendly layouts
+  - Added runnable example: `zig_docs_std/Examples/performance_methodology.tests.zig`
 - Acceptance criteria:
   - Explicit measure-first workflow and optimization triage order.
 
 ### 7) Build Modes + Release Engineering
+- Status: Done ✅ Completed
 - Deliverables:
   - Upgrade: `zig_docs/build_mode.md`, `zig_docs/compilation_model.md`, `zig_docs/targets.md`
   - New guide: `zig_docs/release_checklist.md`
+  - Added runnable example: `zig_docs_std/Examples/build_release_modes.tests.zig`
 - Acceptance criteria:
   - Clear matrix of `Debug` / `ReleaseSafe` / `ReleaseFast` / `ReleaseSmall` behavior impact.
 
 ### 8) Comptime and API Design for Libraries
+- Status: Done ✅ Completed
 - Deliverables:
   - Upgrade: `zig_docs/comptime.md`, `zig_docs/result_location_semantics.md`
   - Add examples: compile-time validation, generic API ergonomics, specialization tradeoffs
+  - Added runnable example: `zig_docs_std/Examples/comptime_api_design.tests.zig`
 - Acceptance criteria:
   - Includes "avoid overusing comptime" guidance and complexity tradeoffs.
 
@@ -127,7 +133,7 @@ A document is "done" when it has:
 3. Build mode behavior impact.
 
 ### Phase 3: Optimization and Library Ergonomics (Weeks 5-6)
-1. Performance playbook.
+1. Performance methodology guide.
 2. Comptime API design guidance.
 3. C interop hardening.
 
@@ -150,9 +156,7 @@ Use this checklist per document:
 
 ## Immediate Next Targets
 
-1. `zig_docs/performance_playbook.md`
-2. `zig_docs/build_mode.md`
-3. `zig_docs/compilation_model.md`
-4. `zig_docs/release_checklist.md`
-5. `zig_docs/comptime.md`
-6. `zig_docs/c.md`
+1. `zig_docs/c.md`
+2. Cross-link cleanup for core docs and playbooks
+3. Per-area status trackers (matching `documentation_status.md` style)
+4. Remaining stubs in `zig_docs_std/Namespaces/` and `zig_docs_std/Types/`

@@ -2,7 +2,7 @@
 
 This guide focuses on **how to write** error handling code in Zig, not the theory.
 
-📘 **Policy and architecture companion:** [Error Handling Playbook](error_handling_playbook.md)
+📘 **Policy and architecture companion:** [Error Handling Playbook](error_handling.md)
 📚 **Runnable policy tests:** `zig_docs_std/Examples/error_handling_playbook.tests.zig`
 
 ## Table of Contents

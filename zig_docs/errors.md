@@ -4,7 +4,7 @@ Error handling is a core control-flow mechanism in Zig.
 
 📚 **Runnable examples:** `zig_docs_std/Examples/error_handling_playbook.tests.zig`
 
-📘 **Policy guide:** [Error Handling Playbook](error_handling_playbook.md)
+📘 **Policy guide:** [Error Handling Playbook](error_handling.md)
 
 ## Overview
 
@@ -27,7 +27,7 @@ fn parsePort(text: []const u8) !u16 {
 ```
 
 Policy detail, retry/backoff, and panic-vs-error guidance live in the playbook:
-[Error Handling Playbook](error_handling_playbook.md).
+[Error Handling Playbook](error_handling.md).
 
 ## [Error Set Type](#toc-Error-Set-Type) §
 
