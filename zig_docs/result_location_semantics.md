@@ -29,6 +29,7 @@ Understanding this model helps avoid subtle bugs in in-place updates and makes c
 
 ## Runnable Examples
 
+- `zig_docs_std/Examples/result_location_semantics.tests.zig` (20 tests covering RLS, swap problem/solution, propagation tables)
 - `zig_docs_std/Examples/comptime_api_design.tests.zig`
 - `zig_docs_std/Examples/performance_methodology.tests.zig`
 - `zig_docs_std/Examples/arrays.tests.zig`
@@ -108,24 +109,26 @@ So `foo = .{ .a = x, .b = y }` behaves like field assignments, not necessarily l
 
 That matters when source and destination overlap.
 
-result_location_interfering_with_swap.zig
-```zig
-const expect = @import("std").testing.expect;
+**The Swap Problem:**
 
-test "attempt to swap array elements with array initializer" {
-    var arr: [2]u32 = .{ 1, 2 };
-    arr = .{ arr[1], arr[0] };
-    // Equivalent behavior:
-    //   arr[0] = arr[1];
-    //   arr[1] = arr[0];
-    // So this does not perform a true swap.
-    try expect(arr[0] == 2); // succeeds
-    try expect(arr[1] == 1); // fails
-}
+```zig
+var arr: [2]u32 = .{ 1, 2 };
+arr = .{ arr[1], arr[0] };  // ❌ WRONG - writes interfere!
+// Result: arr = [2, 2] (not swapped!)
 ```
 
-Shell$ `zig test result_location_interfering_with_swap.zig`
-Expected: failure, demonstrating overlap/write-order semantics.
+**The Solution:**
+
+```zig
+// ✅ CORRECT: Use explicit temporary
+const tmp: [2]u32 = .{ arr[1], arr[0] };
+arr = tmp;  // Now: arr = [2, 1] (swapped!)
+
+// ✅ IDIOMATIC: Use std.mem.swap
+std.mem.swap(u32, &arr[0], &arr[1]);
+```
+
+See `result_location_semantics.tests.zig` tests 4-6 for runnable demonstrations.
 
 ### Result Location Propagation Table
 

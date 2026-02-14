@@ -15,6 +15,7 @@ In most programs:
 
 ## Runnable Examples
 
+- `zig_docs_std/Examples/compilation_model.tests.zig` (11 tests covering discovery, modules, source file structs)
 - `zig_docs_std/Examples/build_release_modes.tests.zig`
 - `zig_docs_std/Examples/testing.tests.zig`
 
@@ -49,6 +50,8 @@ pub fn init(val: u32) TopLevelFields {
 
 A file's root struct type can be referenced from inside the same file using `@This()`.
 
+See `compilation_model.tests.zig` tests 1-2 for working examples of source file instantiation and `@This()` usage.
+
 ## [File and Declaration Discovery](#toc-File-and-Declaration-Discovery) §
 
 Zig analyzes code based on discovery rules. In practice:
@@ -80,6 +83,8 @@ test {
     }
 }
 ```
+
+See `compilation_model.tests.zig` tests 3-5 and 9 for patterns demonstrating forced discovery, conditional imports, and why explicit imports matter.
 
 ## [Special Root Declarations](#toc-Special-Root-Declarations) §
 
