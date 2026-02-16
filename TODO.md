@@ -1,6 +1,6 @@
 # Zig std Namespace Documentation Priority
 
-## Tier 1 - Essential (used in almost every project)
+## Tier 1 - Essential
 | Namespace | Description | Status |
 |-----------|-------------|--------|
 | `mem` | Memory manipulation, allocation, slicing, comparison | ✅ Done |
@@ -12,7 +12,7 @@
 | `array_list` | Dynamic arrays (ArrayList) | ✅ Done |
 | `hash_map` | Hash maps (HashMap, AutoHashMap) | ✅ Done |
 
-## Tier 2 - Very Common (most non-trivial projects)
+## Tier 2 - Very Common
 | Namespace | Description | Status |
 |-----------|-------------|--------|
 | `json` | JSON parsing and serialization | ✅ Done |
@@ -25,7 +25,7 @@
 | `time` | Timers, timestamps, sleep | Not started |
 | `http` | HTTP client/server | Not started |
 
-## Tier 3 - Moderate Use (specific domains)
+## Tier 3 - Moderate Use
 | Namespace | Description | Status |
 |-----------|-------------|--------|
 | `builtin` | Compile-time target info, cpu, os, features | Not started |
@@ -38,7 +38,7 @@
 | `array_hash_map` | Ordered hash maps (insertion-order preserving) | Partial (Types) |
 | `static_string_map` | Compile-time string lookup maps | Not started |
 
-## Tier 4 - Specialized (specific use cases)
+## Tier 4 - Specialized
 | Namespace | Description | Status |
 |-----------|-------------|--------|
 | `zon` | ZON (Zig Object Notation) parsing | Not started |
@@ -50,7 +50,7 @@
 | `c` | C interop utilities | Not started |
 | `posix` | POSIX system calls | Not started |
 
-## Tier 5 - Niche (advanced/low-level)
+## Tier 5 - Niche
 | Namespace | Description | Status |
 |-----------|-------------|--------|
 | `meta` | Compile-time type introspection/reflection | Not started |
@@ -66,9 +66,3 @@
 | `valgrind` | Valgrind integration | Not started |
 | `start` | Program startup/entry point | Not started |
 | `zig` | Zig compiler/toolchain internals | Not started |
-
-## Notes
-- **Tier 1** should be documented first - these are the namespaces every Zig programmer needs
-- **Tier 2** covers the next most common needs and should follow soon after
-- Types already partially documented (ArrayList, HashMap, ArrayHashMap) under `zig_docs_std/Types/`
-- **Completed namespaces:** `mem`, `fmt`, `fs`, `heap`, `testing`, `log`, `json`, `crypto`
