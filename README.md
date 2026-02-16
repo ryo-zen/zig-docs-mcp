@@ -2,6 +2,8 @@
 
 MCP server providing comprehensive access to Zig 0.16 language documentation, standard library references, and working code examples.
 
+**Target Zig Version:** `0.16`
+
 ## Quick Start
 
 ### Prerequisites
@@ -62,11 +64,69 @@ Add this server to your `claude_desktop_config.json`:
 - Ensure you've run `npm run build` before starting the server
 - Restart Claude Desktop after updating the config
 
-### Other MCP Clients
+### Claude Code (CLI)
 
-- **Command:** `node build/index.js`
-- **Protocol:** MCP (stdio transport)
-- **Working directory:** Repository root
+```bash
+# Build first
+npm run build
+
+# Add server (user scope)
+claude mcp add -s user zig-docs -- bash -lc "cd /absolute/path/to/zig-docs-mcp && node build/index.js"
+
+# Verify
+claude mcp list
+```
+
+### Codex CLI
+
+```bash
+# Build first
+npm run build
+
+# Add server
+codex mcp add zig-docs -- bash -lc "cd /absolute/path/to/zig-docs-mcp && node build/index.js"
+
+# Verify
+codex mcp list
+```
+
+### Gemini CLI
+
+```bash
+# Build first
+npm run build
+
+# Add server (user scope, stdio transport)
+gemini mcp add --scope user --transport stdio zig-docs bash -lc "cd /absolute/path/to/zig-docs-mcp && node build/index.js"
+
+# Verify
+gemini mcp list
+```
+
+### OpenCode CLI
+
+```bash
+# Build first
+npm run build
+
+# Add server (interactive wizard)
+opencode mcp add
+
+# Verify
+opencode mcp list
+```
+
+When prompted in `opencode mcp add`, configure a **stdio** server that runs:
+
+```bash
+bash -lc "cd /absolute/path/to/zig-docs-mcp && node build/index.js"
+```
+
+### Notes
+
+- Transport for this server is **stdio**.
+- The server must run from the repository root because docs are resolved via `process.cwd()`.
+- If you pull new changes, run `npm run build` again before reconnecting.
 
 ## Features
 
