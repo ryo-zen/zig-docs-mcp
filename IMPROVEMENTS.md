@@ -121,7 +121,7 @@ A document is "done" when it has:
   - Global cross-link cleanup (replace broken anchors with local file links where needed).
   - Add "runnable examples" line to core concept docs (like `arrays.md`).
   - Add status trackers per area similar to `documentation_status.md`.
-  - Added trackers: `zig_docs/documentation_status.md`, `zig_docs_std/Namespaces/documentation_status.md`, `zig_docs_std/Types/documentation_status.md`
+  - Added trackers: `zig_docs/documentation_status.md`, `zig_docs_std/Namespaces/namespace_tracking.md`, `zig_docs_std/Types/documentation_status.md`
 
 ## Execution Plan (Phased)
 

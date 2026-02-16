@@ -9,8 +9,8 @@
 | `heap` | Allocators (GeneralPurpose, page, arena, c) | ✅ Done |
 | `testing` | Test assertions, expect, allocator for tests | ✅ Done |
 | `log` | Structured logging | ✅ Done |
-| `array_list` | Dynamic arrays (ArrayList) | Partial (Types) |
-| `hash_map` | Hash maps (HashMap, AutoHashMap) | Partial (Types) |
+| `array_list` | Dynamic arrays (ArrayList) | ✅ Done |
+| `hash_map` | Hash maps (HashMap, AutoHashMap) | ✅ Done |
 
 ## Tier 2 - Very Common (most non-trivial projects)
 | Namespace | Description | Status |
