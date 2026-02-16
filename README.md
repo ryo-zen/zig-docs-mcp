@@ -150,35 +150,46 @@ Scope notes:
 # Build first
 npm run build
 
-# Add server (interactive wizard)
-opencode mcp add
-
 # Verify
 opencode mcp list
 ```
 
-When prompted in `opencode mcp add`, configure a **stdio** server that runs:
-
-```bash
-bash -lc "cd /absolute/path/to/zig-docs-mcp && node build/index.js"
-```
-
-Optional config-file form (`~/.config/opencode/opencode.json`):
+Preferred setup: add MCP in OpenCode config (`~/.config/opencode/opencode.json` or `~/.config/opencode/opencode.jsonc`):
 
 ```json
 {
+  "$schema": "https://opencode.ai/config.json",
   "mcp": {
     "zig-docs": {
       "type": "local",
-      "command": ["bash", "-lc", "cd /absolute/path/to/zig-docs-mcp && node build/index.js"]
+      "command": ["bash", "-lc", "cd /absolute/path/to/zig-docs-mcp && node build/index.js"],
+      "enabled": true
     }
   }
 }
 ```
 
-Scope notes:
-- OpenCode loads user/global config from `~/.config/opencode/config.json`, `~/.config/opencode/opencode.json`, and `~/.config/opencode/opencode.jsonc`.
-- `opencode mcp add` does not currently expose a dedicated `--scope` flag.
+Optional environment variables:
+
+```json
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "zig-docs": {
+      "type": "local",
+      "command": ["bash", "-lc", "cd /absolute/path/to/zig-docs-mcp && node build/index.js"],
+      "environment": {
+        "NODE_ENV": "production"
+      }
+    }
+  }
+}
+```
+
+OpenCode notes:
+- OpenCode loads global config from `~/.config/opencode/config.json`, `~/.config/opencode/opencode.json`, and `~/.config/opencode/opencode.jsonc`.
+- MCP server config uses `mcp.<name>` with `type: "local"` or `type: "remote"`.
+- If you see `MCP error -32000: Connection closed`, verify `command` is a proper argv array (not a broken quoted string split into bad tokens).
 
 ### Notes
 
