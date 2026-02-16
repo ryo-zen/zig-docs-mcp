@@ -1,4 +1,4 @@
-# Zig Documentation MCP Server 0.16
+# Zig Documentation MCP Server
 
 MCP server providing comprehensive access to Zig 0.16 language documentation, standard library references, and working code examples.
 
@@ -200,10 +200,11 @@ OpenCode notes:
 ## Features
 
 ### Resources
-The server exposes three types of resources:
+The server exposes four types of resources:
 - **Language Documentation** (`zig://doc/*`) - Zig language features, syntax, and concepts
 - **Standard Library** (`zig://std/*`) - Type and namespace documentation
 - **Working Examples** (`zig://examples/*`) - Runnable Zig code examples
+- **Coding Patterns** (`zig://patterns/*`) - Practical Zig coding patterns organized by category
 
 ### Tools
 - `search_zig_docs` - Search across all documentation with smart scoring and fuzzy matching
@@ -212,25 +213,36 @@ The server exposes three types of resources:
 - `get_syntax_examples` - Get code examples for language constructs
 - `get_example` - Retrieve working code examples by topic
 - `server_diagnostics` - Get server health, cache stats, and diagnostic information
+- `introspect_type` - Introspect a Zig type to see its methods, fields, and structure
+- `validate_code` - Validate a Zig code snippet and get compilation errors if any
+- `query_stdlib_source` - Query the Zig standard library source code for a specific file/module
 
 ## Documentation Structure
 
 - `zig_docs/` - Language documentation (syntax, features, concepts)
 - `zig_docs_std/` - Standard library documentation
   - `Types/` - Type documentation (ArrayList, ArrayHashMap, etc.)
-  - `Examples/` - Working Zig code examples (158 examples)
+  - `Examples/` - Working Zig code examples (167 examples)
+- `zig_patterns/` - Coding patterns organized by category
+  - `memory/` - Memory management patterns
+  - `errors/` - Error handling patterns
+  - `iterators/` - Iterator patterns
+  - `comptime/` - Compile-time patterns
+  - `io/` - I/O patterns
+  - `testing/` - Testing patterns
 - `templates/` - Documentation templates
 
 ## What's Included
 
-- **72 Language Documentation Files** - Covering Zig language features and migration notes
-- **345 Standard Library Docs** - Type and namespace documentation
-- **158 Working Code Examples** - Runnable Zig code demonstrating patterns and APIs
-- **589 Total Cached Resources** - Loaded into memory at startup
+- **75 Language Documentation Files** - Covering Zig language features and migration notes
+- **386 Standard Library Docs** - Type and namespace documentation
+- **167 Working Code Examples** - Runnable Zig code demonstrating patterns and APIs
+- **14 Coding Patterns** - Practical patterns organized by category
+- **642 Total Cached Resources** - Loaded into memory at startup
 
 ## Working Examples
 
-The server includes 158 working Zig examples covering:
+The server includes 167 working Zig examples covering:
 - Data structures (ArrayList, ArrayHashMap)
 - I/O operations (Reader, Writer, std.Io)
 - JSON parsing and serialization
@@ -242,6 +254,20 @@ The server includes 158 working Zig examples covering:
 Access examples via:
 - Resources: `zig://examples/arraylist`, `zig://examples/reader`, etc.
 - Tool: `get_example("arraylist")`
+
+## Coding Patterns
+
+The server includes 14 practical coding patterns organized by category:
+- **Memory Management** - Arena allocators, defer cleanup, errdefer rollback
+- **Error Handling** - Custom error sets, try propagation
+- **Iterators** - Split parsing, window iteration
+- **Compile-time** - Compile-time validation, generic functions
+- **I/O** - Buffered I/O patterns
+- **Testing** - Allocator testing patterns
+
+Access patterns via:
+- Resources: `zig://patterns/memory/arena_allocator`, etc.
+- Search: `search_zig_docs("arena allocator")`
 
 ## Documentation
 
