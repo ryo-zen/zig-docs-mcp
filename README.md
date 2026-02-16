@@ -1,4 +1,4 @@
-# Zig Documentation MCP Server
+# Zig Documentation MCP Server 0.16
 
 MCP server providing comprehensive access to Zig 0.16 language documentation, standard library references, and working code examples.
 
@@ -43,27 +43,6 @@ npm run test:coverage
 
 ## MCP Integration
 
-### Claude Desktop
-
-Add this server to your `claude_desktop_config.json`:
-
-```json
-{
-  "mcpServers": {
-    "zig-docs": {
-      "command": "node",
-      "args": ["/absolute/path/to/zig-docs-mcp/build/index.js"],
-      "cwd": "/absolute/path/to/zig-docs-mcp"
-    }
-  }
-}
-```
-
-**Important:**
-- Replace `/absolute/path/to/zig-docs-mcp` with the actual absolute path
-- Ensure you've run `npm run build` before starting the server
-- Restart Claude Desktop after updating the config
-
 ### Claude Code (CLI)
 
 ```bash
@@ -76,6 +55,36 @@ claude mcp add -s user zig-docs -- bash -lc "cd /absolute/path/to/zig-docs-mcp &
 # Verify
 claude mcp list
 ```
+
+Optional config-file form (`.mcp.json` in your project root):
+
+```json
+{
+  "mcpServers": {
+    "zig-docs": {
+      "type": "stdio",
+      "command": "bash",
+      "args": ["-lc", "cd /absolute/path/to/zig-docs-mcp && node build/index.js"],
+      "env": {}
+    }
+  }
+}
+```
+
+Optional CLI import of the same JSON entry:
+
+```bash
+claude mcp add-json -s user zig-docs '{"type":"stdio","command":"bash","args":["-lc","cd /absolute/path/to/zig-docs-mcp && node build/index.js"],"env":{}}'
+```
+
+Scope options:
+- `-s user` = global config for your user account.
+- `-s project` or `-s local` = repo-scoped config.
+- `.mcp.json` = file-based repo-scoped config.
+
+**Important:**
+- Replace `/absolute/path/to/zig-docs-mcp` with the actual absolute path
+- Ensure you've run `npm run build` before starting the server
 
 ### Codex CLI
 
@@ -90,6 +99,18 @@ codex mcp add zig-docs -- bash -lc "cd /absolute/path/to/zig-docs-mcp && node bu
 codex mcp list
 ```
 
+Optional config-file form (`~/.codex/config.toml`):
+
+```toml
+[mcp_servers.zig-docs]
+command = "bash"
+args = ["-lc", "cd /absolute/path/to/zig-docs-mcp && node build/index.js"]
+```
+
+Scope notes:
+- `codex mcp add` persists server config in `~/.codex/config.toml` (user/global).
+- Codex CLI does not currently expose a dedicated `--scope` flag for MCP server add.
+
 ### Gemini CLI
 
 ```bash
@@ -102,6 +123,26 @@ gemini mcp add --scope user --transport stdio zig-docs bash -lc "cd /absolute/pa
 # Verify
 gemini mcp list
 ```
+
+Optional config-file form (`~/.gemini/settings.json`):
+
+```json
+{
+  "mcp": {
+    "allowed": ["zig-docs"]
+  },
+  "mcpServers": {
+    "zig-docs": {
+      "command": "bash",
+      "args": ["-lc", "cd /absolute/path/to/zig-docs-mcp && node build/index.js"]
+    }
+  }
+}
+```
+
+Scope notes:
+- `--scope user` stores config in your user settings (for this machine/user).
+- `--scope project` stores config in project scope managed by Gemini CLI.
 
 ### OpenCode CLI
 
@@ -121,6 +162,23 @@ When prompted in `opencode mcp add`, configure a **stdio** server that runs:
 ```bash
 bash -lc "cd /absolute/path/to/zig-docs-mcp && node build/index.js"
 ```
+
+Optional config-file form (`~/.config/opencode/opencode.json`):
+
+```json
+{
+  "mcp": {
+    "zig-docs": {
+      "type": "local",
+      "command": ["bash", "-lc", "cd /absolute/path/to/zig-docs-mcp && node build/index.js"]
+    }
+  }
+}
+```
+
+Scope notes:
+- OpenCode loads user/global config from `~/.config/opencode/config.json`, `~/.config/opencode/opencode.json`, and `~/.config/opencode/opencode.jsonc`.
+- `opencode mcp add` does not currently expose a dedicated `--scope` flag.
 
 ### Notes
 
