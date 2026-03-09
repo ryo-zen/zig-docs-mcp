@@ -20,7 +20,12 @@ import {
 import fs from 'fs';
 import path from 'path';
 import { execSync } from 'child_process';
-import { pathToFileURL } from 'url';
+import { pathToFileURL, fileURLToPath } from 'url';
+
+// Resolve docs paths relative to this script file, not process.cwd()
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const DOCS_ROOT = path.resolve(__dirname, '..');
 
 // Interface for cached resource items
 interface ResourceEntry {
@@ -181,7 +186,7 @@ class ZigDocumentationServer {
       }
 
       // If not in cache, read from disk (fallback)
-      const filePath = path.join(process.cwd(), filename);
+      const filePath = path.join(DOCS_ROOT, filename);
       const content = await fs.promises.readFile(filePath, 'utf8');
 
       // Cache it for next time
@@ -198,10 +203,10 @@ class ZigDocumentationServer {
 
   // Load all documentation files into memory cache at startup
   async loadDocsIntoCache(): Promise<void> {
-    const langDocsDir = path.join(process.cwd(), 'zig_docs');
-    const stdDocsDir = path.join(process.cwd(), 'zig_docs_std');
-    const examplesDir = path.join(process.cwd(), 'zig_docs_std', 'Examples');
-    const patternsDir = path.join(process.cwd(), 'zig_patterns');
+    const langDocsDir = path.join(DOCS_ROOT, 'zig_docs');
+    const stdDocsDir = path.join(DOCS_ROOT, 'zig_docs_std');
+    const examplesDir = path.join(DOCS_ROOT, 'zig_docs_std', 'Examples');
+    const patternsDir = path.join(DOCS_ROOT, 'zig_patterns');
 
     console.error('Loading documentation into cache...');
 
@@ -243,7 +248,7 @@ class ZigDocumentationServer {
           const content = await fs.promises.readFile(fullPath, 'utf8');
 
           // Store in cache with relative path as key
-          const relativePath = path.relative(process.cwd(), fullPath);
+          const relativePath = path.relative(DOCS_ROOT, fullPath);
           this.docCache.set(relativePath, content);
 
           // Build resource list
@@ -281,7 +286,7 @@ class ZigDocumentationServer {
           const content = await fs.promises.readFile(fullPath, 'utf8');
 
           // Store in cache with relative path as key
-          const relativePath = path.relative(process.cwd(), fullPath);
+          const relativePath = path.relative(DOCS_ROOT, fullPath);
           this.docCache.set(relativePath, content);
 
           // Build resource list for examples
@@ -396,7 +401,7 @@ class ZigDocumentationServer {
       ];
 
       for (const candidate of candidates) {
-        if (fs.existsSync(path.join(process.cwd(), candidate))) {
+        if (fs.existsSync(path.join(DOCS_ROOT, candidate))) {
           return candidate;
         }
       }
@@ -421,7 +426,7 @@ class ZigDocumentationServer {
   }
 
   filePathToUri(filePath: string): string {
-    const relativePath = path.relative(process.cwd(), filePath);
+    const relativePath = path.relative(DOCS_ROOT, filePath);
 
     if (relativePath.startsWith('zig_docs/')) {
       const topic = relativePath.replace('zig_docs/', '').replace('.md', '').replace(/_/g, '-');
