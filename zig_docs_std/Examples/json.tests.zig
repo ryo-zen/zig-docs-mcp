@@ -15,7 +15,7 @@ test "Quick Start: Parse JSON String into Struct" {
 
     const Person = struct { name: []const u8, age: u32 };
 
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa = std.heap.DebugAllocator(.{}){};
     defer _ = gpa.deinit();
 
     const json_str = "{\"name\":\"Alice\",\"age\":30}";
@@ -33,7 +33,7 @@ test "Quick Start: Parse JSON String into Struct" {
 test "Quick Start: Parse into Dynamic Value" {
     std.debug.print("\n=== Quick Start: Parse into Dynamic Value ===\n", .{});
 
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa = std.heap.DebugAllocator(.{}){};
     defer _ = gpa.deinit();
 
     const json_str = "{\"name\":\"Bob\",\"age\":25}";
@@ -75,7 +75,7 @@ test "Quick Start: Stringify Struct to JSON" {
 test "Quick Start: Stringify to Heap-Allocated String" {
     std.debug.print("\n=== Quick Start: Stringify to Heap ===\n", .{});
 
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa = std.heap.DebugAllocator(.{}){};
     defer _ = gpa.deinit();
 
     const Point = struct { x: f32, y: f32 };
@@ -128,7 +128,7 @@ test "parseFromSlice: Complete Config Example" {
         debug: bool,
     };
 
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa = std.heap.DebugAllocator(.{}){};
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
 
@@ -175,7 +175,7 @@ test "parseFromSliceLeaky: Arena Example" {
 test "validate: JSON Syntax Validation" {
     std.debug.print("\n=== validate: Syntax Validation ===\n", .{});
 
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa = std.heap.DebugAllocator(.{}){};
     defer _ = gpa.deinit();
 
     const valid_json = "{\"key\": \"value\"}";
@@ -281,7 +281,7 @@ test "fmt: JSON Formatter (using Stringify)" {
 test "Scanner: Token Iteration" {
     std.debug.print("\n=== Scanner: Token Iteration ===\n", .{});
 
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa = std.heap.DebugAllocator(.{}){};
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
 
@@ -323,7 +323,7 @@ test "Pattern 1: REST API Response Parsing" {
         };
     };
 
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa = std.heap.DebugAllocator(.{}){};
     defer _ = gpa.deinit();
 
     const json_response =
@@ -379,7 +379,7 @@ test "Pattern 2: Configuration File Loading (Simulated)" {
         };
     };
 
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa = std.heap.DebugAllocator(.{}){};
     defer _ = gpa.deinit();
 
     const config_json =
@@ -418,7 +418,7 @@ test "Pattern 2: Configuration File Loading (Simulated)" {
 test "Pattern 3: Dynamic JSON Inspection" {
     std.debug.print("\n=== Pattern 3: Dynamic Inspection ===\n", .{});
 
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa = std.heap.DebugAllocator(.{}){};
     defer _ = gpa.deinit();
 
     const json = "{\"count\":5,\"items\":[1,2,3],\"active\":true}";
@@ -456,7 +456,7 @@ test "Error: Unknown Field (strict mode)" {
         known_field: i32,
     };
 
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa = std.heap.DebugAllocator(.{}){};
     defer _ = gpa.deinit();
 
     const json = "{\"known_field\":42,\"unknown_field\":\"extra\"}";
@@ -481,7 +481,7 @@ test "Success: Unknown Field (ignore mode)" {
         known_field: i32,
     };
 
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa = std.heap.DebugAllocator(.{}){};
     defer _ = gpa.deinit();
 
     const json = "{\"known_field\":42,\"unknown_field\":\"extra\"}";
@@ -507,7 +507,7 @@ test "Optional Fields: null and missing" {
         optional: ?[]const u8 = null,
     };
 
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa = std.heap.DebugAllocator(.{}){};
     defer _ = gpa.deinit();
 
     // Test 1: Field is null
@@ -550,7 +550,7 @@ test "Optional Fields: null and missing" {
 test "Value: All JSON Types" {
     std.debug.print("\n=== Value: All JSON Types ===\n", .{});
 
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa = std.heap.DebugAllocator(.{}){};
     defer _ = gpa.deinit();
 
     const json =

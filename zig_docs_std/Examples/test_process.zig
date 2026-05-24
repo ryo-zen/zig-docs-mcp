@@ -87,7 +87,13 @@ pub fn main(init: std.process.Init) !void {
     var stderr_list: std.ArrayList(u8) = .empty;
     defer stderr_list.deinit(init.gpa);
 
-    try child.collectOutput(init.gpa, &stdout_list, &stderr_list, 1024);
+    var stdout_buffer: [1024]u8 = undefined;
+    var stdout_reader = child.stdout.?.readerStreaming(init.io, &stdout_buffer);
+    try stdout_reader.interface.appendRemaining(init.gpa, &stdout_list, .limited(1024));
+
+    var stderr_buffer: [1024]u8 = undefined;
+    var stderr_reader = child.stderr.?.readerStreaming(init.io, &stderr_buffer);
+    try stderr_reader.interface.appendRemaining(init.gpa, &stderr_list, .limited(1024));
 
     const term = try child.wait(init.io);
     if (term == .exited and term.exited == 0 and std.mem.eql(u8, stdout_list.items, test_input)) {

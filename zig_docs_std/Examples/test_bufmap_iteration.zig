@@ -10,7 +10,7 @@ pub fn main() !void {
     {
         std.debug.print("Test 1: Basic Iteration\n", .{});
 
-        var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+        var gpa = std.heap.DebugAllocator(.{}){};
         defer _ = gpa.deinit();
 
         var map = std.BufMap.init(gpa.allocator());
@@ -38,7 +38,7 @@ pub fn main() !void {
     {
         std.debug.print("Test 2: Search During Iteration\n", .{});
 
-        var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+        var gpa = std.heap.DebugAllocator(.{}){};
         defer _ = gpa.deinit();
 
         var map = std.BufMap.init(gpa.allocator());
@@ -68,7 +68,7 @@ pub fn main() !void {
     {
         std.debug.print("Test 3: Collect Keys into List\n", .{});
 
-        var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+        var gpa = std.heap.DebugAllocator(.{}){};
         defer _ = gpa.deinit();
 
         var map = std.BufMap.init(gpa.allocator());
@@ -80,7 +80,7 @@ pub fn main() !void {
 
         std.debug.print("  Collecting all keys...\n", .{});
 
-        var keys: std.ArrayList([]const u8) = .{};
+        var keys: std.ArrayList([]const u8) = .empty;
         defer keys.deinit(gpa.allocator());
 
         var it = map.iterator();
@@ -101,7 +101,7 @@ pub fn main() !void {
     {
         std.debug.print("Test 4: Empty Map Iteration\n", .{});
 
-        var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+        var gpa = std.heap.DebugAllocator(.{}){};
         defer _ = gpa.deinit();
 
         var map = std.BufMap.init(gpa.allocator());
@@ -122,7 +122,7 @@ pub fn main() !void {
     {
         std.debug.print("Test 5: Using getPtr to Modify Values\n", .{});
 
-        var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+        var gpa = std.heap.DebugAllocator(.{}){};
         defer _ = gpa.deinit();
 
         var map = std.BufMap.init(gpa.allocator());

@@ -1,11 +1,11 @@
 const std = @import("std");
 
 pub fn main() !void {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa = std.heap.DebugAllocator(.{}){};
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
 
-    var list: std.ArrayList(i32) = .{};
+    var list: std.ArrayList(i32) = .empty;
     defer list.deinit(allocator);
 
     // Build initial list

@@ -1,13 +1,13 @@
 const std = @import("std");
 
 pub fn main() !void {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa = std.heap.DebugAllocator(.{}){};
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
 
     // Example 1: toOwnedSlice transfers ownership
     {
-        var list: std.ArrayList(u8) = .{};
+        var list: std.ArrayList(u8) = .empty;
         try list.appendSlice(allocator, "Hello, World!");
 
         const owned = try list.toOwnedSlice(allocator);
@@ -21,7 +21,7 @@ pub fn main() !void {
 
     // Example 2: clone creates independent copy
     {
-        var original: std.ArrayList(i32) = .{};
+        var original: std.ArrayList(i32) = .empty;
         defer original.deinit(allocator);
         try original.appendSlice(allocator, &[_]i32{ 1, 2, 3 });
 
@@ -35,7 +35,7 @@ pub fn main() !void {
 
     // Example 3: Transfer ownership back and forth
     {
-        var list: std.ArrayList(u8) = .{};
+        var list: std.ArrayList(u8) = .empty;
         try list.appendSlice(allocator, "transfer");
 
         // Take ownership as slice

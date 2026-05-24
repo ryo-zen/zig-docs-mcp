@@ -10,7 +10,7 @@ const std = @import("std");
 test "Quick Start - String Keys" {
     std.debug.print("\n=== Quick Start - String Keys ===\n", .{});
 
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa = std.heap.DebugAllocator(.{}){};
     defer _ = gpa.deinit();
 
     var map = std.StringHashMap(i32).init(gpa.allocator());
@@ -30,7 +30,7 @@ test "Quick Start - String Keys" {
 test "Quick Start - Integer/Enum Keys" {
     std.debug.print("\n=== Quick Start - Integer/Enum Keys ===\n", .{});
 
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa = std.heap.DebugAllocator(.{}){};
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
 
@@ -50,7 +50,7 @@ test "Quick Start - Integer/Enum Keys" {
 test "Quick Start - Counting/Frequency Map" {
     std.debug.print("\n=== Quick Start - Counting/Frequency Map ===\n", .{});
 
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa = std.heap.DebugAllocator(.{}){};
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
 
@@ -78,7 +78,7 @@ test "Quick Start - Counting/Frequency Map" {
 test "Quick Start - Iterating Over Entries" {
     std.debug.print("\n=== Quick Start - Iterating Over Entries ===\n", .{});
 
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa = std.heap.DebugAllocator(.{}){};
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
 
@@ -107,7 +107,7 @@ test "Quick Start - Iterating Over Entries" {
 test "Type - AutoHashMap" {
     std.debug.print("\n=== Type - AutoHashMap ===\n", .{});
 
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa = std.heap.DebugAllocator(.{}){};
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
 
@@ -126,7 +126,7 @@ test "Type - AutoHashMap" {
 test "Type - AutoHashMapUnmanaged" {
     std.debug.print("\n=== Type - AutoHashMapUnmanaged ===\n", .{});
 
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa = std.heap.DebugAllocator(.{}){};
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
 
@@ -145,7 +145,7 @@ test "Type - AutoHashMapUnmanaged" {
 test "Type - StringHashMap" {
     std.debug.print("\n=== Type - StringHashMap ===\n", .{});
 
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa = std.heap.DebugAllocator(.{}){};
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
 
@@ -164,7 +164,7 @@ test "Type - StringHashMap" {
 test "Type - StringHashMapUnmanaged" {
     std.debug.print("\n=== Type - StringHashMapUnmanaged ===\n", .{});
 
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa = std.heap.DebugAllocator(.{}){};
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
 
@@ -216,7 +216,7 @@ test "Utility - eqlString" {
 test "Operation - put and get" {
     std.debug.print("\n=== Operation - put and get ===\n", .{});
 
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa = std.heap.DebugAllocator(.{}){};
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
 
@@ -234,7 +234,7 @@ test "Operation - put and get" {
 test "Operation - getOrPut" {
     std.debug.print("\n=== Operation - getOrPut ===\n", .{});
 
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa = std.heap.DebugAllocator(.{}){};
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
 
@@ -256,7 +256,7 @@ test "Operation - getOrPut" {
 test "Operation - remove" {
     std.debug.print("\n=== Operation - remove ===\n", .{});
 
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa = std.heap.DebugAllocator(.{}){};
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
 
@@ -276,7 +276,7 @@ test "Operation - remove" {
 test "Operation - contains" {
     std.debug.print("\n=== Operation - contains ===\n", .{});
 
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa = std.heap.DebugAllocator(.{}){};
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
 
@@ -294,7 +294,7 @@ test "Operation - contains" {
 test "Operation - clearAndFree" {
     std.debug.print("\n=== Operation - clearAndFree ===\n", .{});
 
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa = std.heap.DebugAllocator(.{}){};
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
 
@@ -335,7 +335,7 @@ fn countWords(allocator: std.mem.Allocator, text: []const u8) !std.StringHashMap
 test "Usage Pattern - Word Frequency Counter" {
     std.debug.print("\n=== Usage Pattern - Word Frequency Counter ===\n", .{});
 
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa = std.heap.DebugAllocator(.{}){};
     defer _ = gpa.deinit();
 
     var counts = try countWords(gpa.allocator(), "foo bar foo baz foo");
@@ -370,7 +370,7 @@ fn fibonacci(cache: *FibCache, n: u64) !u64 {
 test "Usage Pattern - Memoization Cache" {
     std.debug.print("\n=== Usage Pattern - Memoization Cache ===\n", .{});
 
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa = std.heap.DebugAllocator(.{}){};
     defer _ = gpa.deinit();
 
     var cache = FibCache.init(gpa.allocator());
@@ -400,7 +400,7 @@ fn loadConfig(allocator: std.mem.Allocator) !std.StringHashMap([]const u8) {
 test "Usage Pattern - Configuration Map with Pre-allocation" {
     std.debug.print("\n=== Usage Pattern - Configuration Map with Pre-allocation ===\n", .{});
 
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa = std.heap.DebugAllocator(.{}){};
     defer _ = gpa.deinit();
 
     var config = try loadConfig(gpa.allocator());
@@ -437,7 +437,7 @@ const Cache = struct {
 test "Usage Pattern - Unmanaged Map for Explicit Control" {
     std.debug.print("\n=== Usage Pattern - Unmanaged Map for Explicit Control ===\n", .{});
 
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa = std.heap.DebugAllocator(.{}){};
     defer _ = gpa.deinit();
 
     var cache = Cache.init(gpa.allocator());
@@ -459,7 +459,7 @@ test "Usage Pattern - Unmanaged Map for Explicit Control" {
 test "Performance Tip - Pre-allocate capacity" {
     std.debug.print("\n=== Performance Tip - Pre-allocate capacity ===\n", .{});
 
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa = std.heap.DebugAllocator(.{}){};
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
 
@@ -480,7 +480,7 @@ test "Performance Tip - Pre-allocate capacity" {
 test "Performance Tip - Use getPtr to avoid double lookup" {
     std.debug.print("\n=== Performance Tip - Use getPtr to avoid double lookup ===\n", .{});
 
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa = std.heap.DebugAllocator(.{}){};
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
 
@@ -501,7 +501,7 @@ test "Performance Tip - Use getPtr to avoid double lookup" {
 test "Performance Tip - putAssumeCapacity after pre-allocation" {
     std.debug.print("\n=== Performance Tip - putAssumeCapacity after pre-allocation ===\n", .{});
 
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa = std.heap.DebugAllocator(.{}){};
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
 
@@ -521,7 +521,7 @@ test "Performance Tip - putAssumeCapacity after pre-allocation" {
 test "Performance Tip - clearRetainingCapacity for reuse" {
     std.debug.print("\n=== Performance Tip - clearRetainingCapacity for reuse ===\n", .{});
 
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa = std.heap.DebugAllocator(.{}){};
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
 

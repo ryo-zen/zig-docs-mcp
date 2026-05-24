@@ -2,7 +2,7 @@
 const std = @import("std");
 
 test "Basic Key-Value Storage - Unmanaged" {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa = std.heap.DebugAllocator(.{}){};
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
 
@@ -20,7 +20,7 @@ test "Basic Key-Value Storage - Unmanaged" {
 }
 
 test "Pre-allocated Capacity - Unmanaged" {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa = std.heap.DebugAllocator(.{}){};
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
 
@@ -41,7 +41,7 @@ test "Pre-allocated Capacity - Unmanaged" {
 }
 
 test "getOrPut Pattern - Unmanaged" {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa = std.heap.DebugAllocator(.{}){};
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
 
@@ -68,7 +68,7 @@ test "getOrPut Pattern - Unmanaged" {
 }
 
 test "put and get operations - Unmanaged" {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa = std.heap.DebugAllocator(.{}){};
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
 
@@ -84,7 +84,7 @@ test "put and get operations - Unmanaged" {
 }
 
 test "getPtr for in-place modification - Unmanaged" {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa = std.heap.DebugAllocator(.{}){};
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
 
@@ -102,7 +102,7 @@ test "getPtr for in-place modification - Unmanaged" {
 }
 
 test "contains check - Unmanaged" {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa = std.heap.DebugAllocator(.{}){};
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
 
@@ -118,7 +118,7 @@ test "contains check - Unmanaged" {
 }
 
 test "remove operations - Unmanaged" {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa = std.heap.DebugAllocator(.{}){};
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
 
@@ -138,7 +138,7 @@ test "remove operations - Unmanaged" {
 }
 
 test "fetchRemove returns old value - Unmanaged" {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa = std.heap.DebugAllocator(.{}){};
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
 
@@ -160,7 +160,7 @@ test "fetchRemove returns old value - Unmanaged" {
 }
 
 test "putNoClobber asserts on duplicate - Unmanaged" {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa = std.heap.DebugAllocator(.{}){};
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
 
@@ -175,7 +175,7 @@ test "putNoClobber asserts on duplicate - Unmanaged" {
 }
 
 test "getEntry returns both key and value pointers - Unmanaged" {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa = std.heap.DebugAllocator(.{}){};
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
 
@@ -198,7 +198,7 @@ test "getEntry returns both key and value pointers - Unmanaged" {
 }
 
 test "count and capacity - Unmanaged" {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa = std.heap.DebugAllocator(.{}){};
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
 
@@ -214,7 +214,7 @@ test "count and capacity - Unmanaged" {
 }
 
 test "clearRetainingCapacity - Unmanaged" {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa = std.heap.DebugAllocator(.{}){};
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
 
@@ -234,7 +234,7 @@ test "clearRetainingCapacity - Unmanaged" {
 }
 
 test "clearAndFree - Unmanaged" {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa = std.heap.DebugAllocator(.{}){};
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
 

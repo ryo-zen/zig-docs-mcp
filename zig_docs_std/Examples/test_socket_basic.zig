@@ -7,7 +7,7 @@ const std = @import("std");
 const net = std.Io.net;
 
 pub fn main() !void {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa = std.heap.DebugAllocator(.{}){};
     defer _ = gpa.deinit();
 
     // Initialize IO context

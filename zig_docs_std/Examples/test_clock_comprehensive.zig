@@ -11,7 +11,7 @@ test "Clock.real.now returns unix timestamp" {
     defer threaded.deinit();
     const io = threaded.io();
 
-    const ts = try std.Io.Clock.real.now(io);
+    const ts = std.Io.Clock.real.now(io);
     const seconds = ts.toSeconds();
     // Should be after 2020-01-01 (1577836800)
     try testing.expect(seconds > 1_577_836_800);
@@ -24,8 +24,8 @@ test "Clock.awake.now is monotonic" {
     defer threaded.deinit();
     const io = threaded.io();
 
-    const t1 = try std.Io.Clock.awake.now(io);
-    const t2 = try std.Io.Clock.awake.now(io);
+    const t1 = std.Io.Clock.awake.now(io);
+    const t2 = std.Io.Clock.awake.now(io);
 
     // t2 >= t1 (monotonic guarantee)
     const diff = t1.durationTo(t2);
@@ -57,7 +57,7 @@ test "Timestamp addDuration and durationTo" {
     defer threaded.deinit();
     const io = threaded.io();
 
-    const t1 = try std.Io.Clock.real.now(io);
+    const t1 = std.Io.Clock.real.now(io);
     const five_seconds = std.Io.Duration.fromSeconds(5);
     const t2 = t1.addDuration(five_seconds);
 
@@ -72,7 +72,7 @@ test "Timestamp subDuration" {
     defer threaded.deinit();
     const io = threaded.io();
 
-    const now = try std.Io.Clock.real.now(io);
+    const now = std.Io.Clock.real.now(io);
     const ten_ago = now.subDuration(.fromSeconds(10));
 
     const diff = ten_ago.durationTo(now);
@@ -86,7 +86,7 @@ test "Timestamp durationTo returns negative for past" {
     defer threaded.deinit();
     const io = threaded.io();
 
-    const now = try std.Io.Clock.real.now(io);
+    const now = std.Io.Clock.real.now(io);
     const past = now.subDuration(.fromSeconds(5));
 
     // now.durationTo(past) should be negative
@@ -102,9 +102,9 @@ test "io.sleep with Duration" {
     defer threaded.deinit();
     const io = threaded.io();
 
-    const before = try std.Io.Clock.awake.now(io);
+    const before = std.Io.Clock.awake.now(io);
     io.sleep(.fromMilliseconds(50), .awake) catch {};
-    const after = try std.Io.Clock.awake.now(io);
+    const after = std.Io.Clock.awake.now(io);
 
     const elapsed = before.durationTo(after);
     // Should have slept at least 40ms (allow some slack)

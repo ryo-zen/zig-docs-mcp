@@ -10,7 +10,7 @@ pub fn main() !void {
     {
         std.debug.print("Test 1: Basic Push and Pop\n", .{});
 
-        var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+        var gpa = std.heap.DebugAllocator(.{}){};
         defer _ = gpa.deinit();
 
         var stack = std.BitStack.init(gpa.allocator());
@@ -40,7 +40,7 @@ pub fn main() !void {
     {
         std.debug.print("Test 2: Peek Operations\n", .{});
 
-        var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+        var gpa = std.heap.DebugAllocator(.{}){};
         defer _ = gpa.deinit();
 
         var stack = std.BitStack.init(gpa.allocator());
@@ -67,7 +67,7 @@ pub fn main() !void {
     {
         std.debug.print("Test 3: Empty Stack\n", .{});
 
-        var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+        var gpa = std.heap.DebugAllocator(.{}){};
         defer _ = gpa.deinit();
 
         var stack = std.BitStack.init(gpa.allocator());
@@ -82,7 +82,7 @@ pub fn main() !void {
     {
         std.debug.print("Test 4: Large Sequence\n", .{});
 
-        var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+        var gpa = std.heap.DebugAllocator(.{}){};
         defer _ = gpa.deinit();
 
         var stack = std.BitStack.init(gpa.allocator());

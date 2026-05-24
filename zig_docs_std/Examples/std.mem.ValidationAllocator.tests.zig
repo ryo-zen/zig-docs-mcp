@@ -6,7 +6,7 @@ const std = @import("std");
 test "ValidationAllocator basic usage" {
     std.debug.print("\n🧪 Test: Basic ValidationAllocator usage\n", .{});
 
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa = std.heap.DebugAllocator(.{}){};
     defer _ = gpa.deinit();
 
     var validating = std.mem.validationWrap(gpa.allocator());
@@ -29,7 +29,7 @@ test "ValidationAllocator basic usage" {
 test "ValidationAllocator with multiple allocations" {
     std.debug.print("\n🧪 Test: Multiple allocations\n", .{});
 
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa = std.heap.DebugAllocator(.{}){};
     defer _ = gpa.deinit();
 
     var validating = std.mem.validationWrap(gpa.allocator());
@@ -56,7 +56,7 @@ test "ValidationAllocator with multiple allocations" {
 test "ValidationAllocator with create/destroy" {
     std.debug.print("\n🧪 Test: Single-item create/destroy\n", .{});
 
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa = std.heap.DebugAllocator(.{}){};
     defer _ = gpa.deinit();
 
     var validating = std.mem.validationWrap(gpa.allocator());
@@ -85,7 +85,7 @@ test "ValidationAllocator with create/destroy" {
 test "ValidationAllocator with dynamic structures" {
     std.debug.print("\n🧪 Test: Dynamic data structures\n", .{});
 
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa = std.heap.DebugAllocator(.{}){};
     defer _ = gpa.deinit();
 
     var validating = std.mem.validationWrap(gpa.allocator());
@@ -123,7 +123,7 @@ test "ValidationAllocator with dynamic structures" {
 // This is commented out for documentation purposes only.
 //
 // test "ValidationAllocator catches double-free (WILL ASSERT)" {
-//     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+//     var gpa = std.heap.DebugAllocator(.{}){};
 //     defer _ = gpa.deinit();
 //
 //     var validating = std.mem.validationWrap(gpa.allocator());
@@ -139,7 +139,7 @@ test "ValidationAllocator with dynamic structures" {
 test "Real-world pattern: conditional validation in debug mode" {
     std.debug.print("\n🧪 Test: Conditional validation pattern\n", .{});
 
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa = std.heap.DebugAllocator(.{}){};
     defer _ = gpa.deinit();
 
     // Pattern: use validation in debug, skip in release for performance

@@ -3,12 +3,13 @@
 
 const std = @import("std");
 
-// Test 1: getCwd - get current directory
-test "getCwd - basic usage" {
-    std.debug.print("\n=== Test: getCwd ===\n", .{});
+// Test 1: currentPath - get current directory
+test "currentPath - basic usage" {
+    std.debug.print("\n=== Test: currentPath ===\n", .{});
 
     var buf: [4096]u8 = undefined;
-    const cwd = try std.process.getCwd(&buf);
+    const cwd_len = try std.process.currentPath(std.testing.io, &buf);
+    const cwd = buf[0..cwd_len];
 
     std.debug.print("  Current directory: {s}\n", .{cwd});
     try std.testing.expect(cwd.len > 0);
@@ -16,15 +17,15 @@ test "getCwd - basic usage" {
     std.debug.print("  ✅ PASS\n\n", .{});
 }
 
-// Test 2: getCwdAlloc - get current directory with allocation
-test "getCwdAlloc - with allocator" {
-    std.debug.print("\n=== Test: getCwdAlloc ===\n", .{});
+// Test 2: currentPathAlloc - get current directory with allocation
+test "currentPathAlloc - with allocator" {
+    std.debug.print("\n=== Test: currentPathAlloc ===\n", .{});
 
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa = std.heap.DebugAllocator(.{}){};
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
 
-    const cwd = try std.process.getCwdAlloc(allocator);
+    const cwd = try std.process.currentPathAlloc(std.testing.io, allocator);
     defer allocator.free(cwd);
 
     std.debug.print("  CWD: {s}\n", .{cwd});
@@ -37,7 +38,7 @@ test "getCwdAlloc - with allocator" {
 test "process.run - capture output" {
     std.debug.print("\n=== Test: process.run ===\n", .{});
 
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa = std.heap.DebugAllocator(.{}){};
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
 
@@ -62,7 +63,7 @@ test "process.run - capture output" {
 test "process.spawn - basic spawn and wait" {
     std.debug.print("\n=== Test: process.spawn ===\n", .{});
 
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa = std.heap.DebugAllocator(.{}){};
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
 
@@ -86,7 +87,7 @@ test "process.spawn - basic spawn and wait" {
 test "Child.kill - forcibly terminate" {
     std.debug.print("\n=== Test: Child.kill ===\n", .{});
 
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa = std.heap.DebugAllocator(.{}){};
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
 
@@ -111,7 +112,7 @@ test "Child.kill - forcibly terminate" {
 // test "getUserInfo - POSIX user lookup" {
 //     std.debug.print("\n=== Test: getUserInfo ===\n", .{});
 //
-//     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+//     var gpa = std.heap.DebugAllocator(.{}){};
 //     defer _ = gpa.deinit();
 //     const allocator = gpa.allocator();
 //
@@ -133,7 +134,7 @@ test "Child.kill - forcibly terminate" {
 test "Environ.Map - create and manipulate" {
     std.debug.print("\n=== Test: Environ.Map ===\n", .{});
 
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa = std.heap.DebugAllocator(.{}){};
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
 
@@ -157,7 +158,7 @@ test "Environ.Map - create and manipulate" {
 test "process.run - check Term variants" {
     std.debug.print("\n=== Test: process.run - Term checking ===\n", .{});
 
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa = std.heap.DebugAllocator(.{}){};
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
 
@@ -216,7 +217,7 @@ test "Constants - can_spawn" {
 test "process.run - max output bytes" {
     std.debug.print("\n=== Test: process.run - max_output_bytes ===\n", .{});
 
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa = std.heap.DebugAllocator(.{}){};
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
 
@@ -226,7 +227,8 @@ test "process.run - max output bytes" {
 
     const result = try std.process.run(allocator, io, .{
         .argv = &[_][]const u8{ "echo", "limited output" },
-        .max_output_bytes = 1024,
+        .stdout_limit = .limited(1024),
+        .stderr_limit = .limited(1024),
     });
     defer allocator.free(result.stdout);
     defer allocator.free(result.stderr);
@@ -239,7 +241,7 @@ test "process.run - max output bytes" {
 test "Environ.Map - iteration and removal" {
     std.debug.print("\n=== Test: Environ.Map Advanced ===\n", .{});
 
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa = std.heap.DebugAllocator(.{}){};
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
 
@@ -268,11 +270,11 @@ test "Environ.Map - iteration and removal" {
     std.debug.print("  ✅ PASS\n\n", .{});
 }
 
-// Test 12: process.spawn - piping and collectOutput
-test "process.spawn - piping and collectOutput" {
+// Test 12: process.spawn - piping and reader collection
+test "process.spawn - piping and reader collection" {
     std.debug.print("\n=== Test: process.spawn with Piping ===\n", .{});
 
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa = std.heap.DebugAllocator(.{}){};
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
 
@@ -297,14 +299,19 @@ test "process.spawn - piping and collectOutput" {
     var stderr_list: std.ArrayList(u8) = .empty;
     defer stderr_list.deinit(allocator);
 
-    try child.collectOutput(allocator, &stdout_list, &stderr_list, 1024);
+    var stdout_buffer: [1024]u8 = undefined;
+    var stdout_reader = child.stdout.?.readerStreaming(io, &stdout_buffer);
+    try stdout_reader.interface.appendRemaining(allocator, &stdout_list, .limited(1024));
+
+    var stderr_buffer: [1024]u8 = undefined;
+    var stderr_reader = child.stderr.?.readerStreaming(io, &stderr_buffer);
+    try stderr_reader.interface.appendRemaining(allocator, &stderr_list, .limited(1024));
 
     const term = try child.wait(io);
     try std.testing.expect(term == .exited);
     try std.testing.expect(term.exited == 0);
     try std.testing.expectEqualStrings(input_text, stdout_list.items);
 
-    std.debug.print("  Piping and collectOutput verified\n", .{});
+    std.debug.print("  Piping and reader collection verified\n", .{});
     std.debug.print("  ✅ PASS\n\n", .{});
 }
-

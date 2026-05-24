@@ -6,8 +6,8 @@ const std = @import("std");
 const builtin = @import("builtin");
 const testing = std.testing;
 
-test "GeneralPurposeAllocator: baseline strategy" {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+test "DebugAllocator: baseline strategy" {
+    var gpa = std.heap.DebugAllocator(.{}){};
     defer {
         const status = gpa.deinit();
         std.debug.assert(status == .ok);

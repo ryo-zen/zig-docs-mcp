@@ -10,7 +10,7 @@ pub fn main() !void {
     {
         std.debug.print("Test 1: Clone with Same Allocator\n", .{});
 
-        var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+        var gpa = std.heap.DebugAllocator(.{}){};
         defer _ = gpa.deinit();
 
         var original = std.BufSet.init(gpa.allocator());
@@ -40,7 +40,7 @@ pub fn main() !void {
     {
         std.debug.print("Test 2: Clone is Independent\n", .{});
 
-        var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+        var gpa = std.heap.DebugAllocator(.{}){};
         defer _ = gpa.deinit();
 
         var original = std.BufSet.init(gpa.allocator());
@@ -73,10 +73,10 @@ pub fn main() !void {
     {
         std.debug.print("Test 3: Clone with Different Allocator\n", .{});
 
-        var gpa1 = std.heap.GeneralPurposeAllocator(.{}){};
+        var gpa1 = std.heap.DebugAllocator(.{}){};
         defer _ = gpa1.deinit();
 
-        var gpa2 = std.heap.GeneralPurposeAllocator(.{}){};
+        var gpa2 = std.heap.DebugAllocator(.{}){};
         defer _ = gpa2.deinit();
 
         var original = std.BufSet.init(gpa1.allocator());
@@ -108,7 +108,7 @@ pub fn main() !void {
     {
         std.debug.print("Test 4: Clone Empty Set\n", .{});
 
-        var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+        var gpa = std.heap.DebugAllocator(.{}){};
         defer _ = gpa.deinit();
 
         var original = std.BufSet.init(gpa.allocator());
@@ -135,7 +135,7 @@ pub fn main() !void {
     {
         std.debug.print("Test 5: Clone Large Set\n", .{});
 
-        var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+        var gpa = std.heap.DebugAllocator(.{}){};
         defer _ = gpa.deinit();
         const allocator = gpa.allocator();
 
@@ -169,7 +169,7 @@ pub fn main() !void {
     {
         std.debug.print("Test 6: Get Allocator from Set\n", .{});
 
-        var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+        var gpa = std.heap.DebugAllocator(.{}){};
         defer _ = gpa.deinit();
 
         var set = std.BufSet.init(gpa.allocator());

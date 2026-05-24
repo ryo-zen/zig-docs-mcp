@@ -10,7 +10,7 @@ const std = @import("std");
 test "Quick Start - Basic Dynamic Array" {
     std.debug.print("\n=== Quick Start - Basic Dynamic Array ===\n", .{});
 
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa = std.heap.DebugAllocator(.{}){};
     defer _ = gpa.deinit();
 
     var list: std.ArrayList(i32) = .empty;
@@ -32,7 +32,7 @@ test "Quick Start - Basic Dynamic Array" {
 test "Quick Start - Pre-allocated Capacity" {
     std.debug.print("\n=== Quick Start - Pre-allocated Capacity ===\n", .{});
 
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa = std.heap.DebugAllocator(.{}){};
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
 
@@ -54,7 +54,7 @@ test "Quick Start - Pre-allocated Capacity" {
 test "Quick Start - String Building" {
     std.debug.print("\n=== Quick Start - String Building ===\n", .{});
 
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa = std.heap.DebugAllocator(.{}){};
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
 
@@ -77,7 +77,7 @@ test "Quick Start - String Building" {
 test "Function - append" {
     std.debug.print("\n=== Function - append ===\n", .{});
 
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa = std.heap.DebugAllocator(.{}){};
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
 
@@ -96,7 +96,7 @@ test "Function - append" {
 test "Function - appendSlice" {
     std.debug.print("\n=== Function - appendSlice ===\n", .{});
 
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa = std.heap.DebugAllocator(.{}){};
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
 
@@ -115,7 +115,7 @@ test "Function - appendSlice" {
 test "Function - insert" {
     std.debug.print("\n=== Function - insert ===\n", .{});
 
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa = std.heap.DebugAllocator(.{}){};
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
 
@@ -138,7 +138,7 @@ test "Function - insert" {
 test "Function - orderedRemove" {
     std.debug.print("\n=== Function - orderedRemove ===\n", .{});
 
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa = std.heap.DebugAllocator(.{}){};
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
 
@@ -158,7 +158,7 @@ test "Function - orderedRemove" {
 test "Function - swapRemove" {
     std.debug.print("\n=== Function - swapRemove ===\n", .{});
 
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa = std.heap.DebugAllocator(.{}){};
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
 
@@ -178,7 +178,7 @@ test "Function - swapRemove" {
 test "Function - pop" {
     std.debug.print("\n=== Function - pop ===\n", .{});
 
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa = std.heap.DebugAllocator(.{}){};
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
 
@@ -202,7 +202,7 @@ test "Function - pop" {
 test "Function - ensureTotalCapacity" {
     std.debug.print("\n=== Function - ensureTotalCapacity ===\n", .{});
 
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa = std.heap.DebugAllocator(.{}){};
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
 
@@ -224,7 +224,7 @@ test "Function - ensureTotalCapacity" {
 test "Function - toOwnedSlice" {
     std.debug.print("\n=== Function - toOwnedSlice ===\n", .{});
 
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa = std.heap.DebugAllocator(.{}){};
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
 
@@ -245,7 +245,7 @@ test "Function - toOwnedSlice" {
 test "Function - clearRetainingCapacity" {
     std.debug.print("\n=== Function - clearRetainingCapacity ===\n", .{});
 
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa = std.heap.DebugAllocator(.{}){};
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
 
@@ -268,7 +268,7 @@ test "Function - clearRetainingCapacity" {
 test "Function - clearAndFree" {
     std.debug.print("\n=== Function - clearAndFree ===\n", .{});
 
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa = std.heap.DebugAllocator(.{}){};
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
 
@@ -292,7 +292,7 @@ test "Function - clearAndFree" {
 test "Type - Aligned with custom alignment" {
     std.debug.print("\n=== Type - Aligned with custom alignment ===\n", .{});
 
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa = std.heap.DebugAllocator(.{}){};
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
 
@@ -311,7 +311,7 @@ test "Type - Aligned with custom alignment" {
 test "Type - AlignedManaged" {
     std.debug.print("\n=== Type - AlignedManaged ===\n", .{});
 
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa = std.heap.DebugAllocator(.{}){};
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
 
@@ -331,7 +331,7 @@ test "Type - AlignedManaged" {
 test "Type - Managed" {
     std.debug.print("\n=== Type - Managed ===\n", .{});
 
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa = std.heap.DebugAllocator(.{}){};
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
 
@@ -364,7 +364,7 @@ fn buildGreeting(allocator: std.mem.Allocator, name: []const u8) ![]u8 {
 test "Usage Pattern - String Building" {
     std.debug.print("\n=== Usage Pattern - String Building ===\n", .{});
 
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa = std.heap.DebugAllocator(.{}){};
     defer _ = gpa.deinit();
 
     const greeting = try buildGreeting(gpa.allocator(), "Zig");
@@ -392,7 +392,7 @@ fn processItems(allocator: std.mem.Allocator, count: usize) !void {
 test "Usage Pattern - Pre-allocated Buffer" {
     std.debug.print("\n=== Usage Pattern - Pre-allocated Buffer ===\n", .{});
 
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa = std.heap.DebugAllocator(.{}){};
     defer _ = gpa.deinit();
 
     try processItems(gpa.allocator(), 100);
@@ -416,7 +416,7 @@ fn filterEven(allocator: std.mem.Allocator, numbers: []const i32) ![]i32 {
 test "Usage Pattern - Filtering with Managed Variant" {
     std.debug.print("\n=== Usage Pattern - Filtering with Managed Variant ===\n", .{});
 
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa = std.heap.DebugAllocator(.{}){};
     defer _ = gpa.deinit();
 
     const numbers = [_]i32{ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
@@ -436,7 +436,7 @@ test "Usage Pattern - Filtering with Managed Variant" {
 test "Performance Tip - Pre-allocate for loops" {
     std.debug.print("\n=== Performance Tip - Pre-allocate for loops ===\n", .{});
 
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa = std.heap.DebugAllocator(.{}){};
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
 
@@ -456,7 +456,7 @@ test "Performance Tip - Pre-allocate for loops" {
 test "Performance Tip - swapRemove vs orderedRemove" {
     std.debug.print("\n=== Performance Tip - swapRemove vs orderedRemove ===\n", .{});
 
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa = std.heap.DebugAllocator(.{}){};
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
 
@@ -475,7 +475,7 @@ test "Performance Tip - swapRemove vs orderedRemove" {
 test "Performance Tip - clearRetainingCapacity for reuse" {
     std.debug.print("\n=== Performance Tip - clearRetainingCapacity for reuse ===\n", .{});
 
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa = std.heap.DebugAllocator(.{}){};
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
 
@@ -495,7 +495,7 @@ test "Performance Tip - clearRetainingCapacity for reuse" {
 test "Performance Tip - appendSlice vs loop append" {
     std.debug.print("\n=== Performance Tip - appendSlice vs loop append ===\n", .{});
 
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa = std.heap.DebugAllocator(.{}){};
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
 

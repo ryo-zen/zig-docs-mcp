@@ -325,8 +325,10 @@ test "fuzz - property-based testing" {
     const Context = struct {};
 
     try std.testing.fuzz(Context{}, struct {
-        fn testOne(ctx: Context, input: []const u8) !void {
+        fn testOne(ctx: Context, smith: *std.testing.Smith) !void {
             _ = ctx;
+            var buffer: [64]u8 = undefined;
+            const input = buffer[0..smith.slice(&buffer)];
             // Test that parsing never crashes
             _ = parseNonNegative(input) catch {};
         }

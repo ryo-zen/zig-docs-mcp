@@ -46,8 +46,8 @@ test "arena pattern" {
 }
 
 // Test: GPA leak detection
-test "GPA leak detection" {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+test "debug allocator leak detection" {
+    var gpa = std.heap.DebugAllocator(.{}){};
     defer {
         const leaked = gpa.deinit();
         _ = leaked;
@@ -73,7 +73,7 @@ test "explicit error handling" {
 
 // Test: zero-initialize
 test "zero-initialize buffer" {
-    var buffer = [_]u8{0} ** 100;
+    const buffer = [_]u8{0} ** 100;
     try std.testing.expect(buffer[0] == 0);
     try std.testing.expect(buffer[99] == 0);
 }
@@ -193,7 +193,7 @@ test "library function pattern" {
 test "complex data structure" {
     const allocator = std.testing.allocator;
 
-    var list: std.ArrayList(i32) = .{};
+    var list: std.ArrayList(i32) = .empty;
     defer list.deinit(allocator);
 
     const item1 = try allocator.create(i32);

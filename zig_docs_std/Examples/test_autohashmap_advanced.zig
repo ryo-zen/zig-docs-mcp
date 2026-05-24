@@ -2,7 +2,7 @@
 const std = @import("std");
 
 test "clone" {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa = std.heap.DebugAllocator(.{}){};
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
 
@@ -24,7 +24,7 @@ test "clone" {
 }
 
 test "move" {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa = std.heap.DebugAllocator(.{}){};
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
 
@@ -40,7 +40,7 @@ test "move" {
 }
 
 test "getPtr for large values" {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa = std.heap.DebugAllocator(.{}){};
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
 
@@ -62,7 +62,7 @@ test "getPtr for large values" {
 }
 
 test "getOrPut pattern for caching" {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa = std.heap.DebugAllocator(.{}){};
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
 
@@ -89,7 +89,7 @@ test "getOrPut pattern for caching" {
 }
 
 test "fetchPut for cleanup" {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa = std.heap.DebugAllocator(.{}){};
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
 
@@ -116,7 +116,7 @@ test "fetchPut for cleanup" {
 }
 
 test "ensureTotalCapacity for bulk inserts" {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa = std.heap.DebugAllocator(.{}){};
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
 
@@ -135,7 +135,7 @@ test "ensureTotalCapacity for bulk inserts" {
 }
 
 test "contains vs get performance pattern" {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa = std.heap.DebugAllocator(.{}){};
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
 
@@ -158,7 +158,7 @@ test "contains vs get performance pattern" {
 }
 
 test "StringHashMap for proper string hashing" {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa = std.heap.DebugAllocator(.{}){};
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
 
@@ -176,7 +176,7 @@ test "StringHashMap for proper string hashing" {
 }
 
 test "AssumeCapacity pattern in loops" {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa = std.heap.DebugAllocator(.{}){};
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
 

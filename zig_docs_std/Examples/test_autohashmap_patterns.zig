@@ -2,7 +2,7 @@
 const std = @import("std");
 
 test "Word Frequency Counter" {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa = std.heap.DebugAllocator(.{}){};
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
 
@@ -27,7 +27,7 @@ test "Word Frequency Counter" {
 }
 
 test "Caching Function Results" {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa = std.heap.DebugAllocator(.{}){};
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
 
@@ -60,7 +60,7 @@ test "Caching Function Results" {
 }
 
 test "Building a Lookup Table" {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa = std.heap.DebugAllocator(.{}){};
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
 
@@ -90,7 +90,7 @@ test "Building a Lookup Table" {
 }
 
 test "Removing Duplicates" {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa = std.heap.DebugAllocator(.{}){};
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
 
@@ -99,7 +99,7 @@ test "Removing Duplicates" {
     var seen = std.AutoHashMap(i32, void).init(allocator);
     defer seen.deinit();
 
-    var result: std.ArrayList(i32) = .{};
+    var result: std.ArrayList(i32) = .empty;
     defer result.deinit(allocator);
 
     for (items) |item| {
@@ -120,7 +120,7 @@ test "Removing Duplicates" {
 }
 
 test "Set-like behavior with void values" {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa = std.heap.DebugAllocator(.{}){};
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
 
@@ -141,7 +141,7 @@ test "Set-like behavior with void values" {
 }
 
 test "Counter Pattern" {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa = std.heap.DebugAllocator(.{}){};
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
 

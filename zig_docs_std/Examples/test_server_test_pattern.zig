@@ -2,7 +2,7 @@
 const std = @import("std");
 
 test "server accepts connection" {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa = std.heap.DebugAllocator(.{}){};
     defer _ = gpa.deinit();
 
     var threaded = std.Io.Threaded.init(gpa.allocator(), .{ .environ = .empty });

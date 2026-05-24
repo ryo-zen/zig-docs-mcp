@@ -1,7 +1,7 @@
 const std = @import("std");
 
 pub fn main() !void {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa = std.heap.DebugAllocator(.{}){};
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
 
@@ -10,7 +10,7 @@ pub fn main() !void {
     // Test Example 3: ArrayList with Allocating writer
     std.debug.print("Test: ArrayList with Allocating Writer\n", .{});
     {
-        var list: std.ArrayList(u8) = .{};
+        var list: std.ArrayList(u8) = .empty;
 
         // Use Writer.Allocating for dynamic growth
         var allocating_writer = std.Io.Writer.Allocating.fromArrayList(allocator, &list);
@@ -30,7 +30,7 @@ pub fn main() !void {
     // Test Pattern 2: Building strings dynamically
     std.debug.print("Test: Pattern 2 - Building strings dynamically\n", .{});
     {
-        var list: std.ArrayList(u8) = .{};
+        var list: std.ArrayList(u8) = .empty;
 
         // Use Allocating writer for dynamic growth
         var allocating_writer = std.Io.Writer.Allocating.fromArrayList(allocator, &list);
@@ -55,7 +55,7 @@ pub fn main() !void {
     // Test fromArrayList (fixed buffer behavior)
     std.debug.print("Test: fromArrayList (fixed buffer - takes ownership)\n", .{});
     {
-        var list: std.ArrayList(u8) = .{};
+        var list: std.ArrayList(u8) = .empty;
         try list.ensureTotalCapacity(allocator, 1024);  // Pre-allocate
 
         std.debug.print("List capacity before: {}\n", .{list.capacity});

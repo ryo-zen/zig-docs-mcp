@@ -32,31 +32,33 @@ const LockRank = enum(u8) { low = 1, high = 2 };
 
 fn lockPairOrdered(
     first_rank: LockRank,
-    first: *std.Thread.Mutex,
+    first: *std.Io.Mutex,
     second_rank: LockRank,
-    second: *std.Thread.Mutex,
+    second: *std.Io.Mutex,
 ) void {
+    const io = std.testing.io;
     if (@intFromEnum(first_rank) <= @intFromEnum(second_rank)) {
-        first.lock();
-        second.lock();
+        first.lockUncancelable(io);
+        second.lockUncancelable(io);
     } else {
-        second.lock();
-        first.lock();
+        second.lockUncancelable(io);
+        first.lockUncancelable(io);
     }
 }
 
 fn unlockPairOrdered(
     first_rank: LockRank,
-    first: *std.Thread.Mutex,
+    first: *std.Io.Mutex,
     second_rank: LockRank,
-    second: *std.Thread.Mutex,
+    second: *std.Io.Mutex,
 ) void {
+    const io = std.testing.io;
     if (@intFromEnum(first_rank) <= @intFromEnum(second_rank)) {
-        second.unlock();
-        first.unlock();
+        second.unlock(io);
+        first.unlock(io);
     } else {
-        first.unlock();
-        second.unlock();
+        first.unlock(io);
+        second.unlock(io);
     }
 }
 
@@ -103,8 +105,8 @@ test "cooperative cancellation with atomic stop flag" {
 }
 
 test "lock ordering helper enforces deterministic acquire order" {
-    var low = std.Thread.Mutex{};
-    var high = std.Thread.Mutex{};
+    var low: std.Io.Mutex = .init;
+    var high: std.Io.Mutex = .init;
 
     lockPairOrdered(.high, &high, .low, &low);
     defer unlockPairOrdered(.high, &high, .low, &low);

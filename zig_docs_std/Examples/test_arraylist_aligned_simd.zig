@@ -1,7 +1,7 @@
 const std = @import("std");
 
 pub fn main() !void {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa = std.heap.DebugAllocator(.{}){};
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
 
@@ -10,7 +10,7 @@ pub fn main() !void {
     const Vec4f = @Vector(4, f32);
 
     // Create a 16-byte aligned ArrayList
-    var list: std.ArrayList(Vec4f) = .{};
+    var list: std.ArrayList(Vec4f) = .empty;
     defer list.deinit(allocator);
 
     // Add some vectors

@@ -119,7 +119,7 @@
 
 - **Zig Version:** 0.16.0-dev.2193+fc517bd01
 - **Platform:** Linux x86_64
-- **Allocator:** GeneralPurposeAllocator with leak detection
+- **Allocator:** DebugAllocator with leak detection
 - **Command:** `zig test <filename>.tests.zig`
 
 ---

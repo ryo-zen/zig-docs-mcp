@@ -34,7 +34,7 @@ fn handleConnection(io: std.Io, stream: std.Io.net.Stream) !void {
 }
 
 pub fn main() !void {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa = std.heap.DebugAllocator(.{}){};
     defer _ = gpa.deinit();
 
     var threaded = std.Io.Threaded.init(gpa.allocator(), .{ .environ = .empty });

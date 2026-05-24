@@ -12,7 +12,7 @@ pub fn main() !void {
     // Create a General Purpose Allocator for dynamic memory allocation
     // '.{}' means use default configuration
     // This allocator is good for general use and has safety checks
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa = std.heap.DebugAllocator(.{}){};
 
     // Schedule cleanup when function exits (success or error)
     // '_' discards the deinit() return value (leak detection result)

@@ -1,12 +1,12 @@
 const std = @import("std");
 
 pub fn main() !void {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa = std.heap.DebugAllocator(.{}){};
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
 
     // Using ArrayList as a string builder
-    var string: std.ArrayList(u8) = .{};
+    var string: std.ArrayList(u8) = .empty;
     defer string.deinit(allocator);
 
     try string.appendSlice(allocator, "Hello, ");

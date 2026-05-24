@@ -11,7 +11,7 @@ const is_bsd = switch (builtin.os.tag) {
 test "Kqueue - init (platform-specific)" {
     if (!is_bsd) return error.SkipZigTest;
 
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa = std.heap.DebugAllocator(.{}){};
     defer _ = gpa.deinit();
 
     var kq: std.Io.Kqueue = undefined;

@@ -1,7 +1,7 @@
 const std = @import("std");
 
 pub fn main() !void {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa = std.heap.DebugAllocator(.{}){};
     defer _ = gpa.deinit();
 
     var threaded = std.Io.Threaded.init(gpa.allocator(), .{ .environ = .empty });
@@ -22,7 +22,7 @@ pub fn main() !void {
     // Test 2: Fields Inspection
     std.debug.print("Test 2: Fields Inspection\n", .{});
     {
-        var msg = std.Io.net.IncomingMessage.init;
+        const msg = std.Io.net.IncomingMessage.init;
         std.debug.print("  from: IpAddress (undefined)\n", .{});
         std.debug.print("  data: []u8 (undefined)\n", .{});
         std.debug.print("  control: []u8 (len={d})\n", .{msg.control.len});
@@ -170,7 +170,7 @@ pub fn main() !void {
     std.debug.print("Test 10: Documentation Pattern\n", .{});
     {
         // Common pattern: prepare receive buffer and message
-        var recv_buffer: [2048]u8 = undefined;
+        const recv_buffer: [2048]u8 = undefined;
         var msg = std.Io.net.IncomingMessage.init;
 
         // Optional: allocate control data buffer

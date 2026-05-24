@@ -1,7 +1,7 @@
 const std = @import("std");
 
 pub fn main() !void {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa = std.heap.DebugAllocator(.{}){};
     defer _ = gpa.deinit();
 
     var threaded = std.Io.Threaded.init(gpa.allocator(), .{ .environ = .empty });
@@ -78,7 +78,7 @@ pub fn main() !void {
         const data2 = "Message 2";
         const data3 = "Message 3";
 
-        var messages = [_]std.Io.net.OutgoingMessage{
+        const messages = [_]std.Io.net.OutgoingMessage{
             .{ .address = &target_addr, .data_ptr = data1.ptr, .data_len = data1.len },
             .{ .address = &target_addr, .data_ptr = data2.ptr, .data_len = data2.len },
             .{ .address = &target_addr, .data_ptr = data3.ptr, .data_len = data3.len },

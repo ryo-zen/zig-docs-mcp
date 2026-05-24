@@ -2,7 +2,7 @@
 const std = @import("std");
 
 test "Word frequency counter - Unmanaged" {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa = std.heap.DebugAllocator(.{}){};
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
 
@@ -27,7 +27,7 @@ test "Word frequency counter - Unmanaged" {
 }
 
 test "Caching expensive computations - Unmanaged" {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa = std.heap.DebugAllocator(.{}){};
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
 
@@ -59,7 +59,7 @@ test "Caching expensive computations - Unmanaged" {
 }
 
 test "Set operations with void values - Unmanaged" {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa = std.heap.DebugAllocator(.{}){};
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
 
@@ -79,7 +79,7 @@ test "Set operations with void values - Unmanaged" {
 }
 
 test "Deduplication with set - Unmanaged" {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa = std.heap.DebugAllocator(.{}){};
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
 
@@ -88,7 +88,7 @@ test "Deduplication with set - Unmanaged" {
     var seen = std.AutoHashMapUnmanaged(i32, void){};
     defer seen.deinit(allocator);
 
-    var unique: std.ArrayList(i32) = .{};
+    var unique: std.ArrayList(i32) = .empty;
     defer unique.deinit(allocator);
 
     for (numbers) |num| {
@@ -102,7 +102,7 @@ test "Deduplication with set - Unmanaged" {
 }
 
 test "Building lookup table - Unmanaged" {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa = std.heap.DebugAllocator(.{}){};
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
 
@@ -135,7 +135,7 @@ test "Building lookup table - Unmanaged" {
 }
 
 test "Grouping data by category - Unmanaged" {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa = std.heap.DebugAllocator(.{}){};
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
 
@@ -168,7 +168,7 @@ test "Grouping data by category - Unmanaged" {
 }
 
 test "Graph adjacency list - Unmanaged" {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa = std.heap.DebugAllocator(.{}){};
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
 
@@ -195,7 +195,7 @@ test "Graph adjacency list - Unmanaged" {
 
         const result = try graph.getOrPut(allocator, from);
         if (!result.found_existing) {
-            result.value_ptr.* = .{};
+            result.value_ptr.* = .empty;
         }
         try result.value_ptr.append(allocator, to);
     }
@@ -206,7 +206,7 @@ test "Graph adjacency list - Unmanaged" {
 }
 
 test "Batch processing with clearRetainingCapacity - Unmanaged" {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa = std.heap.DebugAllocator(.{}){};
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
 
@@ -234,7 +234,7 @@ test "Batch processing with clearRetainingCapacity - Unmanaged" {
 }
 
 test "Index remapping - Unmanaged" {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa = std.heap.DebugAllocator(.{}){};
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
 
@@ -254,7 +254,7 @@ test "Index remapping - Unmanaged" {
 }
 
 test "Counting unique elements in batches - Unmanaged" {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa = std.heap.DebugAllocator(.{}){};
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
 

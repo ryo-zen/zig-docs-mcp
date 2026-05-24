@@ -9,7 +9,7 @@ const std = @import("std");
 test "Adapter: Allocator wrapper" {
     std.debug.print("\n🔌 Test: Allocator adapter\n", .{});
 
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa = std.heap.DebugAllocator(.{}){};
     defer _ = gpa.deinit();
 
     // Original allocator
@@ -47,7 +47,7 @@ const SliceReader = struct {
         return to_read;
     }
 
-    // Adapter method: make it compatible with std.io.Reader-like interface
+    // Adapter method: make it compatible with Io.Reader-like interface
     pub fn reader(self: *SliceReader) Reader {
         return .{
             .context = self,
@@ -262,7 +262,7 @@ test "Adapter: Generic reader adapter with comptime" {
 test "Adapter: Stacking adapters" {
     std.debug.print("\n🔌 Test: Multiple adapter layers\n", .{});
 
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa = std.heap.DebugAllocator(.{}){};
     defer _ = gpa.deinit();
 
     // Layer 1: Base allocator

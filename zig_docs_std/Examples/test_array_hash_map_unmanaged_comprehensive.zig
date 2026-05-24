@@ -3,7 +3,7 @@
 const std = @import("std");
 
 test "ArrayHashMapUnmanaged - Basic Usage" {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa = std.heap.DebugAllocator(.{}){};
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
 
@@ -19,7 +19,7 @@ test "ArrayHashMapUnmanaged - Basic Usage" {
         }
     };
 
-    var map = std.array_hash_map.ArrayHashMapUnmanaged(
+    var map = std.ArrayHashMapUnmanaged(
         []const u8,
         i32,
         StringContext,
@@ -32,7 +32,7 @@ test "ArrayHashMapUnmanaged - Basic Usage" {
 }
 
 test "ArrayHashMapUnmanaged - Empty Initialization" {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa = std.heap.DebugAllocator(.{}){};
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
 
@@ -48,7 +48,7 @@ test "ArrayHashMapUnmanaged - Empty Initialization" {
         }
     };
 
-    var map = std.array_hash_map.ArrayHashMapUnmanaged(u64, i32, IntContext, false).empty;
+    var map = std.ArrayHashMapUnmanaged(u64, i32, IntContext, false).empty;
     defer map.deinit(allocator);
 
     try map.put(allocator, 1, 10);
@@ -56,7 +56,7 @@ test "ArrayHashMapUnmanaged - Empty Initialization" {
 }
 
 test "ArrayHashMapUnmanaged - Pre-allocation for Performance" {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa = std.heap.DebugAllocator(.{}){};
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
 
@@ -72,7 +72,7 @@ test "ArrayHashMapUnmanaged - Pre-allocation for Performance" {
         }
     };
 
-    var map = std.array_hash_map.ArrayHashMapUnmanaged(u64, u64, IntContext, false).empty;
+    var map = std.ArrayHashMapUnmanaged(u64, u64, IntContext, false).empty;
     defer map.deinit(allocator);
 
     try map.ensureTotalCapacity(allocator, 100);
@@ -98,8 +98,8 @@ test "ArrayHashMapUnmanaged - Word Counter" {
     };
 
     const countWords = struct {
-        fn func(alloc: std.mem.Allocator, text: []const u8) !std.array_hash_map.ArrayHashMapUnmanaged([]const u8, usize, StringContext, true) {
-            var counts = std.array_hash_map.ArrayHashMapUnmanaged([]const u8, usize, StringContext, true).empty;
+        fn func(alloc: std.mem.Allocator, text: []const u8) !std.ArrayHashMapUnmanaged([]const u8, usize, StringContext, true) {
+            var counts = std.ArrayHashMapUnmanaged([]const u8, usize, StringContext, true).empty;
 
             var iter = std.mem.tokenizeAny(u8, text, " \t\n");
             while (iter.next()) |word| {
@@ -114,7 +114,7 @@ test "ArrayHashMapUnmanaged - Word Counter" {
         }
     }.func;
 
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa = std.heap.DebugAllocator(.{}){};
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
 
@@ -130,7 +130,7 @@ test "ArrayHashMapUnmanaged - Embedding in Struct" {
     const IntContext = std.array_hash_map.AutoContext(u64);
 
     const Cache = struct {
-        data: std.array_hash_map.ArrayHashMapUnmanaged(u64, []const u8, IntContext, false) = .{},
+        data: std.ArrayHashMapUnmanaged(u64, []const u8, IntContext, false) = .{},
         allocator: std.mem.Allocator,
 
         pub fn init(alloc: std.mem.Allocator) @This() {
@@ -154,7 +154,7 @@ test "ArrayHashMapUnmanaged - Embedding in Struct" {
         }
     };
 
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa = std.heap.DebugAllocator(.{}){};
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
 
@@ -169,7 +169,7 @@ test "ArrayHashMapUnmanaged - Embedding in Struct" {
 }
 
 test "ArrayHashMapUnmanaged - init with slices" {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa = std.heap.DebugAllocator(.{}){};
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
 
@@ -187,7 +187,7 @@ test "ArrayHashMapUnmanaged - init with slices" {
 
     const keys = [_][]const u8{ "a", "b", "c" };
     const values = [_]i32{ 1, 2, 3 };
-    var map = try std.array_hash_map.ArrayHashMapUnmanaged([]const u8, i32, StringContext, true).init(
+    var map = try std.ArrayHashMapUnmanaged([]const u8, i32, StringContext, true).init(
         allocator,
         &keys,
         &values,

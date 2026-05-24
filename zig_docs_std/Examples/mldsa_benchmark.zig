@@ -8,7 +8,9 @@
 
 const std = @import("std");
 const mldsa = std.crypto.sign.mldsa;
-const time = std.time;
+fn elapsedNs(start: std.Io.Timestamp, end: std.Io.Timestamp) u64 {
+    return @intCast(start.durationTo(end).toNanoseconds());
+}
 
 const BenchmarkResult = struct {
     name: []const u8,
@@ -22,7 +24,7 @@ const BenchmarkResult = struct {
     total_sign_verify_ns: u64,
 };
 
-fn benchmarkMLDSA44(iterations: usize) !BenchmarkResult {
+fn benchmarkMLDSA44(io: std.Io, iterations: usize) !BenchmarkResult {
     const MLDSA44 = mldsa.MLDSA44;
 
     var keygen_total: u64 = 0;
@@ -34,25 +36,25 @@ fn benchmarkMLDSA44(iterations: usize) !BenchmarkResult {
         // Benchmark key generation
         const seed: [32]u8 = [_]u8{0x44 + @as(u8, @intCast(i % 256))} ** 32;
 
-        const keygen_start = try time.Instant.now();
+        const keygen_start = std.Io.Clock.awake.now(io);
         const key_pair = try MLDSA44.KeyPair.generateDeterministic(seed);
-        const keygen_end = try time.Instant.now();
-        keygen_total += keygen_end.since(keygen_start);
+        const keygen_end = std.Io.Clock.awake.now(io);
+        keygen_total += elapsedNs(keygen_start, keygen_end);
 
         // Prepare message to sign
         const message = "This is a test message for benchmarking ML-DSA signatures";
 
         // Benchmark signing
-        const sign_start = try time.Instant.now();
+        const sign_start = std.Io.Clock.awake.now(io);
         const signature = try key_pair.sign(message, null);
-        const sign_end = try time.Instant.now();
-        sign_total += sign_end.since(sign_start);
+        const sign_end = std.Io.Clock.awake.now(io);
+        sign_total += elapsedNs(sign_start, sign_end);
 
         // Benchmark verification
-        const verify_start = try time.Instant.now();
+        const verify_start = std.Io.Clock.awake.now(io);
         try signature.verify(message, key_pair.public_key);
-        const verify_end = try time.Instant.now();
-        verify_total += verify_end.since(verify_start);
+        const verify_end = std.Io.Clock.awake.now(io);
+        verify_total += elapsedNs(verify_start, verify_end);
     }
 
     const keygen_avg = keygen_total / iterations;
@@ -72,7 +74,7 @@ fn benchmarkMLDSA44(iterations: usize) !BenchmarkResult {
     };
 }
 
-fn benchmarkMLDSA65(iterations: usize) !BenchmarkResult {
+fn benchmarkMLDSA65(io: std.Io, iterations: usize) !BenchmarkResult {
     const MLDSA65 = mldsa.MLDSA65;
 
     var keygen_total: u64 = 0;
@@ -83,22 +85,22 @@ fn benchmarkMLDSA65(iterations: usize) !BenchmarkResult {
     while (i < iterations) : (i += 1) {
         const seed: [32]u8 = [_]u8{0x65 + @as(u8, @intCast(i % 256))} ** 32;
 
-        const keygen_start = try time.Instant.now();
+        const keygen_start = std.Io.Clock.awake.now(io);
         const key_pair = try MLDSA65.KeyPair.generateDeterministic(seed);
-        const keygen_end = try time.Instant.now();
-        keygen_total += keygen_end.since(keygen_start);
+        const keygen_end = std.Io.Clock.awake.now(io);
+        keygen_total += elapsedNs(keygen_start, keygen_end);
 
         const message = "This is a test message for benchmarking ML-DSA signatures";
 
-        const sign_start = try time.Instant.now();
+        const sign_start = std.Io.Clock.awake.now(io);
         const signature = try key_pair.sign(message, null);
-        const sign_end = try time.Instant.now();
-        sign_total += sign_end.since(sign_start);
+        const sign_end = std.Io.Clock.awake.now(io);
+        sign_total += elapsedNs(sign_start, sign_end);
 
-        const verify_start = try time.Instant.now();
+        const verify_start = std.Io.Clock.awake.now(io);
         try signature.verify(message, key_pair.public_key);
-        const verify_end = try time.Instant.now();
-        verify_total += verify_end.since(verify_start);
+        const verify_end = std.Io.Clock.awake.now(io);
+        verify_total += elapsedNs(verify_start, verify_end);
     }
 
     const keygen_avg = keygen_total / iterations;
@@ -118,7 +120,7 @@ fn benchmarkMLDSA65(iterations: usize) !BenchmarkResult {
     };
 }
 
-fn benchmarkMLDSA87(iterations: usize) !BenchmarkResult {
+fn benchmarkMLDSA87(io: std.Io, iterations: usize) !BenchmarkResult {
     const MLDSA87 = mldsa.MLDSA87;
 
     var keygen_total: u64 = 0;
@@ -129,22 +131,22 @@ fn benchmarkMLDSA87(iterations: usize) !BenchmarkResult {
     while (i < iterations) : (i += 1) {
         const seed: [32]u8 = [_]u8{0x87 + @as(u8, @intCast(i % 256))} ** 32;
 
-        const keygen_start = try time.Instant.now();
+        const keygen_start = std.Io.Clock.awake.now(io);
         const key_pair = try MLDSA87.KeyPair.generateDeterministic(seed);
-        const keygen_end = try time.Instant.now();
-        keygen_total += keygen_end.since(keygen_start);
+        const keygen_end = std.Io.Clock.awake.now(io);
+        keygen_total += elapsedNs(keygen_start, keygen_end);
 
         const message = "This is a test message for benchmarking ML-DSA signatures";
 
-        const sign_start = try time.Instant.now();
+        const sign_start = std.Io.Clock.awake.now(io);
         const signature = try key_pair.sign(message, null);
-        const sign_end = try time.Instant.now();
-        sign_total += sign_end.since(sign_start);
+        const sign_end = std.Io.Clock.awake.now(io);
+        sign_total += elapsedNs(sign_start, sign_end);
 
-        const verify_start = try time.Instant.now();
+        const verify_start = std.Io.Clock.awake.now(io);
         try signature.verify(message, key_pair.public_key);
-        const verify_end = try time.Instant.now();
-        verify_total += verify_end.since(verify_start);
+        const verify_end = std.Io.Clock.awake.now(io);
+        verify_total += elapsedNs(verify_start, verify_end);
     }
 
     const keygen_avg = keygen_total / iterations;
@@ -280,16 +282,23 @@ fn printResults(results: []const BenchmarkResult) void {
 pub fn main() !void {
     const iterations: usize = 1000;
 
+    var gpa = std.heap.DebugAllocator(.{}){};
+    defer _ = gpa.deinit();
+
+    var threaded = std.Io.Threaded.init(gpa.allocator(), .{ .environ = .empty });
+    defer threaded.deinit();
+    const io = threaded.io();
+
     std.debug.print("\n🔬 Benchmarking ML-DSA Parameter Sets ({} iterations each)...\n\n", .{iterations});
 
     std.debug.print("Running ML-DSA-44 benchmark...\n", .{});
-    const result_44 = try benchmarkMLDSA44(iterations);
+    const result_44 = try benchmarkMLDSA44(io, iterations);
 
     std.debug.print("Running ML-DSA-65 benchmark...\n", .{});
-    const result_65 = try benchmarkMLDSA65(iterations);
+    const result_65 = try benchmarkMLDSA65(io, iterations);
 
     std.debug.print("Running ML-DSA-87 benchmark...\n", .{});
-    const result_87 = try benchmarkMLDSA87(iterations);
+    const result_87 = try benchmarkMLDSA87(io, iterations);
 
     const results = [_]BenchmarkResult{ result_44, result_65, result_87 };
     printResults(&results);

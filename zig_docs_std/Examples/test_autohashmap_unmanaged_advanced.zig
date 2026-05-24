@@ -2,7 +2,7 @@
 const std = @import("std");
 
 test "fetchPut returns previous value - Unmanaged" {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa = std.heap.DebugAllocator(.{}){};
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
 
@@ -24,7 +24,7 @@ test "fetchPut returns previous value - Unmanaged" {
 }
 
 test "fetchPutAssumeCapacity - Unmanaged" {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa = std.heap.DebugAllocator(.{}){};
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
 
@@ -43,7 +43,7 @@ test "fetchPutAssumeCapacity - Unmanaged" {
 }
 
 test "getOrPutValue - Unmanaged" {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa = std.heap.DebugAllocator(.{}){};
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
 
@@ -60,7 +60,7 @@ test "getOrPutValue - Unmanaged" {
 }
 
 test "getKey and getKeyPtr - Unmanaged" {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa = std.heap.DebugAllocator(.{}){};
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
 
@@ -81,7 +81,7 @@ test "getKey and getKeyPtr - Unmanaged" {
 }
 
 test "removeByPtr - Unmanaged" {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa = std.heap.DebugAllocator(.{}){};
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
 
@@ -101,7 +101,7 @@ test "removeByPtr - Unmanaged" {
 }
 
 test "Multiple hashmaps with same allocator - Unmanaged" {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa = std.heap.DebugAllocator(.{}){};
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
 
@@ -144,7 +144,7 @@ test "Passing map to functions - Unmanaged" {
         }
     };
 
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa = std.heap.DebugAllocator(.{}){};
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
 
@@ -181,7 +181,7 @@ test "Struct with embedded unmanaged map - Unmanaged" {
         }
     };
 
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa = std.heap.DebugAllocator(.{}){};
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
 
@@ -196,7 +196,7 @@ test "Struct with embedded unmanaged map - Unmanaged" {
 }
 
 test "Promote to managed map - Unmanaged" {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa = std.heap.DebugAllocator(.{}){};
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
 
@@ -218,7 +218,7 @@ test "Promote to managed map - Unmanaged" {
 }
 
 test "Combining multiple maps - Unmanaged" {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa = std.heap.DebugAllocator(.{}){};
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
 
@@ -255,7 +255,7 @@ test "Memory efficiency comparison - Unmanaged vs Managed" {
 }
 
 test "Context-aware operations - Unmanaged" {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa = std.heap.DebugAllocator(.{}){};
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
 
@@ -281,7 +281,7 @@ test "Empty map constant - Unmanaged" {
 }
 
 test "Large batch insertion with pre-allocation - Unmanaged" {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa = std.heap.DebugAllocator(.{}){};
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
 

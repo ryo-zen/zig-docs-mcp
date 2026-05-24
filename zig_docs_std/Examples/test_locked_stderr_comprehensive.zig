@@ -3,7 +3,7 @@ const std = @import("std");
 const Status = enum { success, warning, error_ };
 
 pub fn main() !void {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa = std.heap.DebugAllocator(.{}){};
     defer _ = gpa.deinit();
 
     var threaded = std.Io.Threaded.init(gpa.allocator(), .{ .environ = .empty });

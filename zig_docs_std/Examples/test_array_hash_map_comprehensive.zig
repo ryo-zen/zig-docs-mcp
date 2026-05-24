@@ -1,9 +1,9 @@
-// Comprehensive tests for ArrayHashMap with custom context
-// These examples demonstrate proper usage of ArrayHashMap in Zig 0.16
+// Comprehensive tests for ArrayHashMapUnmanaged with custom context
+// These examples demonstrate proper ArrayHashMap usage in Zig 0.16
 const std = @import("std");
 
-test "ArrayHashMap - Basic Usage with Custom Context" {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+test "ArrayHashMapUnmanaged - Basic Usage with Custom Context" {
+    var gpa = std.heap.DebugAllocator(.{}){};
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
 
@@ -19,20 +19,20 @@ test "ArrayHashMap - Basic Usage with Custom Context" {
         }
     };
 
-    var map = std.array_hash_map.ArrayHashMap(
+    var map: std.ArrayHashMapUnmanaged(
         []const u8,
         i32,
         StringContext,
         true,
-    ).init(allocator);
-    defer map.deinit();
+    ) = .empty;
+    defer map.deinit(allocator);
 
-    try map.put("key", 42);
+    try map.put(allocator, "key", 42);
     try std.testing.expectEqual(@as(i32, 42), map.get("key").?);
 }
 
-test "ArrayHashMap - Stateful Context with Seed" {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+test "ArrayHashMapUnmanaged - Stateful Context with Seed" {
+    var gpa = std.heap.DebugAllocator(.{}){};
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
 
@@ -53,15 +53,15 @@ test "ArrayHashMap - Stateful Context with Seed" {
     };
 
     const ctx = MyContext{ .seed = 12345 };
-    var map = std.array_hash_map.ArrayHashMap(u64, []const u8, MyContext, false).initContext(allocator, ctx);
-    defer map.deinit();
+    var map: std.ArrayHashMapUnmanaged(u64, []const u8, MyContext, false) = .empty;
+    defer map.deinit(allocator);
 
-    try map.put(100, "test");
-    try std.testing.expectEqualStrings("test", map.get(100).?);
+    try map.putContext(allocator, 100, "test", ctx);
+    try std.testing.expectEqualStrings("test", map.getContext(100, ctx).?);
 }
 
-test "ArrayHashMap - Case-Insensitive String Map" {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+test "ArrayHashMapUnmanaged - Case-Insensitive String Map" {
+    var gpa = std.heap.DebugAllocator(.{}){};
     defer _ = gpa.deinit();
 
     const CaseInsensitiveContext = struct {
@@ -81,22 +81,22 @@ test "ArrayHashMap - Case-Insensitive String Map" {
         }
     };
 
-    var map = std.array_hash_map.ArrayHashMap(
+    var map: std.ArrayHashMapUnmanaged(
         []const u8,
         i32,
         CaseInsensitiveContext,
         true,
-    ).init(gpa.allocator());
-    defer map.deinit();
+    ) = .empty;
+    defer map.deinit(gpa.allocator());
 
-    try map.put("Hello", 1);
+    try map.put(gpa.allocator(), "Hello", 1);
     try std.testing.expectEqual(@as(i32, 1), map.get("HELLO").?);
     try std.testing.expectEqual(@as(i32, 1), map.get("hello").?);
     try std.testing.expectEqual(@as(i32, 1), map.get("HeLLo").?);
 }
 
-test "ArrayHashMap - Custom Struct Keys" {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+test "ArrayHashMapUnmanaged - Custom Struct Keys" {
+    var gpa = std.heap.DebugAllocator(.{}){};
     defer _ = gpa.deinit();
 
     const Point = struct {
@@ -120,23 +120,23 @@ test "ArrayHashMap - Custom Struct Keys" {
         }
     };
 
-    var map = std.array_hash_map.ArrayHashMap(
+    var map: std.ArrayHashMapUnmanaged(
         Point,
         []const u8,
         PointContext,
         false,
-    ).init(gpa.allocator());
-    defer map.deinit();
+    ) = .empty;
+    defer map.deinit(gpa.allocator());
 
-    try map.put(Point{ .x = 10, .y = 20 }, "A");
-    try map.put(Point{ .x = 30, .y = 40 }, "B");
+    try map.put(gpa.allocator(), Point{ .x = 10, .y = 20 }, "A");
+    try map.put(gpa.allocator(), Point{ .x = 30, .y = 40 }, "B");
 
     try std.testing.expectEqualStrings("A", map.get(Point{ .x = 10, .y = 20 }).?);
     try std.testing.expectEqualStrings("B", map.get(Point{ .x = 30, .y = 40 }).?);
 }
 
-test "ArrayHashMap - getOrPut Pattern" {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+test "ArrayHashMapUnmanaged - getOrPut Pattern" {
+    var gpa = std.heap.DebugAllocator(.{}){};
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
 
@@ -152,15 +152,15 @@ test "ArrayHashMap - getOrPut Pattern" {
         }
     };
 
-    var map = std.array_hash_map.ArrayHashMap(
+    var map: std.ArrayHashMapUnmanaged(
         []const u8,
         i32,
         StringContext,
         true,
-    ).init(allocator);
-    defer map.deinit();
+    ) = .empty;
+    defer map.deinit(allocator);
 
-    const result = try map.getOrPut("counter");
+    const result = try map.getOrPut(allocator, "counter");
     if (!result.found_existing) {
         result.value_ptr.* = 0;
     }
@@ -169,8 +169,8 @@ test "ArrayHashMap - getOrPut Pattern" {
     try std.testing.expectEqual(@as(i32, 1), map.get("counter").?);
 }
 
-test "ArrayHashMap - Iteration and Sort" {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+test "ArrayHashMapUnmanaged - Iteration and Sort" {
+    var gpa = std.heap.DebugAllocator(.{}){};
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
 
@@ -186,17 +186,17 @@ test "ArrayHashMap - Iteration and Sort" {
         }
     };
 
-    var map = std.array_hash_map.ArrayHashMap(
+    var map: std.ArrayHashMapUnmanaged(
         u64,
         i32,
         IntContext,
         false,
-    ).init(allocator);
-    defer map.deinit();
+    ) = .empty;
+    defer map.deinit(allocator);
 
-    try map.put(30, 3);
-    try map.put(10, 1);
-    try map.put(20, 2);
+    try map.put(allocator, 30, 3);
+    try map.put(allocator, 10, 1);
+    try map.put(allocator, 20, 2);
 
     const SortCtx = struct {
         keys: []const u64,
@@ -213,8 +213,8 @@ test "ArrayHashMap - Iteration and Sort" {
     try std.testing.expectEqual(@as(u64, 30), keys[2]);
 }
 
-test "ArrayHashMap - Clone" {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+test "ArrayHashMapUnmanaged - Clone" {
+    var gpa = std.heap.DebugAllocator(.{}){};
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
 
@@ -230,14 +230,14 @@ test "ArrayHashMap - Clone" {
         }
     };
 
-    var map = std.array_hash_map.ArrayHashMap(u64, i32, IntContext, false).init(allocator);
-    defer map.deinit();
+    var map: std.ArrayHashMapUnmanaged(u64, i32, IntContext, false) = .empty;
+    defer map.deinit(allocator);
 
-    try map.put(1, 10);
-    try map.put(2, 20);
+    try map.put(allocator, 1, 10);
+    try map.put(allocator, 2, 20);
 
-    var map2 = try map.clone();
-    defer map2.deinit();
+    var map2 = try map.clone(allocator);
+    defer map2.deinit(allocator);
 
     try std.testing.expectEqual(@as(i32, 10), map2.get(1).?);
     try std.testing.expectEqual(@as(i32, 20), map2.get(2).?);

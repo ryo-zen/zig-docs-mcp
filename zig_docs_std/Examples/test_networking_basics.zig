@@ -6,7 +6,7 @@ fn performWork() void {}
 fn processBytes(_: []const u8) void {}
 
 test "ShutdownHow - basic usage" {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa = std.heap.DebugAllocator(.{}){};
     defer _ = gpa.deinit();
 
     // Just verify the enum values exist

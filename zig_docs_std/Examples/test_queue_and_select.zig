@@ -10,7 +10,7 @@ test "TypeErasedQueue - initialization" {
 }
 
 test "TypeErasedQueue - basic put and get" {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa = std.heap.DebugAllocator(.{}){};
     defer _ = gpa.deinit();
 
     var threaded = std.Io.Threaded.init(gpa.allocator(), .{ .environ = .empty });
@@ -32,15 +32,12 @@ test "TypeErasedQueue - basic put and get" {
     try std.testing.expect(received >= 1);
 }
 
-test "SelectUnion - type generation" {
-    // Define struct of Future pointers
-    const Futures = struct {
-        task_a: *std.Io.Future(u32),
-        task_b: *std.Io.Future([]const u8),
+test "Select - explicit result union type" {
+    // Zig 0.16 uses explicit result unions with std.Io.Select.
+    const ResultUnion = union(enum) {
+        task_a: u32,
+        task_b: []const u8,
     };
-
-    // Generate union type
-    const ResultUnion = std.Io.SelectUnion(Futures);
 
     // Verify the union type exists and has correct fields
     const test_union: ResultUnion = .{ .task_a = 42 };
@@ -63,7 +60,7 @@ test "Select - result union types" {
 }
 
 test "Select - init" {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa = std.heap.DebugAllocator(.{}){};
     defer _ = gpa.deinit();
 
     var threaded = std.Io.Threaded.init(gpa.allocator(), .{ .environ = .empty });

@@ -10,7 +10,7 @@ pub fn main() !void {
     {
         std.debug.print("Test 1: Basic Iteration\n", .{});
 
-        var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+        var gpa = std.heap.DebugAllocator(.{}){};
         defer _ = gpa.deinit();
 
         var set = std.BufSet.init(gpa.allocator());
@@ -38,7 +38,7 @@ pub fn main() !void {
     {
         std.debug.print("Test 2: Filter During Iteration\n", .{});
 
-        var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+        var gpa = std.heap.DebugAllocator(.{}){};
         defer _ = gpa.deinit();
 
         var set = std.BufSet.init(gpa.allocator());
@@ -69,7 +69,7 @@ pub fn main() !void {
     {
         std.debug.print("Test 3: Collect into Sorted List\n", .{});
 
-        var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+        var gpa = std.heap.DebugAllocator(.{}){};
         defer _ = gpa.deinit();
         const allocator = gpa.allocator();
 
@@ -83,7 +83,7 @@ pub fn main() !void {
 
         std.debug.print("  Collecting all items...\n", .{});
 
-        var items: std.ArrayList([]const u8) = .{};
+        var items: std.ArrayList([]const u8) = .empty;
         defer items.deinit(allocator);
 
         var it = set.iterator();
@@ -111,7 +111,7 @@ pub fn main() !void {
     {
         std.debug.print("Test 4: Empty Set Iteration\n", .{});
 
-        var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+        var gpa = std.heap.DebugAllocator(.{}){};
         defer _ = gpa.deinit();
 
         var set = std.BufSet.init(gpa.allocator());
@@ -132,7 +132,7 @@ pub fn main() !void {
     {
         std.debug.print("Test 5: Count Matching Pattern\n", .{});
 
-        var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+        var gpa = std.heap.DebugAllocator(.{}){};
         defer _ = gpa.deinit();
         const allocator = gpa.allocator();
 

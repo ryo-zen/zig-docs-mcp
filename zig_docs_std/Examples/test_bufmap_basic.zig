@@ -10,7 +10,7 @@ pub fn main() !void {
     {
         std.debug.print("Test 1: Basic Put and Get\n", .{});
 
-        var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+        var gpa = std.heap.DebugAllocator(.{}){};
         defer _ = gpa.deinit();
 
         var map = std.BufMap.init(gpa.allocator());
@@ -42,7 +42,7 @@ pub fn main() !void {
     {
         std.debug.print("Test 2: Updating Values\n", .{});
 
-        var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+        var gpa = std.heap.DebugAllocator(.{}){};
         defer _ = gpa.deinit();
 
         var map = std.BufMap.init(gpa.allocator());
@@ -65,7 +65,7 @@ pub fn main() !void {
     {
         std.debug.print("Test 3: Remove Operations\n", .{});
 
-        var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+        var gpa = std.heap.DebugAllocator(.{}){};
         defer _ = gpa.deinit();
 
         var map = std.BufMap.init(gpa.allocator());
@@ -92,7 +92,7 @@ pub fn main() !void {
     {
         std.debug.print("Test 4: String Ownership\n", .{});
 
-        var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+        var gpa = std.heap.DebugAllocator(.{}){};
         defer _ = gpa.deinit();
 
         var map = std.BufMap.init(gpa.allocator());
@@ -123,7 +123,7 @@ pub fn main() !void {
     {
         std.debug.print("Test 5: Empty Map\n", .{});
 
-        var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+        var gpa = std.heap.DebugAllocator(.{}){};
         defer _ = gpa.deinit();
 
         var map = std.BufMap.init(gpa.allocator());

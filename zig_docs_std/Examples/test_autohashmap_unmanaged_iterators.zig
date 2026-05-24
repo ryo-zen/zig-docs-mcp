@@ -2,7 +2,7 @@
 const std = @import("std");
 
 test "Basic iterator - Unmanaged" {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa = std.heap.DebugAllocator(.{}){};
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
 
@@ -25,7 +25,7 @@ test "Basic iterator - Unmanaged" {
 }
 
 test "Iterator entry modification - Unmanaged" {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa = std.heap.DebugAllocator(.{}){};
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
 
@@ -48,7 +48,7 @@ test "Iterator entry modification - Unmanaged" {
 }
 
 test "keyIterator - Unmanaged" {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa = std.heap.DebugAllocator(.{}){};
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
 
@@ -69,7 +69,7 @@ test "keyIterator - Unmanaged" {
 }
 
 test "valueIterator - Unmanaged" {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa = std.heap.DebugAllocator(.{}){};
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
 
@@ -90,7 +90,7 @@ test "valueIterator - Unmanaged" {
 }
 
 test "Modifying values through valueIterator - Unmanaged" {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa = std.heap.DebugAllocator(.{}){};
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
 
@@ -130,7 +130,7 @@ test "Iterating empty map - Unmanaged" {
 }
 
 test "Collecting keys into array - Unmanaged" {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa = std.heap.DebugAllocator(.{}){};
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
 
@@ -141,7 +141,7 @@ test "Collecting keys into array - Unmanaged" {
     try map.put(allocator, 2, "two");
     try map.put(allocator, 3, "three");
 
-    var keys: std.ArrayList(u32) = .{};
+    var keys: std.ArrayList(u32) = .empty;
     defer keys.deinit(allocator);
 
     var key_iter = map.keyIterator();
@@ -153,7 +153,7 @@ test "Collecting keys into array - Unmanaged" {
 }
 
 test "Collecting values into array - Unmanaged" {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa = std.heap.DebugAllocator(.{}){};
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
 
@@ -164,7 +164,7 @@ test "Collecting values into array - Unmanaged" {
     try map.put(allocator, 2, 200);
     try map.put(allocator, 3, 300);
 
-    var values: std.ArrayList(i32) = .{};
+    var values: std.ArrayList(i32) = .empty;
     defer values.deinit(allocator);
 
     var value_iter = map.valueIterator();
@@ -182,7 +182,7 @@ test "Collecting values into array - Unmanaged" {
 }
 
 test "Filtering with iterator - Unmanaged" {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa = std.heap.DebugAllocator(.{}){};
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
 
@@ -206,7 +206,7 @@ test "Filtering with iterator - Unmanaged" {
 }
 
 test "Computing sum with iterator - Unmanaged" {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa = std.heap.DebugAllocator(.{}){};
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
 
@@ -228,7 +228,7 @@ test "Computing sum with iterator - Unmanaged" {
 }
 
 test "Finding max value with iterator - Unmanaged" {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa = std.heap.DebugAllocator(.{}){};
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
 

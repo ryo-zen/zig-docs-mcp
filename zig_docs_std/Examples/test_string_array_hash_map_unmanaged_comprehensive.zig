@@ -3,7 +3,7 @@
 const std = @import("std");
 
 test "StringArrayHashMapUnmanaged - Basic Usage" {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa = std.heap.DebugAllocator(.{}){};
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
 
@@ -18,7 +18,7 @@ test "StringArrayHashMapUnmanaged - Basic Usage" {
 }
 
 test "StringArrayHashMapUnmanaged - Iteration Pattern" {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa = std.heap.DebugAllocator(.{}){};
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
 
@@ -39,7 +39,7 @@ test "StringArrayHashMapUnmanaged - Iteration Pattern" {
 }
 
 test "StringArrayHashMapUnmanaged - getOrPut with Allocator" {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa = std.heap.DebugAllocator(.{}){};
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
 
@@ -56,7 +56,7 @@ test "StringArrayHashMapUnmanaged - getOrPut with Allocator" {
 }
 
 test "StringArrayHashMapUnmanaged - Pre-allocation for Performance" {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa = std.heap.DebugAllocator(.{}){};
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
 
@@ -91,7 +91,7 @@ test "StringArrayHashMapUnmanaged - Word Frequency Counter" {
         }
     }.func;
 
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa = std.heap.DebugAllocator(.{}){};
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
 
@@ -124,7 +124,7 @@ test "StringArrayHashMapUnmanaged - Embedding in a Struct" {
         }
     };
 
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa = std.heap.DebugAllocator(.{}){};
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
 
@@ -155,7 +155,7 @@ test "StringArrayHashMapUnmanaged - Batch Insert" {
         }
     }.func;
 
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa = std.heap.DebugAllocator(.{}){};
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
 
@@ -176,7 +176,7 @@ test "StringArrayHashMapUnmanaged - Batch Insert" {
 }
 
 test "StringArrayHashMapUnmanaged - Clone" {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa = std.heap.DebugAllocator(.{}){};
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
 
@@ -194,12 +194,12 @@ test "StringArrayHashMapUnmanaged - Clone" {
 }
 
 test "AutoArrayHashMapUnmanaged - Integer Keys (CORRECT USAGE)" {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa = std.heap.DebugAllocator(.{}){};
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
 
     // AutoArrayHashMapUnmanaged works fine with integer keys
-    var map = std.array_hash_map.AutoArrayHashMapUnmanaged(u64, []const u8){};
+    var map = std.AutoArrayHashMapUnmanaged(u64, []const u8){};
     defer map.deinit(allocator);
 
     try map.put(allocator, 100, "hundred");

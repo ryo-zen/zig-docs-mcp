@@ -216,14 +216,15 @@ test "Lazy Init: With error handling and retry" {
 // Example 5: Thread-safe lazy (simplified for demonstration)
 const ThreadSafeLazy = struct {
     value: ?i32 = null,
-    mutex: std.Thread.Mutex = .{},
+    mutex: std.Io.Mutex = .init,
 
     pub fn get(self: *@This()) i32 {
         // Check without lock first (double-checked locking)
         if (self.value) |v| return v;
 
-        self.mutex.lock();
-        defer self.mutex.unlock();
+        const io = std.testing.io;
+        self.mutex.lockUncancelable(io);
+        defer self.mutex.unlock(io);
 
         // Check again after acquiring lock
         if (self.value) |v| return v;

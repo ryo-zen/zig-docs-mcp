@@ -2,7 +2,7 @@
 const std = @import("std");
 
 test "ensureTotalCapacity - Unmanaged" {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa = std.heap.DebugAllocator(.{}){};
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
 
@@ -17,7 +17,7 @@ test "ensureTotalCapacity - Unmanaged" {
 }
 
 test "ensureUnusedCapacity - Unmanaged" {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa = std.heap.DebugAllocator(.{}){};
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
 
@@ -38,7 +38,7 @@ test "ensureUnusedCapacity - Unmanaged" {
 }
 
 test "putAssumeCapacity after pre-allocation - Unmanaged" {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa = std.heap.DebugAllocator(.{}){};
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
 
@@ -57,7 +57,7 @@ test "putAssumeCapacity after pre-allocation - Unmanaged" {
 }
 
 test "getOrPutAssumeCapacity - Unmanaged" {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa = std.heap.DebugAllocator(.{}){};
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
 
@@ -79,7 +79,7 @@ test "getOrPutAssumeCapacity - Unmanaged" {
 }
 
 test "capacity management prevents reallocations - Unmanaged" {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa = std.heap.DebugAllocator(.{}){};
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
 
@@ -101,7 +101,7 @@ test "capacity management prevents reallocations - Unmanaged" {
 }
 
 test "Batch insertion with ensureUnusedCapacity - Unmanaged" {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa = std.heap.DebugAllocator(.{}){};
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
 
@@ -124,7 +124,7 @@ test "Batch insertion with ensureUnusedCapacity - Unmanaged" {
 }
 
 test "clearRetainingCapacity for reuse - Unmanaged" {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa = std.heap.DebugAllocator(.{}){};
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
 
@@ -155,7 +155,7 @@ test "clearRetainingCapacity for reuse - Unmanaged" {
 }
 
 test "clearAndFree deallocates memory - Unmanaged" {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa = std.heap.DebugAllocator(.{}){};
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
 
@@ -179,7 +179,7 @@ test "clearAndFree deallocates memory - Unmanaged" {
 }
 
 test "Efficient pattern: pre-allocate then AssumeCapacity - Unmanaged" {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa = std.heap.DebugAllocator(.{}){};
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
 
@@ -204,7 +204,7 @@ test "Efficient pattern: pre-allocate then AssumeCapacity - Unmanaged" {
 }
 
 test "move transfers ownership - Unmanaged" {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa = std.heap.DebugAllocator(.{}){};
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
 
@@ -226,7 +226,7 @@ test "move transfers ownership - Unmanaged" {
 }
 
 test "clone creates independent copy - Unmanaged" {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa = std.heap.DebugAllocator(.{}){};
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
 

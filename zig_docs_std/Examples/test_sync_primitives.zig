@@ -49,7 +49,7 @@ test "CancelProtection - enum values" {
 }
 
 test "Event with Io - basic set and wait" {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa = std.heap.DebugAllocator(.{}){};
     defer _ = gpa.deinit();
 
     var threaded = std.Io.Threaded.init(gpa.allocator(), .{ .environ = .empty });
@@ -69,7 +69,7 @@ test "Event with Io - basic set and wait" {
 }
 
 test "Mutex with Io - basic lock and unlock" {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa = std.heap.DebugAllocator(.{}){};
     defer _ = gpa.deinit();
 
     var threaded = std.Io.Threaded.init(gpa.allocator(), .{ .environ = .empty });
@@ -85,7 +85,7 @@ test "Mutex with Io - basic lock and unlock" {
 }
 
 test "Mutex - lockUncancelable" {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa = std.heap.DebugAllocator(.{}){};
     defer _ = gpa.deinit();
 
     var threaded = std.Io.Threaded.init(gpa.allocator(), .{ .environ = .empty });
@@ -101,7 +101,7 @@ test "Mutex - lockUncancelable" {
 }
 
 test "CancelProtection - swapCancelProtection" {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa = std.heap.DebugAllocator(.{}){};
     defer _ = gpa.deinit();
 
     var threaded = std.Io.Threaded.init(gpa.allocator(), .{ .environ = .empty });

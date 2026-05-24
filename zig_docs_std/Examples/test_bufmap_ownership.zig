@@ -10,7 +10,7 @@ pub fn main() !void {
     {
         std.debug.print("Test 1: put() - BufMap Copies Strings\n", .{});
 
-        var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+        var gpa = std.heap.DebugAllocator(.{}){};
         defer _ = gpa.deinit();
 
         var map = std.BufMap.init(gpa.allocator());
@@ -35,7 +35,7 @@ pub fn main() !void {
     {
         std.debug.print("Test 2: putMove() - Transfer Ownership\n", .{});
 
-        var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+        var gpa = std.heap.DebugAllocator(.{}){};
         defer _ = gpa.deinit();
 
         var map = std.BufMap.init(gpa.allocator());
@@ -63,7 +63,7 @@ pub fn main() !void {
     {
         std.debug.print("Test 3: Practical putMove Use Case\n", .{});
 
-        var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+        var gpa = std.heap.DebugAllocator(.{}){};
         defer _ = gpa.deinit();
         const allocator = gpa.allocator();
 
@@ -96,7 +96,7 @@ pub fn main() !void {
     {
         std.debug.print("Test 4: putMove Failure - Ownership Not Transferred\n", .{});
 
-        var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+        var gpa = std.heap.DebugAllocator(.{}){};
         defer _ = gpa.deinit();
         const allocator = gpa.allocator();
 
@@ -128,7 +128,7 @@ pub fn main() !void {
     {
         std.debug.print("Test 5: Remove Frees Owned Strings\n", .{});
 
-        var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+        var gpa = std.heap.DebugAllocator(.{}){};
         defer _ = gpa.deinit();
 
         var map = std.BufMap.init(gpa.allocator());

@@ -1,12 +1,12 @@
 const std = @import("std");
 
 pub fn main() !void {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa = std.heap.DebugAllocator(.{}){};
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
 
     // Test the new ArrayList API
-    var list: std.ArrayList(u32) = .{};
+    var list: std.ArrayList(u32) = .empty;
     defer list.deinit(allocator);
 
     try list.append(allocator, 42);

@@ -3,8 +3,8 @@
 
 const std = @import("std");
 
-test "Quick Start - GeneralPurposeAllocator" {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+test "Quick Start - DebugAllocator" {
+    var gpa = std.heap.DebugAllocator(.{}){};
     defer {
         const deinit_status = gpa.deinit();
         if (deinit_status == .leak) @panic("Memory leak detected!");
@@ -116,8 +116,8 @@ test "Common Operations - dupe" {
     try std.testing.expectEqualStrings(original, duplicated);
 }
 
-test "GeneralPurposeAllocator - Basic Usage" {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+test "DebugAllocator - Basic Usage" {
+    var gpa = std.heap.DebugAllocator(.{}){};
     defer {
         const deinit_status = gpa.deinit();
         if (deinit_status == .leak) {
@@ -138,8 +138,8 @@ test "GeneralPurposeAllocator - Basic Usage" {
     try std.testing.expectEqual(@as(i32, 18), numbers[9]);
 }
 
-test "GeneralPurposeAllocator - Leak Detection" {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+test "DebugAllocator - Leak Detection" {
+    var gpa = std.heap.DebugAllocator(.{}){};
     const allocator = gpa.allocator();
 
     _ = try allocator.alloc(u8, 100);
@@ -278,7 +278,7 @@ test "MemoryPool - Object Pooling" {
 }
 
 test "Usage Pattern - Standard Application Setup" {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa = std.heap.DebugAllocator(.{}){};
     defer {
         const deinit_status = gpa.deinit();
         if (deinit_status == .leak) @panic("LEAK");

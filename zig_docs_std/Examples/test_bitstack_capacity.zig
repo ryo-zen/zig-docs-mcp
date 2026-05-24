@@ -10,7 +10,7 @@ pub fn main() !void {
     {
         std.debug.print("Test 1: Pre-allocate Capacity\n", .{});
 
-        var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+        var gpa = std.heap.DebugAllocator(.{}){};
         defer _ = gpa.deinit();
 
         var stack = std.BitStack.init(gpa.allocator());
@@ -35,7 +35,7 @@ pub fn main() !void {
     {
         std.debug.print("Test 2: Dynamic Growth\n", .{});
 
-        var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+        var gpa = std.heap.DebugAllocator(.{}){};
         defer _ = gpa.deinit();
 
         var stack = std.BitStack.init(gpa.allocator());
@@ -59,7 +59,7 @@ pub fn main() !void {
     {
         std.debug.print("Test 3: Batch Operation Pattern\n", .{});
 
-        var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+        var gpa = std.heap.DebugAllocator(.{}){};
         defer _ = gpa.deinit();
 
         var stack = std.BitStack.init(gpa.allocator());

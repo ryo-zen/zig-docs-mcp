@@ -8,7 +8,9 @@
 
 const std = @import("std");
 const ml_kem = std.crypto.kem.ml_kem;
-const time = std.time;
+fn elapsedNs(start: std.Io.Timestamp, end: std.Io.Timestamp) u64 {
+    return @intCast(start.durationTo(end).toNanoseconds());
+}
 
 const BenchmarkResult = struct {
     name: []const u8,
@@ -23,7 +25,7 @@ const BenchmarkResult = struct {
     total_exchange_ns: u64,
 };
 
-fn benchmarkMLKem512(iterations: usize) !BenchmarkResult {
+fn benchmarkMLKem512(io: std.Io, iterations: usize) !BenchmarkResult {
     const MLKem512 = ml_kem.MLKem512;
 
     var keygen_total: u64 = 0;
@@ -35,23 +37,23 @@ fn benchmarkMLKem512(iterations: usize) !BenchmarkResult {
         // Benchmark key generation
         const seed: [MLKem512.seed_length]u8 = [_]u8{0x42 + @as(u8, @intCast(i % 256))} ** MLKem512.seed_length;
 
-        const keygen_start = try time.Instant.now();
+        const keygen_start = std.Io.Clock.awake.now(io);
         const key_pair = try MLKem512.KeyPair.generateDeterministic(seed);
-        const keygen_end = try time.Instant.now();
-        keygen_total += keygen_end.since(keygen_start);
+        const keygen_end = std.Io.Clock.awake.now(io);
+        keygen_total += elapsedNs(keygen_start, keygen_end);
 
         // Benchmark encapsulation
         const encaps_seed: [MLKem512.encaps_seed_length]u8 = [_]u8{0x11 + @as(u8, @intCast(i % 256))} ** MLKem512.encaps_seed_length;
-        const encaps_start = try time.Instant.now();
+        const encaps_start = std.Io.Clock.awake.now(io);
         const encaps_result = key_pair.public_key.encapsDeterministic(&encaps_seed);
-        const encaps_end = try time.Instant.now();
-        encaps_total += encaps_end.since(encaps_start);
+        const encaps_end = std.Io.Clock.awake.now(io);
+        encaps_total += elapsedNs(encaps_start, encaps_end);
 
         // Benchmark decapsulation
-        const decaps_start = try time.Instant.now();
+        const decaps_start = std.Io.Clock.awake.now(io);
         const shared = try key_pair.secret_key.decaps(&encaps_result.ciphertext);
-        const decaps_end = try time.Instant.now();
-        decaps_total += decaps_end.since(decaps_start);
+        const decaps_end = std.Io.Clock.awake.now(io);
+        decaps_total += elapsedNs(decaps_start, decaps_end);
 
         // Verify correctness
         if (!std.mem.eql(u8, &encaps_result.shared_secret, &shared)) {
@@ -77,7 +79,7 @@ fn benchmarkMLKem512(iterations: usize) !BenchmarkResult {
     };
 }
 
-fn benchmarkMLKem768(iterations: usize) !BenchmarkResult {
+fn benchmarkMLKem768(io: std.Io, iterations: usize) !BenchmarkResult {
     const MLKem768 = ml_kem.MLKem768;
 
     var keygen_total: u64 = 0;
@@ -88,21 +90,21 @@ fn benchmarkMLKem768(iterations: usize) !BenchmarkResult {
     while (i < iterations) : (i += 1) {
         const seed: [MLKem768.seed_length]u8 = [_]u8{0x76 + @as(u8, @intCast(i % 256))} ** MLKem768.seed_length;
 
-        const keygen_start = try time.Instant.now();
+        const keygen_start = std.Io.Clock.awake.now(io);
         const key_pair = try MLKem768.KeyPair.generateDeterministic(seed);
-        const keygen_end = try time.Instant.now();
-        keygen_total += keygen_end.since(keygen_start);
+        const keygen_end = std.Io.Clock.awake.now(io);
+        keygen_total += elapsedNs(keygen_start, keygen_end);
 
         const encaps_seed: [MLKem768.encaps_seed_length]u8 = [_]u8{0x22 + @as(u8, @intCast(i % 256))} ** MLKem768.encaps_seed_length;
-        const encaps_start = try time.Instant.now();
+        const encaps_start = std.Io.Clock.awake.now(io);
         const encaps_result = key_pair.public_key.encapsDeterministic(&encaps_seed);
-        const encaps_end = try time.Instant.now();
-        encaps_total += encaps_end.since(encaps_start);
+        const encaps_end = std.Io.Clock.awake.now(io);
+        encaps_total += elapsedNs(encaps_start, encaps_end);
 
-        const decaps_start = try time.Instant.now();
+        const decaps_start = std.Io.Clock.awake.now(io);
         const shared = try key_pair.secret_key.decaps(&encaps_result.ciphertext);
-        const decaps_end = try time.Instant.now();
-        decaps_total += decaps_end.since(decaps_start);
+        const decaps_end = std.Io.Clock.awake.now(io);
+        decaps_total += elapsedNs(decaps_start, decaps_end);
 
         if (!std.mem.eql(u8, &encaps_result.shared_secret, &shared)) {
             return error.SharedSecretMismatch;
@@ -127,7 +129,7 @@ fn benchmarkMLKem768(iterations: usize) !BenchmarkResult {
     };
 }
 
-fn benchmarkMLKem1024(iterations: usize) !BenchmarkResult {
+fn benchmarkMLKem1024(io: std.Io, iterations: usize) !BenchmarkResult {
     const MLKem1024 = ml_kem.MLKem1024;
 
     var keygen_total: u64 = 0;
@@ -138,21 +140,21 @@ fn benchmarkMLKem1024(iterations: usize) !BenchmarkResult {
     while (i < iterations) : (i += 1) {
         const seed: [MLKem1024.seed_length]u8 = [_]u8{0x10 + @as(u8, @intCast(i % 256))} ** MLKem1024.seed_length;
 
-        const keygen_start = try time.Instant.now();
+        const keygen_start = std.Io.Clock.awake.now(io);
         const key_pair = try MLKem1024.KeyPair.generateDeterministic(seed);
-        const keygen_end = try time.Instant.now();
-        keygen_total += keygen_end.since(keygen_start);
+        const keygen_end = std.Io.Clock.awake.now(io);
+        keygen_total += elapsedNs(keygen_start, keygen_end);
 
         const encaps_seed: [MLKem1024.encaps_seed_length]u8 = [_]u8{0x33 + @as(u8, @intCast(i % 256))} ** MLKem1024.encaps_seed_length;
-        const encaps_start = try time.Instant.now();
+        const encaps_start = std.Io.Clock.awake.now(io);
         const encaps_result = key_pair.public_key.encapsDeterministic(&encaps_seed);
-        const encaps_end = try time.Instant.now();
-        encaps_total += encaps_end.since(encaps_start);
+        const encaps_end = std.Io.Clock.awake.now(io);
+        encaps_total += elapsedNs(encaps_start, encaps_end);
 
-        const decaps_start = try time.Instant.now();
+        const decaps_start = std.Io.Clock.awake.now(io);
         const shared = try key_pair.secret_key.decaps(&encaps_result.ciphertext);
-        const decaps_end = try time.Instant.now();
-        decaps_total += decaps_end.since(decaps_start);
+        const decaps_end = std.Io.Clock.awake.now(io);
+        decaps_total += elapsedNs(decaps_start, decaps_end);
 
         if (!std.mem.eql(u8, &encaps_result.shared_secret, &shared)) {
             return error.SharedSecretMismatch;
@@ -267,16 +269,23 @@ fn printResults(results: []const BenchmarkResult) void {
 pub fn main() !void {
     const iterations: usize = 1000;
 
+    var gpa = std.heap.DebugAllocator(.{}){};
+    defer _ = gpa.deinit();
+
+    var threaded = std.Io.Threaded.init(gpa.allocator(), .{ .environ = .empty });
+    defer threaded.deinit();
+    const io = threaded.io();
+
     std.debug.print("\n🔬 Benchmarking ML-KEM Parameter Sets ({} iterations each)...\n\n", .{iterations});
 
     std.debug.print("Running ML-KEM-512 benchmark...\n", .{});
-    const result_512 = try benchmarkMLKem512(iterations);
+    const result_512 = try benchmarkMLKem512(io, iterations);
 
     std.debug.print("Running ML-KEM-768 benchmark...\n", .{});
-    const result_768 = try benchmarkMLKem768(iterations);
+    const result_768 = try benchmarkMLKem768(io, iterations);
 
     std.debug.print("Running ML-KEM-1024 benchmark...\n", .{});
-    const result_1024 = try benchmarkMLKem1024(iterations);
+    const result_1024 = try benchmarkMLKem1024(io, iterations);
 
     const results = [_]BenchmarkResult{ result_512, result_768, result_1024 };
     printResults(&results);

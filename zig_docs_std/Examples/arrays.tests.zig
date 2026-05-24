@@ -52,7 +52,7 @@ test "complex initialization patterns" {
         y: i32,
     };
 
-    var fancy_array = init: {
+    const fancy_array = init: {
         var initial_value: [10]Point = undefined;
         for (&initial_value, 0..) |*pt, i| {
             pt.* = .{ .x = @intCast(i), .y = @intCast(i * 2) };

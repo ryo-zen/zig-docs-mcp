@@ -52,7 +52,7 @@ test "debug.captureCurrentStackTrace - stack capture" {
         .first_address = @returnAddress(),
     }, &addrs);
 
-    std.debug.print("Captured {d} stack frames\n", .{trace.index});
+    std.debug.print("Captured {d} stack frames\n", .{trace.return_addresses.len});
     std.debug.print("  ✅ PASS\n\n", .{});
 }
 

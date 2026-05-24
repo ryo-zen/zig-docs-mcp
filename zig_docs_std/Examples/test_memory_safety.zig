@@ -31,7 +31,7 @@ test "null safety: explicit unwrapping" {
 }
 
 // 2. Memory Leak Safety
-// The GeneralPurposeAllocator (GPA) tracks allocations.
+// The DebugAllocator (GPA) tracks allocations.
 // If you forget to free, the TEST ITSELF fails.
 test "GPA safety: leak detection" {
     // std.testing.allocator is a GPA variant that runs leak checks at the end of the test.

@@ -10,7 +10,7 @@ pub fn main() !void {
     {
         std.debug.print("Test 1: Basic Insert and Contains\n", .{});
 
-        var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+        var gpa = std.heap.DebugAllocator(.{}){};
         defer _ = gpa.deinit();
 
         var set = std.BufSet.init(gpa.allocator());
@@ -37,7 +37,7 @@ pub fn main() !void {
     {
         std.debug.print("Test 2: Duplicate Inserts\n", .{});
 
-        var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+        var gpa = std.heap.DebugAllocator(.{}){};
         defer _ = gpa.deinit();
 
         var set = std.BufSet.init(gpa.allocator());
@@ -61,7 +61,7 @@ pub fn main() !void {
     {
         std.debug.print("Test 3: Remove Operations\n", .{});
 
-        var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+        var gpa = std.heap.DebugAllocator(.{}){};
         defer _ = gpa.deinit();
 
         var set = std.BufSet.init(gpa.allocator());
@@ -88,7 +88,7 @@ pub fn main() !void {
     {
         std.debug.print("Test 4: String Ownership\n", .{});
 
-        var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+        var gpa = std.heap.DebugAllocator(.{}){};
         defer _ = gpa.deinit();
 
         var set = std.BufSet.init(gpa.allocator());
@@ -114,7 +114,7 @@ pub fn main() !void {
     {
         std.debug.print("Test 5: Empty Set\n", .{});
 
-        var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+        var gpa = std.heap.DebugAllocator(.{}){};
         defer _ = gpa.deinit();
 
         var set = std.BufSet.init(gpa.allocator());
@@ -134,7 +134,7 @@ pub fn main() !void {
     {
         std.debug.print("Test 6: Large Set\n", .{});
 
-        var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+        var gpa = std.heap.DebugAllocator(.{}){};
         defer _ = gpa.deinit();
         const allocator = gpa.allocator();
 

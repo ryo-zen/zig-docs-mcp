@@ -1,7 +1,7 @@
 const std = @import("std");
 
 pub fn main() !void {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa = std.heap.DebugAllocator(.{}){};
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
 
@@ -17,7 +17,7 @@ pub fn main() !void {
         _ = try reader.discardDelimiterInclusive(' ');
 
         // Allocate the rest
-        const allocated = try reader.allocRemaining(allocator, std.math.maxInt(usize));
+        const allocated = try reader.allocRemaining(allocator, .unlimited);
         defer allocator.free(allocated);
 
         std.debug.print("  Allocated: {s}\n", .{allocated});
@@ -30,15 +30,15 @@ pub fn main() !void {
         const data = "Line 1\nLine 2\nLine 3\n";
         var reader = std.Io.Reader.fixed(data);
 
-        var list = std.ArrayList(u8).init(allocator);
-        defer list.deinit();
+        var list: std.ArrayList(u8) = .empty;
+        defer list.deinit(allocator);
 
         // Read first line into list
         const line1 = try reader.takeDelimiterInclusive('\n');
-        try list.appendSlice(line1);
+        try list.appendSlice(allocator, line1);
 
         // Append remaining data
-        try reader.appendRemaining(allocator, &list, std.math.maxInt(usize));
+        try reader.appendRemaining(allocator, &list, .unlimited);
 
         std.debug.print("  ArrayList contents:\n{s}", .{list.items});
         std.debug.print("  Total bytes: {}\n", .{list.items.len});
@@ -64,12 +64,12 @@ pub fn main() !void {
         const data = "apple\nbanana\ncherry\ndate\n";
         var reader = std.Io.Reader.fixed(data);
 
-        var lines = std.ArrayList([]u8).init(allocator);
+        var lines: std.ArrayList([]u8) = .empty;
         defer {
             for (lines.items) |line| {
                 allocator.free(line);
             }
-            lines.deinit();
+            lines.deinit(allocator);
         }
 
         while (true) {
@@ -80,7 +80,7 @@ pub fn main() !void {
 
             // Allocate and store each line
             const owned = try allocator.dupe(u8, line);
-            try lines.append(owned);
+            try lines.append(allocator, owned);
 
             reader.toss(1); // Skip newline
         }
@@ -98,26 +98,23 @@ pub fn main() !void {
         const data = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
         var reader = std.Io.Reader.fixed(data);
 
-        var chunks = std.ArrayList([]u8).init(allocator);
+        var chunks: std.ArrayList([]u8) = .empty;
         defer {
             for (chunks.items) |chunk| {
                 allocator.free(chunk);
             }
-            chunks.deinit();
+            chunks.deinit(allocator);
         }
 
         // Read in chunks of 8 bytes
         while (true) {
             var chunk_buf: [8]u8 = undefined;
-            const bytes_read = reader.readSliceShort(&chunk_buf) catch |err| switch (err) {
-                error.EndOfStream => break,
-                else => return err,
-            };
+            const bytes_read = try reader.readSliceShort(&chunk_buf);
 
             if (bytes_read == 0) break;
 
             const chunk = try allocator.dupe(u8, chunk_buf[0..bytes_read]);
-            try chunks.append(chunk);
+            try chunks.append(allocator, chunk);
         }
 
         std.debug.print("  Read {} chunks:\n", .{chunks.items.len});
