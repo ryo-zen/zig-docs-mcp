@@ -26,6 +26,7 @@ import { pathToFileURL, fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const DOCS_ROOT = path.resolve(__dirname, '..');
+const VERSION_CONTRACT_FILE = 'zig-version-contract.json';
 
 // Interface for cached resource items
 interface ResourceEntry {
@@ -42,12 +43,45 @@ interface SearchResult {
   text: string;
 }
 
+interface ZigVersionContract {
+  targetZigVersion: string;
+  stdlibSource: {
+    expectedPath: string;
+    overrideEnvVar: string;
+    policy: string;
+  };
+  upgradePolicy: string;
+}
+
+interface ZigEnvInfo {
+  version: string | null;
+  stdDir: string | null;
+  error?: string;
+}
+
+interface ZigVersionCheck {
+  ok: boolean;
+  status: 'matched' | 'mismatch' | 'unavailable';
+  targetVersion: string;
+  localVersion: string | null;
+  message: string;
+}
+
+interface StdlibSourceResolution {
+  stdlibPath: string | null;
+  source: 'contract' | 'override' | 'zig-env' | 'unavailable';
+  zigEnvInfo: ZigEnvInfo;
+  versionCheck: ZigVersionCheck;
+  message: string;
+}
+
 class ZigDocumentationServer {
   private server: Server;
   private docCache: Map<string, string>;
   private resourceList: ResourceEntry[];
   private readonly serverName = 'zig-documentation-server';
   private readonly serverVersion = '0.5.0';
+  private readonly versionContract: ZigVersionContract;
 
   // API migration mapping for Zig 0.16 changes
   private readonly apiMigrationMap: Map<string, string> = new Map([
@@ -160,6 +194,7 @@ class ZigDocumentationServer {
   ]);
 
   constructor() {
+    this.versionContract = this.loadVersionContract();
     this.server = new Server({
       name: this.serverName,
       version: this.serverVersion,
@@ -176,6 +211,147 @@ class ZigDocumentationServer {
 
     this.setupResourceHandlers();
     this.setupToolHandlers();
+  }
+
+  loadVersionContract(): ZigVersionContract {
+    const contractPath = path.join(DOCS_ROOT, VERSION_CONTRACT_FILE);
+
+    try {
+      const rawContract = fs.readFileSync(contractPath, 'utf8');
+      const contract = JSON.parse(rawContract) as ZigVersionContract;
+
+      if (
+        typeof contract.targetZigVersion !== 'string' ||
+        typeof contract.stdlibSource?.expectedPath !== 'string' ||
+        typeof contract.stdlibSource?.overrideEnvVar !== 'string' ||
+        typeof contract.stdlibSource?.policy !== 'string' ||
+        typeof contract.upgradePolicy !== 'string'
+      ) {
+        throw new Error('missing required fields');
+      }
+
+      return contract;
+    } catch (error: any) {
+      throw new Error(`Failed to load ${VERSION_CONTRACT_FILE}: ${error.message}`);
+    }
+  }
+
+  parseZigEnvOutput(zigEnvOutput: string): ZigEnvInfo {
+    const version = zigEnvOutput.match(/\.version\s*=\s*"([^"]+)"/)?.[1] ?? null;
+    const stdDir = zigEnvOutput.match(/\.std_dir\s*=\s*"([^"]+)"/)?.[1] ?? null;
+
+    return { version, stdDir };
+  }
+
+  getLocalZigEnvInfo(): ZigEnvInfo {
+    try {
+      const zigEnvOutput = execSync('zig env', { encoding: 'utf8' });
+      return this.parseZigEnvOutput(zigEnvOutput);
+    } catch (error: any) {
+      const stdout = Buffer.isBuffer(error.stdout)
+        ? error.stdout.toString('utf8')
+        : error.stdout;
+
+      if (typeof stdout === 'string' && stdout.length > 0) {
+        return {
+          ...this.parseZigEnvOutput(stdout),
+          error: error.message,
+        };
+      }
+
+      return {
+        version: null,
+        stdDir: null,
+        error: error.message,
+      };
+    }
+  }
+
+  checkZigVersionContract(zigEnvInfo: ZigEnvInfo = this.getLocalZigEnvInfo()): ZigVersionCheck {
+    const targetVersion = this.versionContract.targetZigVersion;
+
+    if (zigEnvInfo.version === targetVersion) {
+      return {
+        ok: true,
+        status: 'matched',
+        targetVersion,
+        localVersion: zigEnvInfo.version,
+        message: `Local Zig version matches target ${targetVersion}.`,
+      };
+    }
+
+    if (!zigEnvInfo.version) {
+      return {
+        ok: false,
+        status: 'unavailable',
+        targetVersion,
+        localVersion: null,
+        message: `Local Zig version is unavailable. Install Zig ${targetVersion} or retarget this MCP through an explicit upgrade ticket before using another Zig version.`,
+      };
+    }
+
+    return {
+      ok: false,
+      status: 'mismatch',
+      targetVersion,
+      localVersion: zigEnvInfo.version,
+      message: `Local Zig version ${zigEnvInfo.version} does not match target ${targetVersion}. Retarget this MCP through an explicit upgrade ticket before using another Zig version.`,
+    };
+  }
+
+  formatZigVersionContractFailure(check: ZigVersionCheck): string {
+    return `# Zig Version Contract Mismatch
+
+**Target Zig Version:** \`${check.targetVersion}\`
+**Local Zig Version:** \`${check.localVersion ?? 'unavailable'}\`
+
+${check.message}
+
+${this.versionContract.upgradePolicy}`;
+  }
+
+  resolveStdlibSource(zigEnvInfo: ZigEnvInfo = this.getLocalZigEnvInfo()): StdlibSourceResolution {
+    const versionCheck = this.checkZigVersionContract(zigEnvInfo);
+    const overridePath = process.env[this.versionContract.stdlibSource.overrideEnvVar];
+
+    if (overridePath) {
+      return {
+        stdlibPath: overridePath,
+        source: 'override',
+        zigEnvInfo,
+        versionCheck,
+        message: `Using ${this.versionContract.stdlibSource.overrideEnvVar} override.`,
+      };
+    }
+
+    const expectedPath = this.versionContract.stdlibSource.expectedPath;
+    if (fs.existsSync(expectedPath)) {
+      return {
+        stdlibPath: expectedPath,
+        source: 'contract',
+        zigEnvInfo,
+        versionCheck,
+        message: 'Using repo Zig version contract stdlib source path.',
+      };
+    }
+
+    if (versionCheck.ok && zigEnvInfo.stdDir) {
+      return {
+        stdlibPath: zigEnvInfo.stdDir,
+        source: 'zig-env',
+        zigEnvInfo,
+        versionCheck,
+        message: 'Using std_dir from local zig env after version contract check.',
+      };
+    }
+
+    return {
+      stdlibPath: null,
+      source: 'unavailable',
+      zigEnvInfo,
+      versionCheck,
+      message: versionCheck.message,
+    };
   }
 
   async readMarkdownFile(filename: string): Promise<string> {
@@ -1515,6 +1691,7 @@ Try searching for:
     const langDocs = this.resourceList.filter(r => r.uri.startsWith('zig://doc/')).length;
     const stdDocs = this.resourceList.filter(r => r.uri.startsWith('zig://std/')).length;
     const examples = this.resourceList.filter(r => r.uri.startsWith('zig://examples/')).length;
+    const stdlibSource = this.resolveStdlibSource();
 
     const memUsage = process.memoryUsage();
     const uptime = process.uptime();
@@ -1525,6 +1702,17 @@ Try searching for:
 **Server Version:** ${this.serverVersion}
 **Node Version:** ${process.version}
 **Platform:** ${process.platform} ${process.arch}
+
+## Zig Version Contract
+- **Target Zig Version:** ${this.versionContract.targetZigVersion}
+- **Contract File:** ${VERSION_CONTRACT_FILE}
+- **Expected Stdlib Source:** ${this.versionContract.stdlibSource.expectedPath}
+- **Active Stdlib Source:** ${stdlibSource.stdlibPath ?? 'unavailable'} (${stdlibSource.source})
+- **Local Zig Version:** ${stdlibSource.zigEnvInfo.version ?? 'unavailable'}
+- **Local Zig std_dir:** ${stdlibSource.zigEnvInfo.stdDir ?? 'unavailable'}
+- **Version Check:** ${stdlibSource.versionCheck.message}
+- **Stdlib Source Policy:** ${this.versionContract.stdlibSource.policy}
+- **Upgrade Policy:** ${this.versionContract.upgradePolicy}
 
 ## Cache Status
 - **Total Cached Files:** ${this.docCache.size}
@@ -1585,6 +1773,11 @@ ${sampleExamples}
 
   async introspectType(typeExpression: string): Promise<string> {
     try {
+      const versionCheck = this.checkZigVersionContract();
+      if (!versionCheck.ok) {
+        return this.formatZigVersionContractFailure(versionCheck);
+      }
+
       // Use @compileLog to dump type information at compile time
       const testCode = `
 const std = @import("std");
@@ -1668,6 +1861,11 @@ This type expression may be invalid or requires additional context.`;
 
   async validateCode(code: string, codeType: string = 'test'): Promise<string> {
     try {
+      const versionCheck = this.checkZigVersionContract();
+      if (!versionCheck.ok) {
+        return this.formatZigVersionContractFailure(versionCheck);
+      }
+
       // Check if code already imports std to avoid duplicate imports
       const hasStdImport = /const\s+std\s*=\s*@import\s*\(\s*"std"\s*\)/.test(code);
       const stdImport = hasStdImport ? '' : 'const std = @import("std");\n\n';
@@ -1733,17 +1931,20 @@ Fix the errors above to make the code compile.`;
 
   async queryStdlibSource(modulePath: string, searchTerm?: string): Promise<string> {
     try {
-      // Find Zig stdlib installation
-      // Note: zig env outputs Zig syntax (.{...}), not JSON
-      const zigEnvOutput = execSync('zig env', { encoding: 'utf8' });
-
-      // Extract std_dir using regex (it's in Zig struct format, not JSON)
-      const stdDirMatch = zigEnvOutput.match(/\.std_dir\s*=\s*"([^"]+)"/);
-      if (!stdDirMatch) {
-        throw new Error('Failed to find std_dir in zig env output');
+      const stdlibSource = this.resolveStdlibSource();
+      if (!stdlibSource.stdlibPath) {
+        return this.formatZigVersionContractFailure(stdlibSource.versionCheck);
       }
 
-      const stdlibPath = stdDirMatch[1];
+      const stdlibPath = stdlibSource.stdlibPath;
+      if (!fs.existsSync(stdlibPath)) {
+        return `# Stdlib Source Not Found
+
+**Configured Stdlib Source:** \`${stdlibPath}\`
+**Source:** ${stdlibSource.source}
+
+${this.versionContract.stdlibSource.policy}`;
+      }
 
       // Normalize module path - remove leading "std/" if present since stdlibPath already points to std/
       let normalizedPath = modulePath.replace(/^std\//, '');

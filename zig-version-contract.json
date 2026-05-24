@@ -1,0 +1,9 @@
+{
+  "targetZigVersion": "0.16.0",
+  "stdlibSource": {
+    "expectedPath": "/path/to/zig-0.16.0/lib/std",
+    "overrideEnvVar": "ZIG_DOCS_STDLIB_SOURCE",
+    "policy": "Documentation and examples are verified against the stable Zig 0.16.0 standard library source. Use the expected source path when available; use the override only to point local development at another Zig 0.16.0 stdlib tree."
+  },
+  "upgradePolicy": "Future Zig target version changes require an explicit upgrade ticket before docs, examples, search behavior, diagnostics, or source-query behavior are retargeted."
+}

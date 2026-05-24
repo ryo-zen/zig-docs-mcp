@@ -237,6 +237,35 @@ Documentation for typeInfo
     });
   });
 
+  describe('Version Contract', () => {
+    test('loads the repo-local Zig version contract', () => {
+      const contract = server['versionContract'];
+
+      expect(contract.targetZigVersion).toBe('0.16.0');
+      expect(contract.stdlibSource.expectedPath).toContain('zig-0.16.0');
+      expect(contract.stdlibSource.overrideEnvVar).toBe('ZIG_DOCS_STDLIB_SOURCE');
+      expect(contract.upgradePolicy).toContain('explicit upgrade ticket');
+    });
+
+    test('rejects local Zig version drift until the MCP target is upgraded', () => {
+      const mismatch = server['checkZigVersionContract'](
+        { version: '0.16.1', stdDir: '/tmp/zig-0.16.1/lib/std' }
+      );
+
+      expect(mismatch.ok).toBe(false);
+      expect(mismatch.status).toBe('mismatch');
+      expect(mismatch.message).toContain('Retarget this MCP');
+      expect(mismatch.message).toContain('explicit upgrade ticket');
+    });
+
+    test('local Zig version satisfies the contract', () => {
+      const check = server['checkZigVersionContract']();
+
+      expect(check.targetVersion).toBe('0.16.0');
+      expect(check.ok).toBe(true);
+    });
+  });
+
   describe('Diagnostics', () => {
     test('getDiagnostics returns server information', () => {
       const diagnostics = server['getDiagnostics'](false);
@@ -244,6 +273,9 @@ Documentation for typeInfo
       expect(diagnostics).toContain('Server Diagnostics');
       expect(diagnostics).toContain('Server Name');
       expect(diagnostics).toContain('Server Version');
+      expect(diagnostics).toContain('Zig Version Contract');
+      expect(diagnostics).toContain('Target Zig Version');
+      expect(diagnostics).toContain('0.16.0');
       expect(diagnostics).toContain('Cache Status');
       expect(diagnostics).toContain('Documentation Breakdown');
     });

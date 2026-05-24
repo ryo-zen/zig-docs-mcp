@@ -1,8 +1,8 @@
 # Zig Documentation MCP Server
 
-MCP server providing comprehensive access to Zig 0.16 language documentation, standard library references, and working code examples.
+MCP server providing comprehensive access to Zig 0.16.0 language documentation, standard library references, and working code examples.
 
-**Target Zig Version:** `0.16`
+**Target Zig Version:** `0.16.0` (locked by `zig-version-contract.json`)
 
 ## Quick Start
 
