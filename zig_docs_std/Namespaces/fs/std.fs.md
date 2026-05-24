@@ -68,12 +68,16 @@ const parsed = std.fs.path.parsePath(path);
 const file = try std.fs.cwd().openFile("data.txt", .{});
 
 // ✅ NEW (0.16+) - Use std.Io.Dir
-const io = try std.Io.init(8, .{});
-defer io.deinit();
+var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+defer _ = gpa.deinit();
+
+var threaded = std.Io.Threaded.init(gpa.allocator(), .{ .environ = .empty });
+defer threaded.deinit();
+const io = threaded.io();
 
 const dir = std.Io.Dir.cwd();
-const file = try dir.open(io, "data.txt", .{ .mode = .read_only });
-defer file.close();
+const file = try dir.openFile(io, "data.txt", .{ .mode = .read_only });
+defer file.close(io);
 ```
 
 **What remains in std.fs (Zig 0.16):**
@@ -438,7 +442,7 @@ const std = @import("std");
 
 pub fn main() !void {
     const allocator = std.heap.page_allocator;
-    const cwd = try std.process.getCwdAlloc(allocator);
+    const cwd = try std.process.currentPathAlloc(std.testing.io, allocator);
     defer allocator.free(cwd);
 
     const rel = try std.fs.path.relative(
@@ -860,4 +864,4 @@ Functions like `relative()` may also return:
 - **std.posix** - Low-level POSIX system calls (openat, unlinkat, etc.)
 - **std.mem** - Memory utilities (slicing, comparison, searching)
 - **std.fmt** - String formatting (useful when building paths with `allocPrint`)
-- **std.process.getCwdAlloc** - Get current working directory
+- **std.process.currentPathAlloc** - Get current working directory

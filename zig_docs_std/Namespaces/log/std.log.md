@@ -188,12 +188,12 @@ Logs a warning message using the default scope.
 ```zig
 const std = @import("std");
 
-pub fn loadConfig(path: []const u8) !Config {
-    const file = std.fs.cwd().openFile(path, .{}) catch {
+pub fn loadConfig(io: std.Io, path: []const u8) !Config {
+    const file = std.Io.Dir.cwd().openFile(io, path, .{}) catch {
   std.log.warn("Config file not found, using defaults", .{});
   return Config.default();
     };
-    defer file.close();
+    defer file.close(io);
     // ... load config
 }
 ```
@@ -485,16 +485,10 @@ fn processItem(item: Item) !void {
 ```zig
 const std = @import("std");
 
-pub fn loadAndParseConfig(path: []const u8) !Config {
+pub fn loadAndParseConfig(allocator: std.mem.Allocator, io: std.Io, path: []const u8) !Config {
     std.log.debug("Loading config from: {s}", .{path});
 
-    const file = std.fs.cwd().openFile(path, .{}) catch |err| {
-  std.log.err("Failed to open config file '{s}': {s}", .{ path, @errorName(err) });
-  return err;
-    };
-    defer file.close();
-
-    const contents = file.readToEndAlloc(allocator, 1024 * 1024) catch |err| {
+    const contents = std.Io.Dir.cwd().readFileAlloc(io, path, allocator, .limited(1024 * 1024)) catch |err| {
   std.log.err("Failed to read config file: {s}", .{@errorName(err)});
   return err;
     };

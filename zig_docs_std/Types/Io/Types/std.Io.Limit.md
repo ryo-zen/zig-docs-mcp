@@ -331,4 +331,4 @@ pub fn readWithQuota(file: std.Io.File, quota: std.Io.Limit, allocator: Allocato
 
 - `std.Io.Reader` - Uses limits for bounded reading
 - `std.Io.Writer` - Can enforce write limits
-- `std.io.limitedReader()` - Reader wrapper that enforces a limit
+- `std.Io.Reader.limited()` - Reader wrapper that enforces a limit

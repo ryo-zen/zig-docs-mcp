@@ -1,58 +1,19 @@
 # std.Io.PollFiles
 
-A metaprogramming helper that generates a struct type for use with `std.Io.poll`.
+`std.Io.PollFiles` is not present in Zig 0.16.
 
-## Overview
+Older drafts used `PollFiles` with a removed `std.Io.poll`/`std.Io.Poller`
+API. Current Zig 0.16 code should model concurrent I/O with `std.Io` tasks and
+futures, or read individual file pipes through `std.Io.File.readerStreaming`.
 
-`std.Io.PollFiles` takes an enum type as a parameter and returns a struct type. This generated struct has fields corresponding exactly to the fields of the input enum. Each field in the generated struct is of type `std.Io.File`.
+For current code, prefer:
 
-This is primarily used to prepare a set of file descriptors (represented by `std.Io.File`) to be monitored simultaneously by `std.Io.poll`.
-
-## Parameters
-
-`StreamEnum: type`
-An enum type where each variant represents a distinct IO stream you want to poll.
-
-## Generated Type
-
-The returned type is structurally equivalent to:
-```zig
-struct {
-    // For each field 'Variant' in StreamEnum:
-    Variant: std.Io.File,
-    // ...
-}
-```
-
-## Usage Example
-
-```zig
-const std = @import("std");
-
-// 1. Define your streams
-const MyStreams = enum {
-    server_socket,
-    console_input,
-};
-
-// 2. Generate the struct type
-const MyPollFiles = std.Io.PollFiles(MyStreams);
-
-pub fn main() !void {
-    // ... setup io ...
-
-    // 3. Initialize the struct with actual files
-    var files: MyPollFiles = undefined;
-    // Assuming you have 'server' and 'stdin' available:
-    // files.server_socket = server.socket.handle; // Note: You need an Io.File here, so you might need to wrap handles
-    // files.console_input = std.io.getStdIn();
-
-    // 4. Use with std.Io.poll (hypothetical usage context)
-    // var poller = std.Io.poll(allocator, MyStreams, files);
-}
-```
+- `io.async` / `io.concurrent` plus `io.select` for task coordination.
+- `std.Io.File.readerStreaming` for file pipe output.
+- `std.Io.net` socket and stream APIs for networking.
 
 ## See Also
 
-- `std.Io.File` - The type of the fields in the generated struct.
-- `std.Io.Poller` - The type returned by `std.Io.poll`.
+- [std.Io](../std.io.md)
+- [std.Io.Future](std.Io.Future.md)
+- [std.Io.Reader](std.Io.Reader.md)

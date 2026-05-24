@@ -44,9 +44,9 @@ ChaCha20-Poly1305 - Modern, fast, patent-free AEAD. Recommended for most uses, e
 ```zig
 const ChaCha20Poly1305 = std.crypto.aead.chacha_poly.ChaCha20Poly1305;
 
-const key: [32]u8 = ...; // Use std.crypto.random.bytes()
+const key: [32]u8 = ...; // Use io.randomSecure() for generated keys
 var nonce: [12]u8 = undefined;
-std.crypto.random.bytes(&nonce);
+try io.randomSecure(&nonce);
 
 // Encrypt
 var ciphertext: [plaintext.len]u8 = undefined;
@@ -72,7 +72,7 @@ const Aes256Gcm = std.crypto.aead.aes_gcm.Aes256Gcm;
 
 const key: [32]u8 = ...;
 var nonce: [12]u8 = undefined;
-std.crypto.random.bytes(&nonce);
+try io.randomSecure(&nonce);
 
 var ciphertext: [plaintext.len]u8 = undefined;
 var tag: [16]u8 = undefined;
@@ -150,7 +150,7 @@ Salsa20-Poly1305 - Predecessor to ChaCha20-Poly1305. Use ChaCha20-Poly1305 for n
 
 - **Never reuse a nonce** with the same key (except with SIV modes)
 - **Always check decryption errors** - `error.AuthenticationFailed` means data was tampered with
-- **Use random nonces** via `std.crypto.random.bytes()` or a counter
+- **Use random nonces** via `io.randomSecure()` or a counter
 - **XChaCha20Poly1305** has a 24-byte nonce - safer for random nonce generation (negligible collision probability)
 - **Associated data** is authenticated but not encrypted - use it for message headers, version numbers, etc.
 

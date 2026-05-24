@@ -102,7 +102,7 @@ pub fn postQuantumKeyExchange(io: std.Io) ![32]u8 {
 | Encrypt/authenticate | `std.crypto.aead.chacha_poly` | `ChaCha20Poly1305.encrypt(ct, tag, pt, ad, nonce, key)` |
 | Compare secrets | `std.crypto.timing_safe.eql` | `timing_safe.eql(T, a, b)` |
 | Secure zero | `std.crypto.secureZero` | `secureZero(u8, slice)` |
-| Random bytes | `std.crypto.random.bytes` | `random.bytes(&buffer)` |
+| Random bytes | `io.randomSecure()` | `try io.randomSecure(&buffer)` |
 | Classical signatures | `std.crypto.sign.Ed25519` | `key_pair.sign(message, null)` |
 | Post-quantum signatures | `std.crypto.sign.mldsa.MLDSA44` | `key_pair.sign(message, null)` |
 | Post-quantum key exchange | `std.crypto.kem.ml_kem.MLKem512` | `public_key.encaps(io)` |
@@ -117,7 +117,7 @@ ChaCha20Poly1305.encrypt(ct2, tag2, pt2, "", nonce, key);  // INSECURE!
 
 // ✅ CORRECT - Generate unique nonce for each encryption
 var nonce: [12]u8 = undefined;
-std.crypto.random.bytes(&nonce);  // Random nonce
+try io.randomSecure(&nonce);  // Random nonce
 ChaCha20Poly1305.encrypt(ct, tag, pt, "", nonce, key);
 
 // ❌ WRONG - Using weak password hashing
@@ -160,7 +160,7 @@ if (std.crypto.timing_safe.eql([32]u8, received_mac.*, computed_mac.*)) { ... }
 - Digital signatures and public-key cryptography
 
 **Related namespaces:**
-- `std.crypto.random` - Cryptographically secure random number generation
+- `std.Io.randomSecure` - Cryptographically secure random number generation
 - `std.crypto.tls` - TLS 1.3 implementation for secure communication
 - `std.crypto.Certificate` - X.509 certificate parsing and verification
 
@@ -254,17 +254,19 @@ Cryptographic hash functions for data integrity and content addressing.
 ```zig
 const std = @import("std");
 
-pub fn hashFile(path: []const u8) ![32]u8 {
-    const file = try std.fs.cwd().openFile(path, .{});
-    defer file.close();
+pub fn hashFile(io: std.Io, path: []const u8) ![32]u8 {
+    const file = try std.Io.Dir.cwd().openFile(io, path, .{});
+    defer file.close(io);
 
     var hasher = std.crypto.hash.Blake3.init(.{});
-    var buffer: [4096]u8 = undefined;
+    var file_buffer: [4096]u8 = undefined;
+    var reader = file.readerStreaming(io, &file_buffer);
+    var chunk: [4096]u8 = undefined;
 
     while (true) {
-  const n = try file.read(&buffer);
+  const n = try reader.interface.readSliceShort(&chunk);
   if (n == 0) break;
-  hasher.update(buffer[0..n]);
+  hasher.update(chunk[0..n]);
     }
 
     var hash: [32]u8 = undefined;
@@ -290,7 +292,7 @@ AEAD (Authenticated Encryption with Associated Data) provides both confidentiali
 const std = @import("std");
 const ChaCha20Poly1305 = std.crypto.aead.chacha_poly.ChaCha20Poly1305;
 
-pub fn encryptMessage(plaintext: []const u8, key: [32]u8) !struct {
+pub fn encryptMessage(io: std.Io, plaintext: []const u8, key: [32]u8) !struct {
     ciphertext: []u8,
     nonce: [12]u8,
     tag: [16]u8
@@ -299,7 +301,7 @@ pub fn encryptMessage(plaintext: []const u8, key: [32]u8) !struct {
 
     // Generate random nonce (MUST be unique for each message with same key)
     var nonce: [12]u8 = undefined;
-    std.crypto.random.bytes(&nonce);
+    try io.randomSecure(&nonce);
 
     // Allocate space for ciphertext
     const ciphertext = try allocator.alloc(u8, plaintext.len);
@@ -348,13 +350,13 @@ Slow, memory-hard functions for deriving keys from passwords.
 const std = @import("std");
 const argon2 = std.crypto.pwhash.argon2;
 
-pub fn hashAndVerifyPassword() !void {
+pub fn hashAndVerifyPassword(io: std.Io) !void {
     const allocator = std.heap.page_allocator;
     const password = "correct_horse_battery_staple";
 
     // Generate random salt
     var salt: [32]u8 = undefined;
-    std.crypto.random.bytes(&salt);
+    try io.randomSecure(&salt);
 
     // Hash password (produces PHC format string)
     var hash_buf: [128]u8 = undefined;
@@ -713,12 +715,12 @@ const EncryptedMessage = struct {
     tag: [16]u8,
 };
 
-pub fn encryptAndSend(plaintext: []const u8, shared_key: [32]u8) !EncryptedMessage {
+pub fn encryptAndSend(io: std.Io, plaintext: []const u8, shared_key: [32]u8) !EncryptedMessage {
     const allocator = std.heap.page_allocator;
 
     // Generate unique nonce
     var nonce: [12]u8 = undefined;
-    std.crypto.random.bytes(&nonce);
+    try io.randomSecure(&nonce);
 
     // Encrypt message
     const ciphertext = try allocator.alloc(u8, plaintext.len);
@@ -769,17 +771,19 @@ pub fn receiveAndDecrypt(msg: EncryptedMessage, shared_key: [32]u8) ![]u8 {
 const std = @import("std");
 const Blake3 = std.crypto.hash.Blake3;
 
-pub fn computeFileHash(path: []const u8) ![32]u8 {
-    const file = try std.fs.cwd().openFile(path, .{});
-    defer file.close();
+pub fn computeFileHash(io: std.Io, path: []const u8) ![32]u8 {
+    const file = try std.Io.Dir.cwd().openFile(io, path, .{});
+    defer file.close(io);
 
     var hasher = Blake3.init(.{});
-    var buffer: [8192]u8 = undefined;
+    var file_buffer: [8192]u8 = undefined;
+    var reader = file.readerStreaming(io, &file_buffer);
+    var chunk: [8192]u8 = undefined;
 
     while (true) {
-  const bytes_read = try file.read(&buffer);
+  const bytes_read = try reader.interface.readSliceShort(&chunk);
   if (bytes_read == 0) break;
-  hasher.update(buffer[0..bytes_read]);
+  hasher.update(chunk[0..bytes_read]);
     }
 
     var hash: [32]u8 = undefined;
@@ -787,19 +791,19 @@ pub fn computeFileHash(path: []const u8) ![32]u8 {
     return hash;
 }
 
-pub fn verifyFileIntegrity(path: []const u8, expected_hash: [32]u8) !bool {
-    const actual_hash = try computeFileHash(path);
+pub fn verifyFileIntegrity(io: std.Io, path: []const u8, expected_hash: [32]u8) !bool {
+    const actual_hash = try computeFileHash(io, path);
 
     // Timing-safe comparison
     return std.crypto.timing_safe.eql([32]u8, actual_hash, expected_hash);
 }
 
-pub fn checksumDirectory(dir_path: []const u8) !void {
-    var dir = try std.fs.cwd().openDir(dir_path, .{ .iterate = true });
-    defer dir.close();
+pub fn checksumDirectory(io: std.Io, dir_path: []const u8) !void {
+    var dir = try std.Io.Dir.cwd().openDir(io, dir_path, .{ .iterate = true });
+    defer dir.close(io);
 
     var iter = dir.iterate();
-    while (try iter.next()) |entry| {
+    while (try iter.next(io)) |entry| {
   if (entry.kind == .file) {
       const full_path = try std.fs.path.join(
           std.heap.page_allocator,
@@ -1005,7 +1009,7 @@ Default configuration for side-channel mitigations (enabled by default for secur
 
 ## See Also
 
-- **std.crypto.random** - Cryptographically secure random number generation
+- **std.Io.randomSecure** - Cryptographically secure random number generation
 - **std.crypto.tls** - TLS 1.3 implementation for secure network communication
 - **std.crypto.Certificate** - X.509 certificate handling for TLS/PKI
 - **std.mem** - Memory utilities (for non-cryptographic comparisons)

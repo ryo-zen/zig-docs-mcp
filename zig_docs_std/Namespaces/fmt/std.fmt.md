@@ -498,13 +498,12 @@ pub fn encodePacket(buf: []u8, id: u32, payload: []const u8) ![]u8 {
     // Encode as: <4-byte hex ID><payload>
     const hex_id = std.fmt.bytesToHex(std.mem.asBytes(&id), .lower);
 
-    var fbs = std.io.fixedBufferStream(buf);
-    const writer = fbs.writer();
+    var writer = std.Io.Writer.fixed(buf);
 
     try writer.writeAll(&hex_id);
     try writer.writeAll(payload);
 
-    return fbs.getWritten();
+    return writer.buffered();
 }
 ```
 

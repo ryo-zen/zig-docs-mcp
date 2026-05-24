@@ -609,7 +609,7 @@ pub fn main() !void {
 
     // Wait for existing connections to finish
     while (active_connections.load(.acquire) > 0) {
-  std.time.sleep(100 * std.time.ns_per_ms);
+  try io.sleep(.fromMilliseconds(100), .awake);
     }
 
     std.debug.print("Server shutdown complete.\n", .{});

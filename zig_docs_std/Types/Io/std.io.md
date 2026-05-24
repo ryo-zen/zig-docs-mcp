@@ -82,11 +82,9 @@ The table of function pointers implementing the standard I/O operations.
 - **[net](Namespaces/std.Io.net.md)**: Networking primitives (Sockets, IPs).
 
 ### Support Types
-- **[Clock](Types/std.Io.Clock.md)**: Time sources (Monotonic, Realtime).
+- **[Clock](Types/std.Io.Clock.md)**: Time sources (`.awake`, `.boot`, `.real`, CPU clocks).
 - **[Duration](Types/std.Io.Duration.md)**: Time duration handling.
 - **[Future](Types/std.Io.Future.md)**: Handle for async task completion.
-- **[PollFiles](Types/std.Io.PollFiles.md)**: Struct for polling multiple file descriptors.
-- **[Poller](Types/std.Io.Poller.md)**: Mechanism for efficient I/O multiplexing.
 
 ## Function Reference
 
@@ -126,23 +124,17 @@ Acquires a lock on standard error for coordinated printing.
 
 ### Time & Randomness
 
-#### `pub fn sleep(io: Io, duration: Duration, clock: Clock) SleepError!void`
+#### `pub fn sleep(io: Io, duration: Duration, clock: Clock) Cancelable!void`
 Suspends execution for at least `duration`. Use `std.Io.Duration` constructors (e.g., `.fromMilliseconds(100)`).
 
 #### `pub fn random(io: Io, buffer: []u8) void`
-Fills `buffer` with cryptographically secure pseudo-random bytes.
+Fills `buffer` with random bytes. Use `randomSecure` when OS entropy is required.
 
-#### `pub fn randomSecure(io: Io, buffer: []u8) RandomSecureError!void`
-Same as `random`, but guarantees entropy comes from the OS (may block or fail).
-
-### Polling
-
-#### `pub fn poll(gpa: Allocator, comptime StreamEnum: type, files: PollFiles) Poller`
-Creates a poller instance for monitoring multiple file descriptors or handles.
+#### `pub fn randomSecure(io: Io, buffer: []u8) (error{EntropyUnavailable} || Cancelable)!void`
+Fills `buffer` using OS entropy and fails if secure entropy is unavailable.
 
 ## Error Sets
 
 - **Cancelable**: `error{Canceled}`
 - **ConcurrentError**: `error{TooManyConcurrentTasks, OutOfMemory}` + `Cancelable`
-- **SleepError**: `error{UnsupportedClock, UnexpectedError}` + `Cancelable`
-- **RandomSecureError**: `error{SystemResources}`
+- **RandomSecureError**: `error{EntropyUnavailable}` + `Cancelable`

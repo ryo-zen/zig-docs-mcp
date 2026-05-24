@@ -46,7 +46,7 @@ Edwards-curve Digital Signature Algorithm on Curve25519. Fast, secure, compact s
 const Ed25519 = std.crypto.sign.Ed25519;
 
 // Generate key pair from seed
-const seed: [32]u8 = ...; // Use std.crypto.random.bytes() in production
+const seed: [32]u8 = ...; // Use io.randomSecure() in production
 const key_pair = try Ed25519.KeyPair.generateDeterministic(seed);
 
 // Sign
@@ -102,7 +102,7 @@ ML-DSA (Module-Lattice Digital Signature Algorithm), formerly known as Dilithium
 const MLDSA44 = std.crypto.sign.mldsa.MLDSA44;
 
 // Generate key pair
-const seed: [32]u8 = ...; // Use std.crypto.random.bytes() in production
+const seed: [32]u8 = ...; // Use io.randomSecure() in production
 const key_pair = try MLDSA44.KeyPair.generateDeterministic(seed);
 
 // Sign

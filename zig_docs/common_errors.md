@@ -180,7 +180,7 @@ const timestamp = std.time.timestamp();
 
 // ✅ NEW: std.Io.Clock.real.now()
 const io = threaded.io();  // Get io from somewhere
-const ts = try std.Io.Clock.real.now(io);
+const ts = std.Io.Clock.real.now(io);
 const seconds = ts.toSeconds();
 ```
 

@@ -14,15 +14,15 @@ Represents a time-based condition for interrupting or limiting the duration of a
 `none`
 No timeout. The operation will block indefinitely until it succeeds or fails with a non-timeout error.
 
-`duration: struct { raw: Duration, clock: Clock }`
+`duration: std.Io.Clock.Duration`
 A relative time span from the start of the operation.
 
-`deadline: struct { raw: Timestamp, clock: Clock }`
+`deadline: std.Io.Clock.Timestamp`
 An absolute point in time.
 
 ## Functions
 
-### `pub fn sleep(timeout: Timeout, io: Io) SleepError!void`
+### `pub fn sleep(timeout: Timeout, io: Io) Io.Cancelable!void`
 Sleeps until the condition specified by the timeout is met.
 
 - If `.none`: Blocks indefinitely (though typically not used this way).
@@ -31,12 +31,12 @@ Sleeps until the condition specified by the timeout is met.
 
 ------
 
-### `pub fn toDeadline(t: Timeout, io: Io) Clock.Error!?Clock.Timestamp`
-Converts a relative `.duration` to an absolute `.deadline` based on the current time of the associated clock. If the timeout is already a `.deadline`, returns it as-is. Returns `null` if the timeout is `.none`.
+### `pub fn toDeadline(t: Timeout, io: Io) Timeout`
+Converts a relative `.duration` to an absolute `.deadline` based on the current time of the associated clock. If the timeout is already a `.deadline`, returns it as-is.
 
 ------
 
-### `pub fn toDurationFromNow(t: Timeout, io: Io) Clock.Error!?Clock.Duration`
+### `pub fn toDurationFromNow(t: Timeout, io: Io) ?Clock.Duration`
 Converts an absolute `.deadline` to a relative `.duration` based on how much time is left. If the timeout is already a `.duration`, returns it as-is. Returns `null` if the timeout is `.none`.
 
 ## Usage Example
@@ -56,21 +56,20 @@ const msg = try socket.receiveTimeout(io, &buf, timeout);
 
 ### Absolute Timeout (Deadline)
 ```zig
-const now = try std.Io.Clock.awake.now(io);
-const deadline = now.addDuration(.fromMinutes(1));
+const deadline = std.Io.Clock.Timestamp.now(io, .awake).addDuration(.{
+    .raw = .fromSeconds(60),
+    .clock = .awake,
+});
 
 const timeout = std.Io.Timeout{
-    .deadline = .{
-  .raw = deadline,
-  .clock = .awake,
-    },
+    .deadline = deadline,
 };
 ```
 
 ## Error Sets
 
-### Error
-- `UnsupportedClock`: The specified clock is not supported on this platform.
+### `Timeout.Error`
+- `Timeout`: Used by operations that report timeout expiration.
 
 ## Debug Checklist
 

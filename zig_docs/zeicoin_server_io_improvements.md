@@ -57,7 +57,7 @@ try io.checkCancel(); // Blocks until SIGINT/SIGTERM
 fn periodicStatus(io: std.Io, components: *NodeComponents) !void {
     while (true) {
   try io.checkCancel();
-  try io.sleep(std.Io.Duration.fromSeconds(30), std.Io.Clock.monotonic);
+  try io.sleep(std.Io.Duration.fromSeconds(30), std.Io.Clock.awake);
   printStatus(components);
     }
 }
@@ -65,7 +65,7 @@ fn periodicStatus(io: std.Io, components: *NodeComponents) !void {
 fn periodicMaintenance(io: std.Io, components: *NodeComponents) !void {
     while (true) {
   try io.checkCancel();
-  try io.sleep(std.Io.Duration.fromSeconds(10), std.Io.Clock.monotonic);
+  try io.sleep(std.Io.Duration.fromSeconds(10), std.Io.Clock.awake);
   components.network_manager.maintenance();
     }
 }
@@ -73,7 +73,7 @@ fn periodicMaintenance(io: std.Io, components: *NodeComponents) !void {
 fn periodicSyncCheck(io: std.Io, components: *NodeComponents) !void {
     while (true) {
   try io.checkCancel();
-  try io.sleep(std.Io.Duration.fromSeconds(5), std.Io.Clock.monotonic);
+  try io.sleep(std.Io.Duration.fromSeconds(5), std.Io.Clock.awake);
   components.sync_manager.checkTimeout();
     }
 }
@@ -250,7 +250,7 @@ fn miningStartupTask(io: std.Io, components: *NodeComponents) !void {
 fn waitForSyncComplete(io: std.Io, sync_manager: *SyncManager) !void {
     while (sync_manager.isActive()) {
   try io.checkCancel();
-  try io.sleep(std.Io.Duration.fromSeconds(1), std.Io.Clock.monotonic);
+  try io.sleep(std.Io.Duration.fromSeconds(1), std.Io.Clock.awake);
     }
 }
 ```
@@ -333,7 +333,7 @@ pub fn main(init: std.process.Init) !void {
 fn periodicStatus(io: std.Io, components: *NodeComponents) !void {
     while (true) {
   try io.checkCancel();
-  try io.sleep(std.Io.Duration.fromSeconds(30), std.Io.Clock.monotonic);
+  try io.sleep(std.Io.Duration.fromSeconds(30), std.Io.Clock.awake);
   printStatus(components);
     }
 }
@@ -341,7 +341,7 @@ fn periodicStatus(io: std.Io, components: *NodeComponents) !void {
 fn periodicMaintenance(io: std.Io, components: *NodeComponents) !void {
     while (true) {
   try io.checkCancel();
-  try io.sleep(std.Io.Duration.fromSeconds(10), std.Io.Clock.monotonic);
+  try io.sleep(std.Io.Duration.fromSeconds(10), std.Io.Clock.awake);
   components.network_manager.maintenance();
     }
 }
@@ -349,7 +349,7 @@ fn periodicMaintenance(io: std.Io, components: *NodeComponents) !void {
 fn periodicSyncCheck(io: std.Io, components: *NodeComponents) !void {
     while (true) {
   try io.checkCancel();
-  try io.sleep(std.Io.Duration.fromSeconds(5), std.Io.Clock.monotonic);
+  try io.sleep(std.Io.Duration.fromSeconds(5), std.Io.Clock.awake);
   components.sync_manager.checkTimeout();
 
   const sync_state = components.sync_manager.getSyncState();
@@ -405,7 +405,7 @@ fn syncRecovery(sync_manager: *SyncManager) !void {
 
 ### Phase 1: Simple Replacements (Low Risk)
 1. Replace `std.time.sleep()` → `io.sleep(Duration, Clock)`
-2. Replace `std.time.timestamp()` → Use Clock.monotonic for intervals
+2. Replace `std.time.timestamp()` → Use Clock.awake for intervals
 3. Test: Server still runs, no behavior change
 
 ### Phase 2: Task Isolation (Medium)
@@ -434,7 +434,7 @@ test "periodic task isolated" {
     // Test runs for 3 iterations then cancels
     const future = try io.concurrent(periodicStatus, .{io, &components});
 
-    try io.sleep(std.Io.Duration.fromSeconds(100), std.Io.Clock.monotonic);
+    try io.sleep(std.Io.Duration.fromSeconds(100), std.Io.Clock.awake);
     io.cancel(future);
 
     // Should have printed status ~3 times

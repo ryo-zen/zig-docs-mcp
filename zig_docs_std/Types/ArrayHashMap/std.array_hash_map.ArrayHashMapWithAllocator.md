@@ -847,10 +847,10 @@ const SeededStringContext = struct {
     }
 };
 
-pub fn createSecureMap(allocator: std.mem.Allocator) !std.array_hash_map.ArrayHashMap([]const u8, []const u8, SeededStringContext, true) {
+pub fn createSecureMap(allocator: std.mem.Allocator, io: std.Io) !std.array_hash_map.ArrayHashMap([]const u8, []const u8, SeededStringContext, true) {
     // Random seed to prevent hash collision attacks
-    var prng = std.Random.DefaultPrng.init(@bitCast(std.time.timestamp()));
-    const seed = prng.random().int(u64);
+    var seed: u64 = undefined;
+    try io.randomSecure(std.mem.asBytes(&seed));
 
     const ctx = SeededStringContext{ .seed = seed };
     return std.array_hash_map.ArrayHashMap(

@@ -6,21 +6,21 @@ A point in time returned by `Clock.now`. Used for elapsed-time measurement, dead
 
 ### Read the Current Time
 ```zig
-const now = try std.Io.Clock.real.now(io);
+const now = std.Io.Clock.real.now(io);
 std.debug.print("Unix seconds: {}\n", .{now.toSeconds()});
 ```
 
 ### Compute a Deadline
 ```zig
-const now = try std.Io.Clock.awake.now(io);
+const now = std.Io.Clock.awake.now(io);
 const deadline = now.addDuration(.fromSeconds(30));
 ```
 
 ### Measure Elapsed Time
 ```zig
-const start = try std.Io.Clock.awake.now(io);
+const start = std.Io.Clock.awake.now(io);
 // ... work ...
-const end = try std.Io.Clock.awake.now(io);
+const end = std.Io.Clock.awake.now(io);
 const elapsed = start.durationTo(end);
 std.debug.print("Elapsed: {}ms\n", .{elapsed.toMilliseconds()});
 ```
@@ -62,7 +62,7 @@ Returns a new `Timestamp` that is `duration` after `from`. Use for computing dea
 
 **Example:**
 ```zig
-const now = try std.Io.Clock.awake.now(io);
+const now = std.Io.Clock.awake.now(io);
 const deadline = now.addDuration(.fromSeconds(10));
 ```
 
@@ -74,7 +74,7 @@ Returns a new `Timestamp` that is `duration` before `from`.
 
 **Example:**
 ```zig
-const now = try std.Io.Clock.real.now(io);
+const now = std.Io.Clock.real.now(io);
 const ten_seconds_ago = now.subDuration(.fromSeconds(10));
 ```
 
@@ -86,9 +86,9 @@ Returns the `Duration` between two timestamps. Positive if `to` is after `from`;
 
 **Example:**
 ```zig
-const start = try std.Io.Clock.awake.now(io);
+const start = std.Io.Clock.awake.now(io);
 // ... work ...
-const end = try std.Io.Clock.awake.now(io);
+const end = std.Io.Clock.awake.now(io);
 const elapsed = start.durationTo(end);
 ```
 

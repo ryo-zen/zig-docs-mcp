@@ -6,15 +6,15 @@
 
 ### Get the Current Unix Time
 ```zig
-const ts = try std.Io.Clock.real.now(io);
+const ts = std.Io.Clock.real.now(io);
 const unix_seconds = ts.toSeconds();
 ```
 
 ### Measure Elapsed Time
 ```zig
-const before = try std.Io.Clock.awake.now(io);
+const before = std.Io.Clock.awake.now(io);
 // ... do work ...
-const after = try std.Io.Clock.awake.now(io);
+const after = std.Io.Clock.awake.now(io);
 const elapsed = before.durationTo(after);
 std.debug.print("Took {}ms\n", .{elapsed.toMilliseconds()});
 ```
@@ -26,7 +26,7 @@ io.sleep(.fromMilliseconds(500), .awake) catch {};
 
 ### Compute a Future Timestamp
 ```zig
-const now = try std.Io.Clock.real.now(io);
+const now = std.Io.Clock.real.now(io);
 const deadline = now.addDuration(.fromSeconds(30));
 ```
 
@@ -98,13 +98,13 @@ Tracks the amount of CPU time (user + kernel mode) used by the calling thread.
 
 ## Core Functions
 
-### `pub fn now(clock: Clock, io: Io) Error!Timestamp`
+### `pub fn now(clock: Clock, io: Io) Timestamp`
 
 Returns the current time for this clock as a `Timestamp`. Not cancelable — it does not block, and cancellation logic itself may need to read the time.
 
 **Example:**
 ```zig
-const ts = try std.Io.Clock.real.now(io);
+const ts = std.Io.Clock.real.now(io);
 std.debug.print("Unix time: {}s\n", .{ts.toSeconds()});
 ```
 
@@ -126,23 +126,23 @@ Note: `sleep` lives on the `Io` interface, not on `Clock` itself, but it is the 
 
 ### Benchmarking a Block of Work
 ```zig
-const before = try std.Io.Clock.awake.now(io);
+const before = std.Io.Clock.awake.now(io);
 
 // ... work to measure ...
 var sum: u64 = 0;
 for (0..1_000_000) |i| sum += i;
 
-const after = try std.Io.Clock.awake.now(io);
+const after = std.Io.Clock.awake.now(io);
 const elapsed = before.durationTo(after);
 std.debug.print("Sum {} took {}ms\n", .{ sum, elapsed.toMilliseconds() });
 ```
 
 ### Deadline-Based Loop
 ```zig
-const deadline = (try std.Io.Clock.awake.now(io)).addDuration(.fromSeconds(5));
+const deadline = std.Io.Clock.awake.now(io).addDuration(.fromSeconds(5));
 
 while (true) {
-    const now = try std.Io.Clock.awake.now(io);
+    const now = std.Io.Clock.awake.now(io);
     if (now.durationTo(deadline).nanoseconds <= 0) break;
     // ... poll or do work ...
     io.sleep(.fromMilliseconds(10), .awake) catch {};

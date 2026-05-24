@@ -81,12 +81,12 @@ pub fn isTimedOut(self: Self) bool {
 
 **std.Io Improvement:**
 ```zig
-const deadline = (try std.Io.Clock.monotonic.now(io))
-    .add(std.Io.Duration.fromSeconds(types.SYNC.DOWNLOAD_TIMEOUT_SECONDS));
+const deadline = std.Io.Clock.awake.now(io)
+    .addDuration(std.Io.Duration.fromSeconds(types.SYNC.DOWNLOAD_TIMEOUT_SECONDS));
 
 // Later, check timeout
-const now = try std.Io.Clock.monotonic.now(io);
-if (now.isAfter(deadline)) {
+const now = std.Io.Clock.awake.now(io);
+if (now.nanoseconds >= deadline.nanoseconds) {
     return error.Timeout;
 }
 ```
@@ -137,8 +137,8 @@ std.time.sleep(1 * std.time.ns_per_s);  // Wait 1 second
 
 **std.Io Improvement:**
 ```zig
-try io.sleep(std.Io.Duration.fromSeconds(2), std.Io.Clock.monotonic);
-try io.sleep(std.Io.Duration.fromSeconds(1), std.Io.Clock.monotonic);
+try io.sleep(std.Io.Duration.fromSeconds(2), std.Io.Clock.awake);
+try io.sleep(std.Io.Duration.fromSeconds(1), std.Io.Clock.awake);
 ```
 
 **Benefits:**
@@ -226,7 +226,7 @@ const PeerConnection = struct {
 
 ### Phase 1: Low-Hanging Fruit
 1. **Replace sleep patterns** → `io.sleep(Duration, Clock)`
-2. **Replace timeout checks** → `Clock.monotonic` + `Timestamp.isAfter()`
+2. **Replace timeout checks** → `Clock.awake` + direct timestamp comparison
 3. **Replace getTime()** → Already done with `global_single_threaded`
 
 **Impact:** Immediate readability improvement, no architectural changes
@@ -326,7 +326,7 @@ fn miningLoop(io: std.Io, ctx: MiningContext, keypair: key.KeyPair, addr: types.
 
 ## When NOT to Use std.Io
 
-- ✅ Keep `global_single_threaded.ioBasic()` for simple timestamp utils
+- ✅ Keep `global_single_threaded.io()` for simple timestamp utils
 - ✅ Keep `std.posix` for simple file operations (like config loading)
 - ✅ Don't over-engineer simple single-threaded code
 

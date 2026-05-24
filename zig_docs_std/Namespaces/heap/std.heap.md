@@ -366,20 +366,21 @@ pub fn main() !void {
 
 ## Specialized Allocators
 
-### ThreadSafeAllocator
+### FixedBufferAllocator Thread-Safe View
 
-Wraps any allocator to make it thread-safe with a mutex.
+`ThreadSafeAllocator` was removed in Zig 0.16. For a fixed buffer allocator,
+use its built-in lock-free thread-safe `Allocator` view.
 
-**Type:** `std.heap.ThreadSafeAllocator`
+**API:** `FixedBufferAllocator.threadSafeAllocator()`
 
 **Example:**
 ```zig
 const std = @import("std");
 
-var backing_allocator = std.heap.FixedBufferAllocator.init(&buffer);
-var tsa = std.heap.ThreadSafeAllocator{ .backing_allocator = backing_allocator.allocator() };
-const allocator = tsa.allocator();
-// Safe to use from multiple threads
+var buffer: [4096]u8 = undefined;
+var fba = std.heap.FixedBufferAllocator.init(&buffer);
+const allocator = fba.threadSafeAllocator();
+// Safe to use concurrently through this allocator interface.
 ```
 
 ------

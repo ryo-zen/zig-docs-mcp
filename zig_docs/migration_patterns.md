@@ -51,7 +51,7 @@ pub fn main() !void {
 ```zig
 fn processData(allocator: Allocator, io: std.Io, data: []const u8) !void {
     // Can use filesystem, network, time operations
-    const ts = try std.Io.Clock.real.now(io);
+    const ts = std.Io.Clock.real.now(io);
 
     // Can use ArrayList
     var list: std.ArrayList(u8) = .{};
@@ -180,7 +180,7 @@ const Logger = struct {
     io: std.Io,
 
     pub fn log(self: Logger, comptime level: []const u8, msg: []const u8) !void {
-  const ts = try std.Io.Clock.real.now(self.io);
+  const ts = std.Io.Clock.real.now(self.io);
   const seconds = ts.toSeconds();
 
   std.debug.print("[{s}][{}] {s}\n", .{level, seconds, msg});
@@ -345,7 +345,7 @@ pub fn efficientProcessing(io: std.Io) !void {
 | `ArrayList` with allocator | Dynamic arrays (mandatory pattern) |
 | `io` parameter threading | Any function needing fs/net/time |
 | `std.Io.Clock.real` | Wall clock time, timestamps |
-| `std.Io.Clock.monotonic` | Durations, timers, performance measurement |
+| `std.Io.Clock.awake` | Durations, timers, performance measurement |
 
 ## Migration Quick Reference
 
@@ -369,6 +369,6 @@ const listener = try addr.listen(.{});              → const listener = try net
 const conn = try listener.accept();                 → const conn = try listener.accept(io);
 
 // Time
-const ts = std.time.timestamp();                    → const ts = try std.Io.Clock.real.now(io).toSeconds();
-std.time.sleep(1_000_000_000);                      → try io.sleep(Duration.fromSeconds(1), Clock.monotonic);
+const ts = std.time.timestamp();                    → const ts = std.Io.Clock.real.now(io).toSeconds();
+std.time.sleep(1_000_000_000);                      → try io.sleep(Duration.fromSeconds(1), Clock.awake);
 ```

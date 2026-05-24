@@ -41,20 +41,28 @@ var child = try std.process.spawn(init.io, .{
     .stdout = .pipe,
     .stderr = .pipe,
 });
-defer _ = child.wait(init.io) catch {};
+errdefer child.kill(init.io);
 
 // Use writeStreamingAll to send data to stdin
 try child.stdin.?.writeStreamingAll(init.io, "Hello from parent!\n");
 child.stdin.?.close(init.io);
 child.stdin = null;
 
-// Use collectOutput to capture stdout/stderr from the child
+// Read stdout/stderr from the child pipes
 var stdout_list: std.ArrayList(u8) = .empty;
 defer stdout_list.deinit(init.gpa);
 var stderr_list: std.ArrayList(u8) = .empty;
 defer stderr_list.deinit(init.gpa);
 
-try child.collectOutput(init.gpa, &stdout_list, &stderr_list, 1024 * 1024);
+var stdout_buffer: [1024]u8 = undefined;
+var stdout_reader = child.stdout.?.readerStreaming(init.io, &stdout_buffer);
+try stdout_reader.interface.appendRemaining(init.gpa, &stdout_list, .limited(1024 * 1024));
+
+var stderr_buffer: [1024]u8 = undefined;
+var stderr_reader = child.stderr.?.readerStreaming(init.io, &stderr_buffer);
+try stderr_reader.interface.appendRemaining(init.gpa, &stderr_list, .limited(1024 * 1024));
+
+_ = try child.wait(init.io);
 std.debug.print("Output: {s}\n", .{stdout_list.items});
 ```
 
@@ -90,7 +98,7 @@ std.process.fatal("Critical error occurred!", .{});
 | Spawn process | `std.process.spawn()` | `var child = try std.process.spawn(io, .{ .argv = &cmd })` |
 | Get env var | `Environ.Map.get()` | `init.environ_map.get("PATH")` |
 | Exit | `exit()` | `std.process.exit(0)` |
-| Get current dir | `getCwd()` | `try std.process.getCwd(&buffer)` |
+| Get current dir | `currentPath()` | `try std.process.currentPath(io, &buffer)` |
 | Get executable path | `executablePath()` | `try std.process.executablePath(io, &buffer)` |
 
 ### ⚠️ Critical: Always Wait for Child Processes
@@ -175,7 +183,13 @@ pub fn main(init: std.process.Init) !void {
     var stderr_list: std.ArrayList(u8) = .empty;
     defer stderr_list.deinit(init.gpa);
 
-    try child.collectOutput(init.gpa, &stdout_list, &stderr_list, 1024 * 1024);
+    var stdout_buffer: [1024]u8 = undefined;
+    var stdout_reader = child.stdout.?.readerStreaming(init.io, &stdout_buffer);
+    try stdout_reader.interface.appendRemaining(init.gpa, &stdout_list, .limited(1024 * 1024));
+
+    var stderr_buffer: [1024]u8 = undefined;
+    var stderr_reader = child.stderr.?.readerStreaming(init.io, &stderr_buffer);
+    try stderr_reader.interface.appendRemaining(init.gpa, &stderr_list, .limited(1024 * 1024));
 
     const term = try child.wait(init.io);
     std.debug.print("Output: {s}\n", .{stdout_list.items});
@@ -413,33 +427,33 @@ while (it.next()) |entry| {
 
 ## Path and Directory Functions
 
-### `pub fn getCwd(buf: []u8) ![]u8`
+### `pub fn currentPath(io: Io, buf: []u8) !usize`
 
 Gets the current working directory.
 
 **Parameters:**
 - `buf` - Buffer for path (must be large enough)
 
-**Returns:** Slice of `buf` containing path
+**Returns:** Number of bytes written into `buf`
 
 **Errors:** `error.NameTooLong` if buffer too small
 
 **Example:**
 ```zig
 var buf: [std.fs.max_path_bytes]u8 = undefined;
-const cwd = try std.process.getCwd(&buf);
-std.debug.print("Current directory: {s}\n", .{cwd});
+const cwd_len = try std.process.currentPath(init.io, &buf);
+std.debug.print("Current directory: {s}\n", .{buf[0..cwd_len]});
 ```
 
 ------
 
-### `pub fn getCwdAlloc(allocator: Allocator) ![]u8`
+### `pub fn currentPathAlloc(io: Io, allocator: Allocator) ![:0]u8`
 
 Gets current working directory with dynamic allocation.
 
 **Example:**
 ```zig
-const cwd = try std.process.getCwdAlloc(init.gpa);
+const cwd = try std.process.currentPathAlloc(init.io, init.gpa);
 defer init.gpa.free(cwd);
 std.debug.print("CWD: {s}\n", .{cwd});
 ```
@@ -493,9 +507,10 @@ Logs an error message to stderr and exits with code 1.
 
 **Example:**
 ```zig
-const file = std.fs.cwd().openFile("config.json", .{}) catch {
+const file = std.Io.Dir.cwd().openFile(init.io, "config.json", .{}) catch {
     std.process.fatal("Failed to open config.json", .{});
 };
+defer file.close(init.io);
 ```
 
 ---
@@ -575,13 +590,19 @@ pub fn compressData(init: std.process.Init, data: []const u8) ![]u8 {
     child.stdin.?.close(init.io);
     child.stdin = null;
 
-    // Read compressed output using collectOutput
+    // Read compressed output from the child pipes
     var stdout_list: std.ArrayList(u8) = .empty;
     defer stdout_list.deinit(init.gpa);
     var stderr_list: std.ArrayList(u8) = .empty;
     defer stderr_list.deinit(init.gpa);
 
-    try child.collectOutput(init.gpa, &stdout_list, &stderr_list, 10 * 1024 * 1024);
+    var stdout_buffer: [8192]u8 = undefined;
+    var stdout_reader = child.stdout.?.readerStreaming(init.io, &stdout_buffer);
+    try stdout_reader.interface.appendRemaining(init.gpa, &stdout_list, .limited(10 * 1024 * 1024));
+
+    var stderr_buffer: [8192]u8 = undefined;
+    var stderr_reader = child.stderr.?.readerStreaming(init.io, &stderr_buffer);
+    try stderr_reader.interface.appendRemaining(init.gpa, &stderr_list, .limited(10 * 1024 * 1024));
 
     const term = try child.wait(init.io);
     if (term != .exited or term.exited != 0) {
@@ -641,7 +662,7 @@ pub fn runPipeline(init: std.process.Init) ![]u8 {
   .stdout = .pipe,
   .stderr = .pipe,
     });
-    defer _ = grep.wait(init.io) catch {};
+    errdefer grep.kill(init.io);
 
     // Pipe cat's stdout to grep's stdin
     var cat_stdout: std.ArrayList(u8) = .empty;
@@ -649,7 +670,13 @@ pub fn runPipeline(init: std.process.Init) ![]u8 {
     var cat_stderr: std.ArrayList(u8) = .empty;
     defer cat_stderr.deinit(init.gpa);
 
-    try cat.collectOutput(init.gpa, &cat_stdout, &cat_stderr, 10 * 1024 * 1024);
+    var cat_stdout_buffer: [8192]u8 = undefined;
+    var cat_stdout_reader = cat.stdout.?.readerStreaming(init.io, &cat_stdout_buffer);
+    try cat_stdout_reader.interface.appendRemaining(init.gpa, &cat_stdout, .limited(10 * 1024 * 1024));
+
+    var cat_stderr_buffer: [8192]u8 = undefined;
+    var cat_stderr_reader = cat.stderr.?.readerStreaming(init.io, &cat_stderr_buffer);
+    try cat_stderr_reader.interface.appendRemaining(init.gpa, &cat_stderr, .limited(10 * 1024 * 1024));
 
     try grep.stdin.?.writeStreamingAll(init.io, cat_stdout.items);
     grep.stdin.?.close(init.io);
@@ -661,7 +688,13 @@ pub fn runPipeline(init: std.process.Init) ![]u8 {
     var grep_stderr: std.ArrayList(u8) = .empty;
     defer grep_stderr.deinit(init.gpa);
 
-    try grep.collectOutput(init.gpa, &grep_stdout, &grep_stderr, 10 * 1024 * 1024);
+    var grep_stdout_buffer: [8192]u8 = undefined;
+    var grep_stdout_reader = grep.stdout.?.readerStreaming(init.io, &grep_stdout_buffer);
+    try grep_stdout_reader.interface.appendRemaining(init.gpa, &grep_stdout, .limited(10 * 1024 * 1024));
+
+    var grep_stderr_buffer: [8192]u8 = undefined;
+    var grep_stderr_reader = grep.stderr.?.readerStreaming(init.io, &grep_stderr_buffer);
+    try grep_stderr_reader.interface.appendRemaining(init.gpa, &grep_stderr, .limited(10 * 1024 * 1024));
 
     _ = try grep.wait(init.io);
 

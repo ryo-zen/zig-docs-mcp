@@ -492,8 +492,13 @@ fn processCommand(command: []const u8) !void {
 ### Library Function Pattern (Caller Allocates)
 ```zig
 // Library API: caller provides allocator
-pub fn parseConfig(allocator: Allocator, path: []const u8) !Config {
-    const file_content = try std.fs.cwd().readFileAlloc(allocator, path, 1024 * 1024);
+pub fn parseConfig(allocator: Allocator, io: std.Io, path: []const u8) !Config {
+    const file_content = try std.Io.Dir.cwd().readFileAlloc(
+  io,
+  path,
+  allocator,
+  .limited(1024 * 1024),
+    );
     defer allocator.free(file_content);
 
     // Parse and return owned data

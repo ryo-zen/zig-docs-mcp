@@ -260,7 +260,7 @@ pub fn lockWithTimeout(mutex: *std.Io.Mutex, io: std.Io, max_attempts: u32) !voi
   }
 
   // Brief sleep before retry
-  std.time.sleep(10 * std.time.ns_per_ms);
+  try io.sleep(.fromMilliseconds(10), .awake);
     }
 
     return error.LockTimeout;

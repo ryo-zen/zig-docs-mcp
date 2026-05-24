@@ -37,8 +37,13 @@ pub fn main(init: std.process.Init) !void {
     var stderr_list: std.ArrayList(u8) = .empty;
     defer stderr_list.deinit(init.gpa);
 
-    // Use collectOutput to capture all output from stdout and stderr pipes
-    try child.collectOutput(init.gpa, &stdout_list, &stderr_list, 1024);
+    var stdout_buffer: [1024]u8 = undefined;
+    var stdout_reader = child.stdout.?.readerStreaming(init.io, &stdout_buffer);
+    try stdout_reader.interface.appendRemaining(init.gpa, &stdout_list, .limited(1024));
+
+    var stderr_buffer: [1024]u8 = undefined;
+    var stderr_reader = child.stderr.?.readerStreaming(init.io, &stderr_buffer);
+    try stderr_reader.interface.appendRemaining(init.gpa, &stderr_list, .limited(1024));
 
     _ = try child.wait(init.io);
     std.debug.print("Got: {s}", .{stdout_list.items});
@@ -116,9 +121,11 @@ Forcibly terminates the child process and waits for it to exit. This ensures res
 
 ------
 
-### `pub fn collectOutput(child: *const Child, allocator: Allocator, stdout: *ArrayList(u8), stderr: *ArrayList(u8), max_output_bytes: usize) !void`
+### Capturing Output from Pipes
 
-Convenience function to read all remaining data from `stdout` and `stderr` pipes until EOF. The child must have been spawned with `.pipe` for these streams.
+Use `File.readerStreaming(io, buffer)` on `child.stdout` and `child.stderr`,
+then read into caller-owned buffers or append to an `ArrayList`. The child must
+have been spawned with `.pipe` for these streams.
 
 ---
 

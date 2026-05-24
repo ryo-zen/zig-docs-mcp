@@ -166,12 +166,6 @@ Returns the generic `Io` interface for this instance. This interface is what mos
 
 ------
 
-### `pub fn ioBasic(t: *Threaded) Io`
-
-Same as `io()`, but excludes networking functionality. Useful on Windows to avoid dependencies on `ws2_32.lib`.
-
-------
-
 ### `pub fn setAsyncLimit(t: *Threaded, new_limit: Io.Limit) void`
 
 Updates the limit on how many asynchronous tasks can be queued.
@@ -242,7 +236,7 @@ Converts a Zig `IpAddress` to a POSIX socket address storage.
 - ✅ **Initialization**: Did you provide `.environ` in `InitOptions`?
 - ✅ **Cleanup**: Did you call `deinit()`?
 - ✅ **Interface**: Are you passing `threaded.io()` to functions expecting `Io`?
-- ✅ **Windows Networking**: If you don't need networking, use `ioBasic()` to reduce binary size.
+- ✅ **Windows Networking**: Keep networking use explicit so platform-specific link dependencies stay visible.
 
 ## Performance Tips
 

@@ -63,15 +63,15 @@ const timestamp = std.time.timestamp();
 **After (Simple):**
 ```zig
 pub fn getTime() i64 {
-    const io = std.Io.Threaded.global_single_threaded.ioBasic();
-    const ts = std.Io.Clock.real.now(io) catch return 0;
+    const io = std.Io.Threaded.global_single_threaded.io();
+    const ts = std.Io.Clock.real.now(io);
     return ts.toSeconds();
 }
 ```
 
 **After (With Io):**
 ```zig
-const ts = try std.Io.Clock.real.now(io);
+const ts = std.Io.Clock.real.now(io);
 const seconds = ts.toSeconds();
 ```
 

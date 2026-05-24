@@ -22,8 +22,8 @@ const buffer = try allocator.alloc(u8, size);
 defer allocator.free(buffer); // Guaranteed cleanup
 
 // Works even with errors
-const file = try std.fs.cwd().openFile("data.txt", .{});
-defer file.close(); // Guaranteed cleanup
+const file = try std.Io.Dir.cwd().openFile(io, "data.txt", .{});
+defer file.close(io); // Guaranteed cleanup
 
 try processFile(file); // If this fails, file still closes
 ```
@@ -354,16 +354,19 @@ Patterns for organizing code structure and composition.
 **Example**:
 ```zig
 // Complex stdlib API
-const file = try std.fs.cwd().openFile("data.txt", .{});
-defer file.close();
-var buf_reader = std.io.bufferedReader(file.reader());
-const reader = buf_reader.reader();
+const file = try std.Io.Dir.cwd().openFile(io, "data.txt", .{});
+defer file.close(io);
+var buffer: [4096]u8 = undefined;
+var reader = file.readerStreaming(io, &buffer);
 
 // Facade: simplified interface
-pub fn readTextFile(path: []const u8, allocator: Allocator) ![]u8 {
-    const file = try std.fs.cwd().openFile(path, .{});
-    defer file.close();
-    return try file.readToEndAlloc(allocator, 1024 * 1024);
+pub fn readTextFile(path: []const u8, allocator: Allocator, io: std.Io) ![]u8 {
+    return try std.Io.Dir.cwd().readFileAlloc(
+  io,
+  path,
+  allocator,
+  .limited(1024 * 1024),
+    );
 }
 ```
 

@@ -9,8 +9,8 @@ const std = @import("std");
 
 /// Get current Unix timestamp (simplest approach)
 pub fn getTime() i64 {
-    const io = std.Io.Threaded.global_single_threaded.ioBasic();
-    const ts = std.Io.Clock.real.now(io) catch return 0;
+    const io = std.Io.Threaded.global_single_threaded.io();
+    const ts = std.Io.Clock.real.now(io);
     return ts.toSeconds();
 }
 ```
@@ -27,8 +27,8 @@ pub fn getTime() i64 {
 ### After (0.16) - Simple Global Pattern
 ```zig
 pub fn getTime() i64 {
-    const io = std.Io.Threaded.global_single_threaded.ioBasic();
-    const ts = std.Io.Clock.real.now(io) catch return 0;
+    const io = std.Io.Threaded.global_single_threaded.io();
+    const ts = std.Io.Clock.real.now(io);
     return ts.toSeconds();
 }
 ```
@@ -61,8 +61,8 @@ const std = @import("std");
 
 /// Get current Unix timestamp
 pub fn getTime() i64 {
-    const io = std.Io.Threaded.global_single_threaded.ioBasic();
-    const ts = std.Io.Clock.real.now(io) catch return 0;
+    const io = std.Io.Threaded.global_single_threaded.io();
+    const ts = std.Io.Clock.real.now(io);
     return ts.toSeconds();
 }
 
@@ -102,23 +102,20 @@ const Transaction = struct {
 };
 
 fn getTime() i64 {
-    const io = std.Io.Threaded.global_single_threaded.ioBasic();
-    const ts = std.Io.Clock.real.now(io) catch return 0;
+    const io = std.Io.Threaded.global_single_threaded.io();
+    const ts = std.Io.Clock.real.now(io);
     return ts.toSeconds();
 }
 ```
 
-## Error Handling
+## Passing Io Explicitly
 
-The pattern `catch return 0` means:
-- If getting timestamp fails (extremely rare), return 0 (Unix epoch)
-- For most code, this is acceptable fallback
-- If you need strict error handling, propagate the error:
+`Clock.now` is not fallible. In code that already has an `io` value, pass it
+directly instead of using the global helper:
 
 ```zig
-pub fn getTimeStrict() !i64 {
-    const io = std.Io.Threaded.global_single_threaded.ioBasic();
-    const ts = try std.Io.Clock.real.now(io);
+pub fn getTime(io: std.Io) i64 {
+    const ts = std.Io.Clock.real.now(io);
     return ts.toSeconds();
 }
 ```
@@ -128,8 +125,8 @@ pub fn getTimeStrict() !i64 {
 ### 1. Global Pattern (Simplest)
 ```zig
 pub fn getTime() i64 {
-    const io = std.Io.Threaded.global_single_threaded.ioBasic();
-    const ts = std.Io.Clock.real.now(io) catch return 0;
+    const io = std.Io.Threaded.global_single_threaded.io();
+    const ts = std.Io.Clock.real.now(io);
     return ts.toSeconds();
 }
 ```
@@ -137,8 +134,8 @@ pub fn getTime() i64 {
 
 ### 2. Thread Io Pattern (Recommended for servers)
 ```zig
-pub fn getTime(io: std.Io) !i64 {
-    const ts = try std.Io.Clock.real.now(io);
+pub fn getTime(io: std.Io) i64 {
+    const ts = std.Io.Clock.real.now(io);
     return ts.toSeconds();
 }
 ```

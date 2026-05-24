@@ -239,7 +239,7 @@ fn workerLoop(io: std.Io) !void {
   // Process work items
   processNextItem() catch |err| {
       if (err == error.NoMoreWork) {
-          std.time.sleep(10 * std.time.ns_per_ms);
+          try io.sleep(.fromMilliseconds(10), .awake);
           continue;
       }
       return err;

@@ -36,7 +36,7 @@ const X25519 = std.crypto.dh.X25519;
 // === Key Exchange Protocol ===
 
 // Alice generates her key pair
-const alice_seed: [32]u8 = ...; // Use std.crypto.random.bytes() in production
+const alice_seed: [32]u8 = ...; // Use io.randomSecure() in production
 const alice_kp = try X25519.KeyPair.generateDeterministic(alice_seed);
 
 // Bob generates his key pair

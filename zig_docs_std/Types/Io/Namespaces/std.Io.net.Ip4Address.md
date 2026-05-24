@@ -18,10 +18,10 @@ pub fn main() !void {
 
     // Format back to string
     var buf: [64]u8 = undefined;
-    var fbs = std.io.fixedBufferStream(&buf);
-    try addr.format(fbs.writer());
+    var writer = std.Io.Writer.fixed(&buf);
+    try addr.format(&writer);
 
-    std.debug.print("Formatted: {s}\n", .{fbs.getWritten()});
+    std.debug.print("Formatted: {s}\n", .{writer.buffered()});
 }
 ```
 

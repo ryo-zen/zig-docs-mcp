@@ -433,12 +433,14 @@ const AppConfig = struct {
     };
 };
 
-pub fn loadConfig(allocator: std.mem.Allocator, path: []const u8) !AppConfig {
+pub fn loadConfig(allocator: std.mem.Allocator, io: std.Io, path: []const u8) !AppConfig {
     // Read file
-    const file = try std.fs.cwd().openFile(path, .{});
-    defer file.close();
-
-    const content = try file.readToEndAlloc(allocator, 1024 * 1024);  // 1MB max
+    const content = try std.Io.Dir.cwd().readFileAlloc(
+  io,
+  path,
+  allocator,
+  .limited(1024 * 1024), // 1MB max
+    );
     defer allocator.free(content);
 
     // Parse config
@@ -669,7 +671,7 @@ const options = std.json.Stringify.Options{
     .whitespace = .indent_2,
     .emit_null_optional_fields = false,  // Omit null fields
 };
-try std.json.stringify(data, options, writer);
+try std.json.Stringify.value(data, options, writer);
 ```
 
 ------
@@ -826,13 +828,13 @@ Default buffer size for `json.Reader` when parsing from streaming sources.
 6. **Pre-allocate stringify buffer** - For fixed-size output, use a stack buffer instead of ArrayList:
    ```zig
    var buffer: [4096]u8 = undefined;
-   var fbs = std.io.fixedBufferStream(&buffer);
-   try std.json.stringify(data, .{}, fbs.writer());
+   var writer = std.Io.Writer.fixed(&buffer);
+   try std.json.Stringify.value(data, .{}, &writer);
    ```
 
 7. **Use .minified whitespace for production** - Smaller output size and faster serialization:
    ```zig
-   try std.json.stringify(data, .{ .whitespace = .minified }, writer);
+   try std.json.Stringify.value(data, .{ .whitespace = .minified }, writer);
    ```
 
 8. **Increase max_value_len if needed** - Default 4 MiB limit may be too small for legitimate large strings:

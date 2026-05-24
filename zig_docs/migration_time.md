@@ -19,8 +19,8 @@ std.debug.print("Unix time: {}\n", .{timestamp});
 **After (0.16) - Simple:**
 ```zig
 pub fn getTime() i64 {
-    const io = std.Io.Threaded.global_single_threaded.ioBasic();
-    const ts = std.Io.Clock.real.now(io) catch return 0;
+    const io = std.Io.Threaded.global_single_threaded.io();
+    const ts = std.Io.Clock.real.now(io);
     return ts.toSeconds();
 }
 
@@ -39,14 +39,14 @@ var threaded = std.Io.Threaded.init(allocator, .{ .environ = .empty });
 defer threaded.deinit();
 const io = threaded.io();
 
-const ts = try std.Io.Clock.real.now(io);
+const ts = std.Io.Clock.real.now(io);
 const seconds = ts.toSeconds();
 std.debug.print("Unix time: {}\n", .{seconds});
 ```
 
 **Changes:**
 - `std.time.timestamp()` → `std.Io.Clock.real.now(io).toSeconds()`
-- Use `global_single_threaded.ioBasic()` for simple cases
+- Use `global_single_threaded.io()` for simple cases
 - Returns `Timestamp` type, call `.toSeconds()` for unix time
 - Can throw errors (hence `try`)
 
@@ -57,7 +57,7 @@ See [Simple Timestamp Pattern](simple_timestamp_016.md) for details.
 ### Real-time Clock (Wall Clock)
 
 ```zig
-const ts = try std.Io.Clock.real.now(io);
+const ts = std.Io.Clock.real.now(io);
 const seconds = ts.toSeconds();
 ```
 
@@ -69,10 +69,10 @@ Use for:
 ### Monotonic Clock
 
 ```zig
-const start = try std.Io.Clock.monotonic.now(io);
+const start = std.Io.Clock.awake.now(io);
 // ... do work ...
-const end = try std.Io.Clock.monotonic.now(io);
-const elapsed = end.since(start);
+const end = std.Io.Clock.awake.now(io);
+const elapsed = start.durationTo(end);
 ```
 
 Use for:
@@ -92,7 +92,7 @@ std.time.sleep(std.time.ns_per_s); // 1 second
 **After:**
 ```zig
 const duration = std.Io.Duration.fromSeconds(1);
-try io.sleep(duration, std.Io.Clock.monotonic);
+try io.sleep(duration, std.Io.Clock.awake);
 ```
 
 ### Duration Construction
@@ -115,21 +115,21 @@ const ts = std.Io.Timestamp.fromSeconds(1704067200);
 ### To Seconds
 
 ```zig
-const ts = try std.Io.Clock.real.now(io);
+const ts = std.Io.Clock.real.now(io);
 const seconds = ts.toSeconds();
 ```
 
 ### Arithmetic
 
 ```zig
-const ts1 = try std.Io.Clock.real.now(io);
-const ts2 = try std.Io.Clock.real.now(io);
+const ts1 = std.Io.Clock.real.now(io);
+const ts2 = std.Io.Clock.real.now(io);
 
 // Difference
-const duration = ts2.since(ts1);
+const duration = ts1.durationTo(ts2);
 
 // Add duration
-const future = ts1.add(std.Io.Duration.fromSeconds(60));
+const future = ts1.addDuration(std.Io.Duration.fromSeconds(60));
 ```
 
 ## Complete Examples
@@ -148,7 +148,7 @@ pub fn main() !void {
     defer threaded.deinit();
     const io = threaded.io();
 
-    const ts = try std.Io.Clock.real.now(io);
+    const ts = std.Io.Clock.real.now(io);
     const seconds = ts.toSeconds();
 
     std.debug.print("Current unix timestamp: {}\n", .{seconds});
@@ -169,14 +169,14 @@ pub fn main() !void {
     defer threaded.deinit();
     const io = threaded.io();
 
-    const start = try std.Io.Clock.monotonic.now(io);
+    const start = std.Io.Clock.awake.now(io);
 
     // Simulate work
     const duration = std.Io.Duration.fromMilliseconds(100);
-    try io.sleep(duration, std.Io.Clock.monotonic);
+    try io.sleep(duration, std.Io.Clock.awake);
 
-    const end = try std.Io.Clock.monotonic.now(io);
-    const elapsed = end.since(start);
+    const end = std.Io.Clock.awake.now(io);
+    const elapsed = start.durationTo(end);
 
     std.debug.print("Elapsed: {} ns\n", .{elapsed.toNanoseconds()});
 }
@@ -189,20 +189,20 @@ const std = @import("std");
 
 pub fn doWorkWithTimeout(io: std.Io) !void {
     const timeout_duration = std.Io.Duration.fromSeconds(5);
-    const deadline = try std.Io.Clock.monotonic.now(io);
-    const timeout_ts = deadline.add(timeout_duration);
+    const deadline = std.Io.Clock.awake.now(io);
+    const timeout_ts = deadline.addDuration(timeout_duration);
 
     while (true) {
   // Do work
 
   // Check timeout
-  const now = try std.Io.Clock.monotonic.now(io);
-  if (now.isAfter(timeout_ts)) {
+  const now = std.Io.Clock.awake.now(io);
+  if (now.nanoseconds >= timeout_ts.nanoseconds) {
       return error.Timeout;
   }
 
   // Sleep a bit
-  try io.sleep(std.Io.Duration.fromMilliseconds(10), std.Io.Clock.monotonic);
+  try io.sleep(std.Io.Duration.fromMilliseconds(10), std.Io.Clock.awake);
     }
 }
 ```
@@ -222,7 +222,7 @@ fn logMessage(msg: []const u8) void {
 **After:**
 ```zig
 fn logMessage(io: std.Io, msg: []const u8) !void {
-    const ts = try std.Io.Clock.real.now(io);
+    const ts = std.Io.Clock.real.now(io);
     const seconds = ts.toSeconds();
     std.debug.print("[{}] {s}\n", .{seconds, msg});
 }
@@ -245,12 +245,12 @@ fn measurePerformance() !void {
 **After:**
 ```zig
 fn measurePerformance(io: std.Io) !void {
-    const start = try std.Io.Clock.monotonic.now(io);
+    const start = std.Io.Clock.awake.now(io);
 
     // Do work
 
-    const end = try std.Io.Clock.monotonic.now(io);
-    const elapsed = end.since(start);
+    const end = std.Io.Clock.awake.now(io);
+    const elapsed = start.durationTo(end);
     std.debug.print("Took {} ns\n", .{elapsed.toNanoseconds()});
 }
 ```
@@ -265,7 +265,7 @@ test "unix timestamp" {
     defer threaded.deinit();
     const io = threaded.io();
 
-    const ts = try std.Io.Clock.real.now(io);
+    const ts = std.Io.Clock.real.now(io);
     const seconds = ts.toSeconds();
 
     // Should be after year 2020
@@ -282,7 +282,7 @@ test "unix timestamp" {
 const ts = std.time.timestamp();
 
 // Fixed
-const ts = try std.Io.Clock.real.now(io);
+const ts = std.Io.Clock.real.now(io);
 const seconds = ts.toSeconds();
 ```
 
@@ -290,11 +290,11 @@ const seconds = ts.toSeconds();
 
 ```zig
 // Wrong
-const ts = try std.Io.Clock.real.now(io);
+const ts = std.Io.Clock.real.now(io);
 std.debug.print("{}\n", .{ts}); // ts is Timestamp type
 
 // Fixed
-const ts = try std.Io.Clock.real.now(io);
+const ts = std.Io.Clock.real.now(io);
 std.debug.print("{}\n", .{ts.toSeconds()}); // Convert to i64
 ```
 
@@ -305,7 +305,7 @@ std.debug.print("{}\n", .{ts.toSeconds()}); // Convert to i64
 std.time.sleep(1_000_000_000);
 
 // Fixed
-try io.sleep(std.Io.Duration.fromSeconds(1), std.Io.Clock.monotonic);
+try io.sleep(std.Io.Duration.fromSeconds(1), std.Io.Clock.awake);
 ```
 
 ## API Changes Summary
@@ -313,19 +313,19 @@ try io.sleep(std.Io.Duration.fromSeconds(1), std.Io.Clock.monotonic);
 | Before (0.13-0.14) | After (0.16) |
 |-------------------|--------------|
 | `std.time.timestamp()` | `std.Io.Clock.real.now(io).toSeconds()` |
-| `std.time.sleep(ns)` | `io.sleep(Duration.fromNanoseconds(ns), Clock.monotonic)` |
-| `Timer.start()` | `Clock.monotonic.now(io)` |
-| `timer.read()` | `end.since(start).toNanoseconds()` |
+| `std.time.sleep(ns)` | `io.sleep(Duration.fromNanoseconds(ns), Clock.awake)` |
+| `Timer.start()` | `Clock.awake.now(io)` |
+| `timer.read()` | `start.durationTo(end).toNanoseconds()` |
 
 ## Migration Checklist
 
 - [ ] Add Io.Threaded setup if not present
 - [ ] Replace `std.time.timestamp()` → `Clock.real.now(io).toSeconds()`
 - [ ] Replace `std.time.sleep()` → `io.sleep(Duration, Clock)`
-- [ ] Replace `Timer.start()` → `Clock.monotonic.now(io)`
+- [ ] Replace `Timer.start()` → `Clock.awake.now(io)`
 - [ ] Update function signatures to accept `io: Io`
 - [ ] Handle errors with `try` (now fallible)
 - [ ] Use `Clock.real` for wall time
-- [ ] Use `Clock.monotonic` for durations
+- [ ] Use `Clock.awake` for durations
 - [ ] Convert Timestamp to seconds when needed
 - [ ] Test all timing code

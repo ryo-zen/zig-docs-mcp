@@ -35,13 +35,14 @@ fn work(iterations: usize) u64 {
 }
 
 test "simple timer harness" {
-    var timer = try std.time.Timer.start();
+    const io = std.testing.io;
+    const start = std.Io.Clock.awake.now(io);
     const result = work(200_000);
-    const elapsed_ns = timer.read();
+    const elapsed_ns = start.durationTo(std.Io.Clock.awake.now(io)).toNanoseconds();
 
     // Guard against dead-code elimination while keeping the example tiny.
     try std.testing.expect(result != 0);
-    try std.testing.expect(elapsed_ns > 0);
+    try std.testing.expect(elapsed_ns >= 0);
 }
 ```
 
