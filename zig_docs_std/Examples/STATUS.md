@@ -150,3 +150,89 @@
    - Example programs demonstrating combined usage
    - Benchmark comparisons for performance tips
    - Common pitfalls section based on test failures
+
+---
+
+## Stdlib Docs Audit Update
+
+## Date: 2026-05-25
+
+### Audit Summary
+
+The stdlib documentation audit now checks existing markdown correctness, `std.Io` public declaration coverage, and top-level `std` Types/Namespaces/Values from the locked local `std.zig` source.
+
+**Completed:**
+- Added `npm run audit:stdlib-docs` coverage for expected `std.Io` public declarations.
+- Added source-driven root `std` coverage so missing top-level Types, Namespaces, and Values are reported from local `std.zig`.
+- Fixed stale Zig 0.16 symbol paths for JSON, math, BufMap, BufSet, and Io docs.
+- Removed stale docs for removed APIs such as `std.process.ProtectMemoryOptions`, `std.Io.Poller`, `std.Io.PollFiles`, and `std.Io.SelectUnion`.
+- Added missing markdown pages for:
+  - `std.Io.AnyFuture`
+  - `std.Io.Batch`
+  - `std.Io.Condition`
+  - `std.Io.Dispatch`
+  - `std.Io.Operation`
+  - `std.Io.RwLock`
+  - `std.Io.Semaphore`
+  - `std.Io.failingNetSend`
+- Added first root `std` Type pages for the hash map and static string map family:
+  - `std.AutoHashMap`
+  - `std.AutoHashMapUnmanaged`
+  - `std.HashMap`
+  - `std.HashMapUnmanaged`
+  - `std.StringHashMap`
+  - `std.StringHashMapUnmanaged`
+  - `std.StaticStringMap`
+  - `std.StaticStringMapWithEql`
+- Updated resolver support for import-member aliases, nested declarations, enum values, union fields, qualified public functions, and field references.
+
+**Latest verification:**
+- `npm run audit:stdlib-docs -- --path zig_docs_std/Types/Io --fail-on-issues`
+  - 49 checked
+  - 49 OK
+  - 0 warnings
+  - 0 errors
+- `npm run audit:stdlib-docs -- --path zig_docs_std/Types --max 80`
+  - 96 checked
+  - 69 OK
+  - 0 warnings
+  - 26 errors for missing root Type docs
+  - 1 skipped non-symbol file
+- `npm run audit:stdlib-docs -- --path zig_docs_std/Namespaces --max 100`
+  - 361 checked
+  - 324 OK
+  - 0 warnings
+  - 35 errors for missing root Namespace/Value docs
+  - 2 skipped non-symbol files
+- `npm run audit:stdlib-docs -- --max 20`
+  - 457 checked
+  - 393 OK
+  - 0 warnings
+  - 61 errors for missing root docs
+  - 3 skipped non-symbol files
+- `npm test`
+  - 53 tests passed
+
+### Reusable Coverage Workflow
+
+Use this same workflow for other `Types` and `Namespaces`:
+
+1. Pick a documentation area, for example `std.Io`, `std.fs`, `std.process`, or a `Types/*` group.
+2. Read the locked local stdlib source under `/path/to/zig-0.16.0/lib/std`.
+3. List the public declarations that should have standalone markdown pages.
+4. Compare those declarations to existing markdown H1 symbols and filenames.
+5. Add a `CoverageRule` in `src/audit-stdlib-docs.ts` for explicit declaration lists, or use `ROOT_COVERAGE_RULES` for source-driven root surfaces.
+6. For explicit rules include:
+   - `namespace`
+   - `docRoot`
+   - `expectedDir`
+   - `symbols`
+7. Run a targeted audit with `--fail-on-issues` to expose missing docs.
+8. Add missing markdown pages from the local stdlib source, keeping the H1 exactly equal to the public symbol.
+9. Include source-derived fields, enum values, function signatures, behavior notes, and see-also links.
+10. Run the targeted audit again until it has 0 warnings and 0 errors.
+11. Run the full audit and test suite:
+    - `npm run audit:stdlib-docs`
+    - `npm test`
+
+This makes missing docs a repeatable audit failure instead of a manual checklist item.

@@ -10,7 +10,7 @@
 ```zig
 pub const Evented = switch (builtin.os.tag) {
     .linux => switch (builtin.cpu.arch) {
-  .x86_64, .aarch64 => std.Io.IoUring,
+  .x86_64, .aarch64 => std.Io.Uring,
   else => void,
     },
     .dragonfly, .freebsd, .netbsd, .openbsd, .macos, .ios, .watchos, .tvos, .visionos => switch (builtin.cpu.arch) {
@@ -35,7 +35,7 @@ pub const Evented = switch (builtin.os.tag) {
 
 | Operating System | Architecture | Backend | Note |
 | :--- | :--- | :--- | :--- |
-| **Linux** | x86_64, aarch64 | [`std.Io.IoUring`](./std.Io.IoUring.md) | Requires kernel 5.1+ |
+| **Linux** | x86_64, aarch64 | [`std.Io.Uring`](./std.Io.Uring.md) | Requires kernel 5.1+ |
 | **macOS / iOS** | x86_64, aarch64 | [`std.Io.Kqueue`](./std.Io.Kqueue.md) | |
 | **BSD Family** | x86_64, aarch64 | [`std.Io.Kqueue`](./std.Io.Kqueue.md) | FreeBSD, OpenBSD, NetBSD, Dragonfly |
 | **Windows** | Any | *Not yet implemented* | Use `std.Io.Threaded` |
@@ -84,6 +84,6 @@ pub fn main() !void {
 
 ## See Also
 
-- `std.Io.IoUring` - Documentation for the Linux backend.
+- `std.Io.Uring` - Documentation for the Linux backend.
 - `std.Io.Kqueue` - Documentation for the BSD/macOS backend.
 - `std.Io.Threaded` - The portable thread-pool backend (safe fallback for all platforms).

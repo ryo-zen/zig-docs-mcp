@@ -384,7 +384,6 @@ pub fn fetchWithRetries(io: std.Io) !Data {
 
 ## See Also
 
-- `std.Io.SelectUnion` - Helper for generating union types from future structs
 - `std.Io.Group` - For managing task groups without first-wins semantics
 - `std.Io.Future` - Individual async operation primitive
 - `std.Io.Queue` - The underlying queue type used internally

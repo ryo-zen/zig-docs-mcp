@@ -1,4 +1,4 @@
-# std.array_hash_map.AutoArrayHashMapUnmanaged
+# std.AutoArrayHashMapUnmanaged
 
 📚 **[See Comprehensive Examples & Tests](../../Examples/)** - Complete runnable code demonstrating all AutoArrayHashMapUnmanaged features
 

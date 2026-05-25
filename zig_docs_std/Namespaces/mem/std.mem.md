@@ -97,7 +97,7 @@ std.mem.copyForwards(u8, dest, source); // ❌ Deprecated
 - `std.fmt` - String formatting and parsing (higher-level)
 - `std.heap` - Memory allocation strategies
 - `std.ArrayList` - Dynamic array type
-- `std.io` - Buffered I/O operations
+- `std.Io` - Buffered I/O operations
 
 ---
 

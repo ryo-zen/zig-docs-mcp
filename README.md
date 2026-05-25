@@ -41,6 +41,16 @@ npm run test:ui
 npm run test:coverage
 ```
 
+### Auditing Stdlib Docs
+
+```bash
+# Audit all std namespace/type docs against the locked local Zig stdlib source
+npm run audit:stdlib-docs
+
+# Audit one doc or directory while fixing stale coverage
+npm run audit:stdlib-docs -- --path zig_docs_std/Namespaces/process/std.process.ArgExpansion.md --include-ok
+```
+
 ## MCP Integration
 
 ### Claude Code (CLI)

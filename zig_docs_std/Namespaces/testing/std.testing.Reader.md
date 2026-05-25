@@ -32,6 +32,12 @@ See **[std.testing.Reader.Call](./std.testing.Reader.Call.md)** for details.
 
 ------
 
+### `buffer: []u8`
+
+Working buffer used by the wrapped `Io.Reader` interface while streaming test data.
+
+------
+
 ### `interface: Io.Reader`
 
 The `Io.Reader` interface that wraps this test reader. Use this for actual read operations.

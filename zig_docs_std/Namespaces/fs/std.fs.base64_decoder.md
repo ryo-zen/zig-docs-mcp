@@ -1,6 +1,6 @@
 # std.fs.base64_decoder
 
-Deprecated, use `std.base64.url_safe.Decoder`.
+Deprecated, use the `.Decoder` field on `std.base64.url_safe`.
 
 ## Source Code
 

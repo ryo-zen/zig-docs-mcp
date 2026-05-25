@@ -1,6 +1,6 @@
 # std.testing.allocator_instance
 
-**Type:** `std.heap.GeneralPurposeAllocator` (configured for testing)
+**Type:** `std.heap.DebugAllocator` (configured for testing)
 
 **Module:** `std.testing`
 
@@ -10,7 +10,7 @@
 
 ## Overview
 
-The underlying `GeneralPurposeAllocator` instance that powers `std.testing.allocator`. Configured with leak detection, stack traces, and a unique canary value to prevent misuse.
+The underlying `DebugAllocator` instance that powers `std.testing.allocator`. Configured with leak detection, stack traces, and a unique canary value to prevent misuse.
 
 **Key Configuration:**
 - ✅ Stack trace frames: 10 (when platform supports stack traces)
@@ -24,11 +24,11 @@ The underlying `GeneralPurposeAllocator` instance that powers `std.testing.alloc
 ## Source
 
 ```zig
-pub var allocator_instance: std.heap.GeneralPurposeAllocator(.{
+pub var allocator_instance: std.heap.DebugAllocator(.{
     .stack_trace_frames = if (std.debug.sys_can_stack_trace) 10 else 0,
     .resize_stack_traces = true,
     // A unique value so that when a default-constructed
-    // GeneralPurposeAllocator is incorrectly passed to testing allocator, or
+    // DebugAllocator is incorrectly passed to testing allocator, or
     // vice versa, panic occurs.
     .canary = @truncate(0x2731e675c3a701ba),
 }) = b: {
@@ -42,7 +42,7 @@ pub var allocator_instance: std.heap.GeneralPurposeAllocator(.{
 ## Related
 
 - **[std.testing.allocator](./std.testing.allocator.md)** - The public allocator interface (use this in tests)
-- **[std.heap.GeneralPurposeAllocator](../heap/std.heap.md)** - The underlying allocator type
+- **[std.heap.DebugAllocator](../heap/std.heap.md)** - The underlying allocator type
 - **[std.testing main docs](./std.testing.md)** - Complete testing guide
 
 ---

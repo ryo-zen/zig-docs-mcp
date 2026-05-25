@@ -1,140 +1,282 @@
 # std.Io
 
-📚 **[See Comprehensive Examples & Tests](../../Examples/test_io_threaded.zig)** - Runnable code showing initialization and basic usage.
-📘 **Reliability playbook:** [I/O Reliability and Backpressure](../../../zig_docs/io_reliability_backpressure.md)
+Cross-platform interface for I/O and concurrency.
 
-## Quick Start
-
-### 1. Initialize an Backend
-To do any I/O in Zig 0.16, you first need to initialize a backend. `std.Io.Threaded` is the standard, cross-platform choice.
-
-```zig
-const std = @import("std");
-
-pub fn main() !void {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
-    defer _ = gpa.deinit();
-
-    // Initialize the Threaded backend
-    var threaded = std.Io.Threaded.init(gpa.allocator(), .{ .environ = .empty });
-    defer threaded.deinit();
-
-    // Get the generic 'Io' interface
-    const io = threaded.io();
-
-    // Pass 'io' to functions that need it
-    try doWork(io);
-}
-```
-
-### 2. Async Execution
-```zig
-fn doWork(io: std.Io) !void {
-    // Launch a task concurrently
-    var task = io.async(heavyComputation, .{123});
-    defer _ = task.cancel(io); // Always clean up futures
-
-    // Do other work...
-    io.sleep(.fromMilliseconds(100), .awake) catch {};
-
-    // Await the result
-    const result = try task.await(io);
-}
-
-fn heavyComputation(arg: u32) u32 {
-    return arg * 2;
-}
-```
-
----
-
-## Overview
-
-`std.Io` is the central abstraction for all I/O and concurrency operations in Zig. It replaces the old ad-hoc `std.fs`, `std.net`, and `std.time` functions with a unified, vtable-based interface.
-
-**Key Design Principles:**
-- **Backend Agnostic**: Code written against `std.Io` runs on threads, io_uring, kqueue, or even custom backends without changes.
-- **Explicit Context**: No global state. All I/O operations (reading files, sleeping, spawning tasks) require an `io` instance.
-- **Integrated Concurrency**: Async/await is a library feature, not just a language keyword. `io.async` spawns tasks that are managed by the backend.
+`std.Io` is a small vtable-backed handle that lets code perform filesystem, networking, process, time, randomness, async task, queue, and synchronization operations through an implementation-provided backend.
 
 ## Fields
 
-`userdata: ?*anyopaque`
+### `userdata: ?*anyopaque`
 
-A pointer to the backend-specific state (e.g., the `Threaded` struct or `IoUring` instance).
+Backend-specific state passed to every vtable function.
 
-------
+### `vtable: *const VTable`
 
-`vtable: *const VTable`
+Function table implementing the backend operations.
 
-The table of function pointers implementing the standard I/O operations.
+## Types
 
-## Core Types
+- `AnyFuture`
+- `Batch`
+- `CancelProtection`
+- `Clock`
+- `Condition`
+- `Dir`
+- `Dispatch`
+- `Duration`
+- `Event`
+- `Evented`
+- `File`
+- `Future`
+- `Group`
+- `Kqueue`
+- `Limit`
+- `LockedStderr`
+- `Mutex`
+- `Operation`
+- `Queue`
+- `Reader`
+- `RwLock`
+- `Select`
+- `Semaphore`
+- `Terminal`
+- `Threaded`
+- `Timeout`
+- `Timestamp`
+- `TypeErasedQueue`
+- `Uring`
+- `VTable`
+- `Writer`
 
-### Primary Interfaces
-- **[Threaded](Types/std.Io.Threaded.md)**: The standard cross-platform backend.
-- **[Evented](Types/std.Io.Evented.md)**: High-performance async backend (IoUring/Kqueue).
-- **[File](Types/std.Io.File.md)**: Buffered file operations.
-- **[Reader](Types/std.Io.Reader.md)**: Generic stream reading interface.
-- **[Writer](Types/std.Io.Writer.md)**: Generic stream writing interface.
+## Namespaces
 
-### Namespaces
-- **[net](Namespaces/std.Io.net.md)**: Networking primitives (Sockets, IPs).
+- `fiber`
+- `net`
 
-### Support Types
-- **[Clock](Types/std.Io.Clock.md)**: Time sources (`.awake`, `.boot`, `.real`, CPU clocks).
-- **[Duration](Types/std.Io.Duration.md)**: Time duration handling.
-- **[Future](Types/std.Io.Future.md)**: Handle for async task completion.
+## Values
 
-## Function Reference
+### `failing: std.Io`
 
-### Concurrency & Tasks
+An `std.Io` implementation that simulates a system supporting no I/O operations. It is useful for tests, defaults, and vtable slots that must fail predictably.
 
-#### `pub fn async(io: Io, function: anytype, args: anytype) Future`
-Spawns a new task to run `function` with `args`. The task may run on another thread or be multiplexed on the same thread, depending on the backend. Returns a `Future` that must be awaited or canceled.
+## Core Functions
 
-#### `pub fn concurrent(io: Io, function: anytype, args: anytype) ConcurrentError!Future`
-Similar to `async`, but explicitly requests concurrent execution (e.g., on a separate thread). Can fail if the backend hits its concurrency limit.
+### `pub fn async(io: Io, function: anytype, args: std.meta.ArgsTuple(@TypeOf(function))) Future(@typeInfo(@TypeOf(function)).@"fn".return_type.?)`
 
-#### `pub fn select(io: Io, s: anytype) Cancelable!SelectUnion`
-Waits for one of multiple futures to complete. `s` is a struct of futures. Returns a union indicating which future finished first.
+Calls `function` with `args`. The return value is available through the returned `Future`.
 
-#### `pub fn checkCancel(io: Io) Cancelable!void`
-Explicit cancellation point. Returns `error.Canceled` if the current task has been requested to stop.
+### `pub fn concurrent(io: Io, function: anytype, args: std.meta.ArgsTuple(@TypeOf(function))) ConcurrentError!Future(@typeInfo(@TypeOf(function)).@"fn".return_type.?)`
 
-#### `pub fn recancel(io: Io) void`
-Re-arms a cancellation request after it has been caught.
+Calls `function` with `args` while allowing the caller to make progress waiting on other `Io` operations. This has stronger backend requirements than `async`.
 
-#### `pub fn swapCancelProtection(io: Io, new: CancelProtection) CancelProtection`
-Enables or disables cancellation for a critical section of code.
+### `pub fn operate(io: Io, operation: Operation) Cancelable!Operation.Result`
 
-### Synchronization
+Performs one low-level `Operation`.
 
-#### `pub fn futexWait(io: Io, ptr: *const T, expected: T) Cancelable!void`
-Atomically checks if `*ptr == expected` and blocks if true. Efficient low-level waiting primitive.
+### `pub fn operateTimeout(io: Io, operation: Operation, timeout: Timeout) OperateTimeoutError!Operation.Result`
 
-#### `pub fn futexWaitTimeout(io: Io, ptr: *const T, expected: T, timeout: Timeout) Cancelable!void`
-Same as `futexWait` but with a timeout.
+Performs one low-level `Operation` with a timeout.
 
-#### `pub fn futexWake(io: Io, ptr: *const T, max_waiters: u32) void`
-Wakes up to `max_waiters` threads blocked on `ptr`.
+### `pub fn recancel(io: Io) void`
 
-#### `pub fn lockStderr(io: Io, buffer: []u8, terminal_mode: ?Terminal.Mode) Cancelable!LockedStderr`
-Acquires a lock on standard error for coordinated printing.
+Re-arms a cancellation request after `error.Canceled` was returned from a previous cancellation point.
 
-### Time & Randomness
+### `pub fn swapCancelProtection(io: Io, new: CancelProtection) CancelProtection`
 
-#### `pub fn sleep(io: Io, duration: Duration, clock: Clock) Cancelable!void`
-Suspends execution for at least `duration`. Use `std.Io.Duration` constructors (e.g., `.fromMilliseconds(100)`).
+Updates the current task's cancellation protection state and returns the previous state.
 
-#### `pub fn random(io: Io, buffer: []u8) void`
-Fills `buffer` with random bytes. Use `randomSecure` when OS entropy is required.
+### `pub fn checkCancel(io: Io) Cancelable!void`
 
-#### `pub fn randomSecure(io: Io, buffer: []u8) (error{EntropyUnavailable} || Cancelable)!void`
-Fills `buffer` using OS entropy and fails if secure entropy is unavailable.
+Pure cancellation point. It returns `error.Canceled` if a non-blocked cancellation request is outstanding; otherwise it is a no-op.
+
+### `pub fn sleep(io: Io, duration: Duration, clock: Clock) Cancelable!void`
+
+Waits until the requested duration has passed on the selected clock.
+
+## Futex Functions
+
+### `pub fn futexWait(io: Io, comptime T: type, ptr: *align(@alignOf(u32)) const T, expected: T) Cancelable!void`
+
+Waits while `ptr` still contains `expected`.
+
+### `pub fn futexWaitTimeout(io: Io, comptime T: type, ptr: *align(@alignOf(u32)) const T, expected: T, timeout: Timeout) Cancelable!void`
+
+Like `futexWait`, with timeout support.
+
+### `pub fn futexWaitUncancelable(io: Io, comptime T: type, ptr: *align(@alignOf(u32)) const T, expected: T) void`
+
+Like `futexWait`, without introducing a cancellation point.
+
+### `pub fn futexWake(io: Io, comptime T: type, ptr: *align(@alignOf(u32)) const T, max_waiters: u32) void`
+
+Wakes up to `max_waiters` waiters blocked on `ptr`.
+
+## Stderr Functions
+
+### `pub fn lockStderr(io: Io, buffer: []u8, terminal_mode: ?Terminal.Mode) Cancelable!LockedStderr`
+
+Locks standard error for coordinated application-level writes.
+
+### `pub fn tryLockStderr(io: Io, buffer: []u8, terminal_mode: ?Terminal.Mode) Cancelable!?LockedStderr`
+
+Non-blocking variant of `lockStderr`.
+
+### `pub fn unlockStderr(io: Io) void`
+
+Unlocks standard error after `lockStderr` or `tryLockStderr`.
+
+## Randomness Functions
+
+### `pub fn random(io: Io, buffer: []u8) void`
+
+Fills `buffer` with pseudo-random bytes from a cryptographically secure generator managed by the backend.
+
+### `pub fn randomSecure(io: Io, buffer: []u8) RandomSecureError!void`
+
+Obtains fresh cryptographically secure entropy from outside the process.
+
+## Default Backend Helper Functions
+
+The root namespace also exposes default vtable helper functions. These are primarily for backend implementers and for the `failing` implementation.
+
+### Generic helpers
+
+- `noCrashHandler`
+- `noAsync`
+- `failingConcurrent`
+- `unreachableAwait`
+- `unreachableCancel`
+- `noGroupAsync`
+- `failingGroupConcurrent`
+- `unreachableGroupAwait`
+- `unreachableGroupCancel`
+- `unreachableRecancel`
+- `unreachableSwapCancelProtection`
+- `unreachableCheckCancel`
+- `noFutexWait`
+- `noFutexWaitUncancelable`
+- `noFutexWake`
+- `failingOperate`
+- `unreachableBatchAwaitAsync`
+- `unreachableBatchAwaitConcurrent`
+- `unreachableBatchCancel`
+- `noRandom`
+- `failingRandomSecure`
+- `noNow`
+- `failingClockResolution`
+- `noSleep`
+
+### Directory helpers
+
+- `failingDirCreateDir`
+- `failingDirCreateDirPath`
+- `failingDirCreateDirPathOpen`
+- `failingDirOpenDir`
+- `failingDirStat`
+- `failingDirStatFile`
+- `failingDirAccess`
+- `failingDirCreateFile`
+- `failingDirCreateFileAtomic`
+- `failingDirOpenFile`
+- `unreachableDirClose`
+- `noDirRead`
+- `failingDirRealPath`
+- `failingDirRealPathFile`
+- `failingDirDeleteFile`
+- `failingDirDeleteDir`
+- `failingDirRename`
+- `failingDirRenamePreserve`
+- `failingDirSymLink`
+- `failingDirReadLink`
+- `failingDirSetOwner`
+- `failingDirSetFileOwner`
+- `failingDirSetPermissions`
+- `failingDirSetFilePermissions`
+- `noDirSetTimestamps`
+- `failingDirHardLink`
+
+### File helpers
+
+- `failingFileStat`
+- `failingFileLength`
+- `unreachableFileClose`
+- `failingFileWritePositional`
+- `noFileWriteFileStreaming`
+- `noFileWriteFilePositional`
+- `failingFileReadPositional`
+- `failingFileSeekBy`
+- `failingFileSeekTo`
+- `failingFileSync`
+- `unreachableFileIsTty`
+- `unreachableFileEnableAnsiEscapeCodes`
+- `unreachableFileSupportsAnsiEscapeCodes`
+- `failingFileSetLength`
+- `failingFileSetOwner`
+- `failingFileSetPermissions`
+- `noFileSetTimestamps`
+- `failingFileLock`
+- `failingFileTryLock`
+- `unreachableFileUnlock`
+- `failingFileDowngradeLock`
+- `failingFileRealPath`
+- `failingFileHardLink`
+- `failingFileMemoryMapCreate`
+- `unreachableFileMemoryMapDestroy`
+- `unreachableFileMemoryMapSetLength`
+- `unreachableFileMemoryMapRead`
+- `unreachableFileMemoryMapWrite`
+
+### Process helpers
+
+- `failingProcessExecutableOpen`
+- `failingProcessExecutablePath`
+- `unreachableLockStderr`
+- `noTryLockStderr`
+- `unreachableUnlockStderr`
+- `failingProcessCurrentPath`
+- `failingProcessSetCurrentDir`
+- `failingProcessSetCurrentPath`
+- `failingProcessReplace`
+- `failingProcessReplacePath`
+- `failingProcessSpawn`
+- `failingProcessSpawnPath`
+- `unreachableChildWait`
+- `unreachableChildKill`
+- `failingProgressParentFile`
+
+### Networking helpers
+
+- `failingNetListenIp`
+- `failingNetAccept`
+- `failingNetBindIp`
+- `failingNetConnectIp`
+- `failingNetListenUnix`
+- `failingNetConnectUnix`
+- `failingNetSocketCreatePair`
+- `failingNetSend`
+- `failingNetRead`
+- `failingNetWrite`
+- `failingNetWriteFile`
+- `unreachableNetClose`
+- `failingNetShutdown`
+- `failingNetInterfaceNameResolve`
+- `unreachableNetInterfaceName`
+- `failingNetLookup`
 
 ## Error Sets
 
-- **Cancelable**: `error{Canceled}`
-- **ConcurrentError**: `error{TooManyConcurrentTasks, OutOfMemory}` + `Cancelable`
-- **RandomSecureError**: `error{EntropyUnavailable}` + `Cancelable`
+- `Cancelable`
+- `ConcurrentError`
+- `OperateTimeoutError`
+- `QueueClosedError`
+- `RandomSecureError`
+- `UnexpectedError`
+
+## See Also
+
+- `std.Io.Threaded`
+- `std.Io.Evented`
+- `std.Io.VTable`
+- `std.Io.File`
+- `std.Io.Dir`
+- `std.Io.net`

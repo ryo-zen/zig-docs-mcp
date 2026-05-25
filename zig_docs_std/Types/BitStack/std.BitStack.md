@@ -383,4 +383,4 @@ Returned by `push()` and `ensureTotalCapacity()` when memory allocation fails. C
 - **`std.ArrayList`** - The underlying storage mechanism for the byte array
 - **`std.DynamicBitSet`** - For bit sets with random access (not just stack operations)
 - **`std.StaticBitSet`** - Compile-time sized bit set for fixed-size collections
-- **`std.PackedIntArray`** - For arrays of integers with non-byte sizes
+- Packed integer arrays - For arrays of integers with non-byte sizes

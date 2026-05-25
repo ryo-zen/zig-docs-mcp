@@ -1,4 +1,4 @@
-# std.array_hash_map.AutoArrayHashMap
+# std.array_hash_map.Auto
 
 📚 **[See Comprehensive Examples & Tests](../../Examples/)** - Complete runnable code demonstrating all AutoArrayHashMap features
 

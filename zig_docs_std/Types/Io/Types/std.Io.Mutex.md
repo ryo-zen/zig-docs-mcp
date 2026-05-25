@@ -82,9 +82,9 @@ pub fn criticalCleanup(mutex: *std.Io.Mutex, io: std.Io) void {
 Atomic value tracking the mutex state (unlocked, locked, or locked with waiters). Uses atomic operations for lock-free fast-path acquire/release.
 
 **Internal representation** (opaque to users):
-- `unlocked`: No task holds the lock
-- `locked`: One task holds the lock, no waiters
-- `locked_with_waiters`: One task holds the lock, others are blocked
+- unlocked: no task holds the lock
+- locked_once: one task holds the lock with no known waiters
+- contended: one task holds the lock and others may be blocked
 
 ------
 
@@ -96,8 +96,8 @@ Internal enum representing the mutex state machine. Not directly usable by appli
 
 **Values:**
 - `unlocked`
-- `locked`
-- `locked_with_waiters`
+- `locked_once`
+- `contended`
 
 ## Initialization
 
@@ -394,5 +394,5 @@ m2.lock(); m1.lock(); // B → A (deadlock!)
 
 - `std.Io.Event` - For signaling without data protection
 - `std.Io.Queue` - Thread-safe queue using mutex internally
-- `std.Thread.Mutex` - Thread-based mutex (non-Io variant)
+- Thread mutexes - Use lower-level threading primitives when an `std.Io` backend is not involved
 - `std.Io.Future` - For task-based concurrency primitives

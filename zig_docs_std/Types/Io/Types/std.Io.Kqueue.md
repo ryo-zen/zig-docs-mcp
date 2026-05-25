@@ -49,7 +49,7 @@ pub fn main() !void {
 }
 ```
 
-⚠️ **Critical**: Call `deinit()` to clean up threads and resources. The allocator must be thread-safe (e.g., `GeneralPurposeAllocator`).
+⚠️ **Critical**: Call `deinit()` to clean up threads and resources. The allocator must be thread-safe.
 
 ---
 
@@ -70,7 +70,7 @@ pub fn main() !void {
 - **Event-Driven I/O**: Network servers, file watchers, multi-client systems
 
 **Platform Equivalents:**
-- **Linux**: `std.Io.IoUring` (preferred) or `std.Io.Evented`
+- **Linux**: `std.Io.Uring` (preferred) or `std.Io.Evented`
 - **Windows**: `std.Io.Evented` (IOCP-based)
 - **Cross-Platform**: `std.Io.Threaded` (works everywhere but less efficient)
 
@@ -81,7 +81,7 @@ pub fn main() !void {
 The general-purpose allocator used for internal memory allocation (threads, buffers, task structures). **Must be thread-safe**, as multiple worker threads will use it concurrently.
 
 **Recommended allocators:**
-- `std.heap.GeneralPurposeAllocator` (thread-safe)
+- `std.heap.smp_allocator` (thread-safe)
 - `std.heap.c_allocator` (thread-safe)
 
 **Not recommended:**
@@ -389,6 +389,6 @@ sudo launchctl limit maxfiles 65536 200000
 ## See Also
 
 - `std.Io` - Core I/O interface
-- `std.Io.IoUring` - Linux equivalent (io_uring-based)
+- `std.Io.Uring` - Linux equivalent (io_uring-based)
 - `std.Io.Evented` - Cross-platform event-driven backend
 - `std.Io.Threaded` - Simple thread pool backend

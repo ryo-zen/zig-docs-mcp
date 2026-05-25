@@ -1,6 +1,6 @@
 # std.hash_map.HashMap
 
-General purpose hash table. No order is guaranteed and any modification invalidates live iterators. It provides fast operations (lookup, insertion, deletion) with quite high load factors (up to 80% by default) for low memory usage. For a hash map that can be initialized directly that does not store an Allocator field, see `HashMapUnmanaged`. If iterating over the table entries is a strong usecase and needs to be fast, prefer the alternative `std.ArrayHashMap`. Context must be a struct type with two member functions: hash(self, K) u64 eql(self, K, K) bool Adapted variants of many functions are provided. These variants take a pseudo key instead of a key. Their context must have the functions: hash(self, PseudoKey) u64 eql(self, PseudoKey, K) bool
+General purpose hash table. No order is guaranteed and any modification invalidates live iterators. It provides fast operations (lookup, insertion, deletion) with quite high load factors (up to 80% by default) for low memory usage. For a hash map that can be initialized directly that does not store an Allocator field, see `HashMapUnmanaged`. If iterating over the table entries is a strong usecase and needs to be fast, prefer the alternative `std.array_hash_map.ArrayHashMap`. Context must be a struct type with two member functions: hash(self, K) u64 eql(self, K, K) bool Adapted variants of many functions are provided. These variants take a pseudo key instead of a key. Their context must have the functions: hash(self, PseudoKey) u64 eql(self, PseudoKey, K) bool
 
 ## Parameters
 

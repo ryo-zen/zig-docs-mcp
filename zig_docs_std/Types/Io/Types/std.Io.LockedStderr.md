@@ -70,7 +70,7 @@ defer io.unlockStderr();  // ALWAYS unlock! Use defer immediately after lock
 `std.Io.LockedStderr` is a thread-safe wrapper for the standard error stream, obtained via `io.lockStderr()`. While the lock is held, it prevents other threads (and the debug logger) from interleaving output on stderr, ensuring atomic multi-line writes.
 
 **Key Characteristics:**
-- **Thread-safe**: Holds `std.process.stderr_thread_mutex` while active
+- **Thread-safe**: Holds the runtime stderr lock while active
 - **Atomic writes**: Multiple writes appear as a single uninterrupted block
 - **Terminal integration**: Provides access to Terminal for colors and screen control
 - **Buffer management**: Automatically clears the buffer on lock acquisition

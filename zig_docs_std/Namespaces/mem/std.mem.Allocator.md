@@ -14,7 +14,7 @@ Zig's allocator design is intentional — instead of a hidden global allocator (
 
 **Common allocators**:
 - `std.heap.page_allocator` — Allocates directly from the OS (slow, page-granular)
-- `std.heap.GeneralPurposeAllocator` — General-purpose allocator with safety checks
+- `std.heap.DebugAllocator` — General-purpose debugging allocator with safety checks
 - `std.testing.allocator` — Test allocator that detects memory leaks
 - `std.heap.ArenaAllocator` — Bulk-free allocator (free everything at once)
 - `std.heap.FixedBufferAllocator` — Allocates from a fixed buffer (no OS calls)
