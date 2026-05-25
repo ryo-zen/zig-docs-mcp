@@ -1,5 +1,20 @@
 # std.ArrayHashMapUnmanaged
 
+`std.ArrayHashMapUnmanaged` is a deprecated root alias for the canonical type function `std.array_hash_map.Custom`.
+
+## Source Declaration
+
+```zig
+/// Deprecated; use `array_hash_map.Custom`.
+pub const ArrayHashMapUnmanaged = array_hash_map.Custom;
+```
+
+## Replacement
+
+New code should use `std.array_hash_map.Custom(K, V, Context, store_hash)` directly. This page exists for older code and searchability; the alias calls the same implementation.
+
+The full field, value, and method surface is documented by the `std.array_hash_map.Custom` implementation.
+
 📚 **[See Comprehensive Examples & Tests](../../Examples/)** - Complete runnable code demonstrating all ArrayHashMapUnmanaged features
 
 ## Quick Start

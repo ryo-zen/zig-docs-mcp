@@ -1,5 +1,20 @@
 # std.AutoArrayHashMapUnmanaged
 
+`std.AutoArrayHashMapUnmanaged` is a deprecated root alias for the canonical type function `std.array_hash_map.Auto`.
+
+## Source Declaration
+
+```zig
+/// Deprecated; use `array_hash_map.Auto`.
+pub const AutoArrayHashMapUnmanaged = array_hash_map.Auto;
+```
+
+## Replacement
+
+New code should use `std.array_hash_map.Auto(K, V)` directly. This page exists for older code and searchability; the alias calls the same implementation.
+
+The full field, value, and method surface is documented by the `std.array_hash_map.Auto` implementation.
+
 📚 **[See Comprehensive Examples & Tests](../../Examples/)** - Complete runnable code demonstrating all AutoArrayHashMapUnmanaged features
 
 ## ⚠️ IMPORTANT: String Keys in Zig 0.16
