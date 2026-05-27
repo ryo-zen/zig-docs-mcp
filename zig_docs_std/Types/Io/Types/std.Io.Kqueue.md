@@ -283,7 +283,7 @@ pub fn main() !void {
 
     const io = kq.io();
 
-    const addr = try std.Io.net.IpAddress.parse("127.0.0.1:8080", .{});
+    const addr = try std.Io.net.IpAddress.parse("127.0.0.1", 8080);
     var server = try addr.listen(io, .{});
     defer server.close(io);
 
@@ -311,7 +311,7 @@ pub fn main() !void {
 
     const io = kq.io();
 
-    const addr = try std.Io.net.IpAddress.parse("127.0.0.1:8080", .{});
+    const addr = try std.Io.net.IpAddress.parse("127.0.0.1", 8080);
     var server = try addr.listen(io, .{});
     defer server.close(io);
 

@@ -9,8 +9,8 @@
 
 **Open and Read from a Stream**
 ```zig
-const addr = net.IpAddress.parse("example.com", 80) catch unreachable;
-const stream = try addr.connect(io, .{ .mode = .stream });
+const host = try net.HostName.init("example.com");
+const stream = try host.connect(io, 80, .{});
 defer stream.close(io);
 
 var buffer: [4096]u8 = undefined;
@@ -22,8 +22,8 @@ const line = line_raw[0 .. line_raw.len - 1];
 
 **Open and Write to a Stream**
 ```zig
-const addr = net.IpAddress.parse("example.com", 80) catch unreachable;
-const stream = try addr.connect(io, .{ .mode = .stream });
+const host = try net.HostName.init("example.com");
+const stream = try host.connect(io, 80, .{});
 defer stream.close(io);
 
 var buffer: [4096]u8 = undefined;
@@ -34,8 +34,8 @@ try writer.interface.flush();
 
 **Bidirectional Communication**
 ```zig
-const addr = net.IpAddress.parse("example.com", 80) catch unreachable;
-const stream = try addr.connect(io, .{ .mode = .stream });
+const host = try net.HostName.init("example.com");
+const stream = try host.connect(io, 80, .{});
 defer stream.close(io);
 
 var wbuf: [4096]u8 = undefined;

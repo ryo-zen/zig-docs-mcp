@@ -36,6 +36,7 @@ const addr = try net.IpAddress.parse("127.0.0.1", 8080);
 **Changes:**
 - `Address.parseIp4()` → `IpAddress.parse()` (auto-detects IPv4/IPv6)
 - Type rename: `Address` → `IpAddress`
+- `IpAddress.parse(text, port)` takes the address text and port separately; use `IpAddress.parseLiteral(text)` for strings like `"127.0.0.1:8080"` or `"[::1]:8080"`
 
 ### IPv6 Addresses
 
@@ -250,6 +251,9 @@ const addr = std.Io.net.Address.parseIp4(...);
 // Fixed
 const addr = std.Io.net.IpAddress.parse(...);
 ```
+
+`IpAddress.parse` expects two arguments: address text and port. If the string
+already includes the port, call `IpAddress.parseLiteral` instead.
 
 ### Error: "expected 2 arguments, found 1"
 

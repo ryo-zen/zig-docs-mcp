@@ -76,7 +76,7 @@ if (std.Io.net.has_unix_sockets) {
     const addr = try std.Io.net.UnixAddress.init("/tmp/my.sock");
 } else {
     // Fall back to TCP localhost
-    const addr = try std.Io.net.IpAddress.parse("127.0.0.1:9000", .{});
+    const addr = try std.Io.net.IpAddress.parse("127.0.0.1", 9000);
 }
 ```
 
@@ -108,11 +108,9 @@ pub fn main() !void {
     defer threaded.deinit();
     const io = threaded.io();
 
-    // Parse address
-    const addr = try std.Io.net.IpAddress.parse("example.com:80", .{});
-
-    // Connect
-    const stream = try addr.connect(io, .{});
+    // Connect to a DNS host name
+    const host = try std.Io.net.HostName.init("example.com");
+    const stream = try host.connect(io, 80, .{});
     defer stream.close(io);
 
     // Write request
@@ -145,7 +143,7 @@ pub fn main() !void {
     defer threaded.deinit();
     const io = threaded.io();
 
-    const addr = try std.Io.net.IpAddress.parse("127.0.0.1:8080", .{});
+    const addr = try std.Io.net.IpAddress.parse("127.0.0.1", 8080);
 
     var server = try addr.listen(io, .{ .reuse_address = true });
     defer server.close(io);
@@ -179,7 +177,7 @@ pub fn main() !void {
     const socket = try std.Io.net.Socket.init(.ip4, .datagram, .udp);
     defer socket.close(io);
 
-    const bind_addr = try std.Io.net.IpAddress.parse("0.0.0.0:9000", .{});
+    const bind_addr = try std.Io.net.IpAddress.parse("0.0.0.0", 9000);
     try socket.bind(io, bind_addr);
 
     var buffer: [1024]u8 = undefined;

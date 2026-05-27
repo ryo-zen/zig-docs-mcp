@@ -174,6 +174,10 @@ const net = std.Io.net;
 const addr = try net.IpAddress.parse("127.0.0.1", 8080);
 ```
 
+Use `IpAddress.parse(text, port)` when the port is a separate value. Use
+`IpAddress.parseLiteral(text)` when the string already contains the port, such
+as `"127.0.0.1:8080"` or `"[::1]:8080"`.
+
 ```zig
 // ❌ OLD: std.time.timestamp()
 const timestamp = std.time.timestamp();
