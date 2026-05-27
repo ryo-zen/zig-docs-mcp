@@ -55,7 +55,7 @@ defer file.close();
 
 **After:**
 ```zig
-const file = try dir.create(io, "test.txt", .{});
+const file = try dir.createFile(io, "test.txt", .{});
 defer file.close(io);
 ```
 
@@ -69,7 +69,7 @@ defer file.close();
 
 **After:**
 ```zig
-const file = try dir.open(io, "test.txt", .{});
+const file = try dir.openFile(io, "test.txt", .{});
 defer file.close(io);
 ```
 
@@ -82,10 +82,10 @@ try dir.deleteTree("old_dir");
 
 **After:**
 ```zig
-try dir.removeTree(io, "old_dir");
+try dir.deleteTree(io, "old_dir");
 ```
 
-**Method rename:** `deleteTree` → `removeTree`
+**Signature change:** `deleteTree(path)` → `deleteTree(io, path)`
 
 ### Reading Files
 
@@ -100,11 +100,8 @@ const bytes_read = try file.readAll(&buffer);
 
 **After:**
 ```zig
-const file = try std.Io.Dir.cwd().open(io, "data.txt", .{});
-defer file.close(io);
-
 var buffer: [1024]u8 = undefined;
-const bytes_read = try file.readAll(io, &buffer);
+const bytes = try std.Io.Dir.cwd().readFile(io, "data.txt", &buffer);
 ```
 
 ### Writing Files
@@ -119,10 +116,10 @@ try file.writeAll("Hello, World!");
 
 **After:**
 ```zig
-const file = try std.Io.Dir.cwd().create(io, "output.txt", .{});
-defer file.close(io);
-
-try file.writeAll(io, "Hello, World!");
+try std.Io.Dir.cwd().writeFile(io, .{
+    .sub_path = "output.txt",
+    .data = "Hello, World!",
+});
 ```
 
 ## Complete Example
@@ -146,11 +143,11 @@ pub fn main() !void {
     try dir.createDirPath(io, test_dir);
 
     // Create a file
-    const file = try dir.create(io, "test_mkdir_016/test.txt", .{});
+    const file = try dir.createFile(io, "test_mkdir_016/test.txt", .{});
     defer file.close(io);
 
     // Write to file
-    try file.writeAll(io, "Hello from Zig 0.16!");
+    try file.writeStreamingAll(io, "Hello from Zig 0.16!");
 
     std.debug.print("File operations complete\n", .{});
 }
@@ -193,12 +190,12 @@ pub fn main() !void {
 | Before (0.13-0.14) | After (0.16) |
 |-------------------|--------------|
 | `makePath(path)` | `createDirPath(io, path)` |
-| `deleteTree(path)` | `removeTree(io, path)` |
-| `createFile(path, opts)` | `create(io, path, opts)` |
-| `openFile(path, opts)` | `open(io, path, opts)` |
+| `deleteTree(path)` | `deleteTree(io, path)` |
+| `createFile(path, opts)` | `createFile(io, path, opts)` |
+| `openFile(path, opts)` | `openFile(io, path, opts)` |
 | `file.close()` | `file.close(io)` |
-| `file.readAll(buf)` | `file.readAll(io, buf)` |
-| `file.writeAll(data)` | `file.writeAll(io, data)` |
+| `dir.readFile(path, buf)` | `dir.readFile(io, path, buf)` |
+| `dir.writeFile(options)` | `dir.writeFile(io, options)` |
 
 ## Common Errors
 
@@ -238,10 +235,10 @@ const dir = std.Io.Dir.cwd();
 - [ ] Replace `std.fs.cwd()` → `std.Io.Dir.cwd()`
 - [ ] Add `io` parameter to all dir methods
 - [ ] Rename `makePath` → `createDirPath`
-- [ ] Rename `deleteTree` → `removeTree`
-- [ ] Rename `createFile` → `create`
-- [ ] Rename `openFile` → `open`
+- [ ] Add `io` to `deleteTree`
+- [ ] Add `io` to `createFile`
+- [ ] Add `io` to `openFile`
 - [ ] Add `io` to `file.close()`
-- [ ] Add `io` to file read/write operations
+- [ ] Use `Dir.readFile`, `Dir.writeFile`, `File.reader`, `File.writer`, or `File.writeStreamingAll` for file contents
 - [ ] Consider `std.posix` for simple cases
 - [ ] Test all file operations

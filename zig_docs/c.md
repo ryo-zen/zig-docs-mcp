@@ -429,14 +429,14 @@ defer allocator.free(str_z);
 c_function(str_z);  // ✅ Now works
 ```
 
-**⚠️ Important:** `std.fmt.allocPrintZ` does NOT exist in Zig 0.16. Always use `allocPrint` + `dupeZ`.
+**⚠️ Important:** `std.fmt.allocPrintZ` does NOT exist in Zig 0.16. Use
+`std.fmt.allocPrintSentinel(..., 0)` when you only need the sentinel-terminated
+string, or use `allocPrint` + `dupeZ` when you also need the plain slice.
 
 **One-step version** (if you don't need the non-null-terminated version):
 
 ```zig
-const str = try std.fmt.allocPrint(allocator, "value: {}", .{42});
-const str_z = try allocator.dupeZ(u8, str);
-allocator.free(str);  // Free original immediately
+const str_z = try std.fmt.allocPrintSentinel(allocator, "value: {}", .{42}, 0);
 defer allocator.free(str_z);
 
 c_function(str_z);
@@ -450,7 +450,7 @@ For fixed-size buffers, reserve space for the null terminator:
 var buffer: [256:0]u8 = undefined;  // ✅ Reserve space for null terminator
 const str = try std.fmt.bufPrint(&buffer, "value: {}", .{42});
 buffer[str.len] = 0;  // Add null terminator
-c_function(&buffer);
+c_function(buffer[0..str.len :0]);
 ```
 
 ### Solution 4: Sentinel-Terminated Slices
@@ -474,7 +474,7 @@ c_function(terminated);
 
 **"no member named 'allocPrintZ' in struct 'std.fmt'"**
 - Cause: `allocPrintZ` was removed in Zig 0.16
-- Fix: Use `allocPrint()` + `dupeZ()`
+- Fix: Use `allocPrintSentinel(..., 0)` or `allocPrint()` + `dupeZ()`
 
 See also:
 

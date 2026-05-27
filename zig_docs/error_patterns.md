@@ -272,8 +272,8 @@ fn processAll(items: []Item) Result {
 Add context when propagating errors:
 
 ```zig
-fn loadConfig(path: []const u8) !Config {
-    const file = std.Io.File.open(io, path, .{}) catch |err| {
+fn loadConfig(io: std.Io, path: []const u8) !Config {
+    const file = std.Io.Dir.cwd().openFile(io, path, .{}) catch |err| {
   std.debug.print("Failed to open config at '{s}': {}\n", .{path, err});
   return err;
     };
@@ -294,21 +294,17 @@ When building complex resources in multiple steps:
 Each step adds its own cleanup:
 
 ```zig
-fn setupServer(allocator: Allocator, io: *Io) !Server {
+fn setupServer(allocator: Allocator, io: std.Io, address: std.Io.net.IpAddress) !Server {
     // Step 1: Allocate buffer
     const buffer = try allocator.alloc(u8, 4096);
     errdefer allocator.free(buffer);  // Cleanup if steps 2+ fail
 
-    // Step 2: Create socket
-    const socket = try net.Socket.create(io, .ipv4, .stream);
-    errdefer socket.close(io);  // Cleanup if steps 3+ fail
-
-    // Step 3: Bind and listen
-    try socket.bind(address);
-    try socket.listen(128);
+    // Step 2: Bind and listen
+    var server = try address.listen(io, .{});
+    errdefer server.deinit(io);  // Cleanup if later steps fail
 
     // Success: return all resources, errdefers don't run
-    return Server{ .socket = socket, .buffer = buffer };
+    return Server{ .server = server, .buffer = buffer };
 }
 ```
 

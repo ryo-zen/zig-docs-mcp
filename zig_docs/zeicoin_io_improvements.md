@@ -129,7 +129,7 @@ const tx = try tx_queue.pop(io); // Blocks until available
 
 ### 5. Manual Sleep Patterns
 
-**Current Pattern (manager.zig:103, 127):**
+**Legacy/pre-0.16 pattern (manager.zig:103, 127):**
 ```zig
 std.time.sleep(2 * std.time.ns_per_s);  // Wait 2 seconds
 std.time.sleep(1 * std.time.ns_per_s);  // Wait 1 second
@@ -196,7 +196,7 @@ pub fn downloadBlocksParallel(
 ```zig
 const PeerConnection = struct {
     io: std.Io,
-    stream: std.Io.net.TcpStream,
+    stream: std.Io.net.Stream,
 
     pub fn handleMessages(self: *PeerConnection) !void {
   defer self.stream.close(self.io);

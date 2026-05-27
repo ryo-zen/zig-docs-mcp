@@ -86,20 +86,17 @@ pub fn readWriteFile(allocator: Allocator, io: std.Io) !void {
 
     // Write
     {
-  const file = try dir.create(io, "data.txt", .{});
+  const file = try dir.createFile(io, "data.txt", .{});
   defer file.close(io);
-  try file.writeAll(io, "Hello, World!");
+  try file.writeStreamingAll(io, "Hello, World!");
     }
 
     // Read
     {
-  const file = try dir.open(io, "data.txt", .{});
-  defer file.close(io);
-
   var buffer: [1024]u8 = undefined;
-  const bytes_read = try file.readAll(io, &buffer);
+  const bytes = try dir.readFile(io, "data.txt", &buffer);
 
-  std.debug.print("Read: {s}\n", .{buffer[0..bytes_read]});
+  std.debug.print("Read: {s}\n", .{bytes});
     }
 }
 ```
@@ -126,13 +123,13 @@ pub fn runServer(allocator: Allocator, io: std.Io) !void {
     const net = std.Io.net;
     const addr = try net.IpAddress.parse("127.0.0.1", 8080);
 
-    const listener = try net.TcpListener.bind(io, addr);
-    defer listener.close(io);
+    var server = try addr.listen(io, .{});
+    defer server.deinit(io);
 
     std.debug.print("Listening on port 8080\n", .{});
 
     while (true) {
-  const conn = try listener.accept(io);
+  const conn = try server.accept(io);
   errdefer conn.close(io);
 
   // Handle connection (ideally spawn thread/task)
@@ -140,14 +137,19 @@ pub fn runServer(allocator: Allocator, io: std.Io) !void {
     }
 }
 
-fn handleConnection(allocator: Allocator, io: std.Io, conn: std.Io.net.TcpStream) !void {
+fn handleConnection(allocator: Allocator, io: std.Io, conn: std.Io.net.Stream) !void {
     defer conn.close(io);
+    _ = allocator;
 
-    var buffer: [1024]u8 = undefined;
-    const bytes_read = try conn.read(io, &buffer);
+    var rbuf: [1024]u8 = undefined;
+    var reader = conn.reader(io, &rbuf);
+    const bytes_read = try reader.interface.readSliceShort(&rbuf);
 
     // Echo back
-    try conn.writeAll(io, buffer[0..bytes_read]);
+    var wbuf: [1024]u8 = undefined;
+    var writer = conn.writer(io, &wbuf);
+    try writer.interface.writeAll(rbuf[0..bytes_read]);
+    try writer.interface.flush();
 }
 ```
 
@@ -258,7 +260,7 @@ test "file operations with Io" {
     // Test filesystem operations
     const dir = std.Io.Dir.cwd();
     try dir.createDirPath(io, "test_temp");
-    defer dir.removeTree(io, "test_temp") catch {};
+    defer dir.deleteTree(io, "test_temp") catch {};
 
     // Test passes
 }
@@ -293,14 +295,14 @@ pub fn robustOperation(allocator: Allocator, io: std.Io) !void {
     };
 
     // Open file
-    const file = dir.create(io, "output/data.txt", .{}) catch |err| {
+    const file = dir.createFile(io, "output/data.txt", .{}) catch |err| {
   std.debug.print("Failed to create file: {}\n", .{err});
   return err;
     };
     defer file.close(io);
 
     // Write data
-    try file.writeAll(io, "Important data");
+    try file.writeStreamingAll(io, "Important data");
 
     std.debug.print("Operation completed successfully\n", .{});
 }
@@ -360,13 +362,13 @@ list.deinit();                                      → list.deinit(allocator);
 // Filesystem
 const dir = std.fs.cwd();                           → const dir = std.Io.Dir.cwd();
 try dir.makePath("foo");                            → try dir.createDirPath(io, "foo");
-const file = try dir.createFile("f.txt", .{});      → const file = try dir.create(io, "f.txt", .{});
+const file = try dir.createFile("f.txt", .{});      → const file = try dir.createFile(io, "f.txt", .{});
 file.close();                                       → file.close(io);
 
 // Networking
 const addr = std.net.Address.parseIp4("::1", 80);   → const addr = std.Io.net.IpAddress.parse("::1", 80);
-const listener = try addr.listen(.{});              → const listener = try net.TcpListener.bind(io, addr);
-const conn = try listener.accept();                 → const conn = try listener.accept(io);
+const listener = try addr.listen(.{});              → var server = try addr.listen(io, .{});
+const conn = try listener.accept();                 → const conn = try server.accept(io);
 
 // Time
 const ts = std.time.timestamp();                    → const ts = std.Io.Clock.real.now(io).toSeconds();

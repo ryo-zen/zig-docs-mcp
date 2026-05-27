@@ -86,11 +86,11 @@ pub fn main() !void {
 
     const net = std.Io.net;
     const addr = try net.IpAddress.parse("127.0.0.1", 8080);
-    const listener = try net.TcpListener.bind(io, addr);
-    defer listener.close(io);
+    var server = try addr.listen(io, .{});
+    defer server.deinit(io);
 
     while (true) {
-  const conn = try listener.accept(io);
+  const conn = try server.accept(io);
   defer conn.close(io);
 
   // Handle connection
@@ -131,13 +131,17 @@ pub fn main() !void {
 
     const net = std.Io.net;
     const addr = try net.IpAddress.parse("127.0.0.1", 8080);
-    const conn = try net.TcpStream.connect(io, addr);
+    const conn = try addr.connect(io, .{});
     defer conn.close(io);
 
-    try conn.writeAll(io, "Hello");
+    var wbuf: [256]u8 = undefined;
+    var writer = conn.writer(io, &wbuf);
+    try writer.interface.writeAll("Hello");
+    try writer.interface.flush();
 
     var buffer: [1024]u8 = undefined;
-    const bytes_read = try conn.read(io, &buffer);
+    var reader = conn.reader(io, &buffer);
+    const bytes_read = try reader.interface.readSliceShort(&buffer);
 }
 ```
 
@@ -175,7 +179,7 @@ pub fn main() !void {
 
     const net = std.Io.net;
     const addr = try net.IpAddress.parse("0.0.0.0", 9000);
-    const socket = try net.UdpSocket.bind(io, addr);
+    const socket = try addr.bind(io, .{ .mode = .dgram });
     defer socket.close(io);
 }
 ```
@@ -199,19 +203,23 @@ pub fn main() !void {
 
     std.debug.print("Listening on {}\n", .{addr});
 
-    const listener = try net.TcpListener.bind(io, addr);
-    defer listener.close(io);
+    var server = try addr.listen(io, .{});
+    defer server.deinit(io);
 
     while (true) {
-  const conn = try listener.accept(io);
+  const conn = try server.accept(io);
   defer conn.close(io);
 
   std.debug.print("Client connected\n", .{});
 
-  var buffer: [1024]u8 = undefined;
-  const bytes_read = try conn.read(io, &buffer);
+  var rbuf: [1024]u8 = undefined;
+  var reader = conn.reader(io, &rbuf);
+  const bytes_read = try reader.interface.readSliceShort(&rbuf);
 
-  try conn.writeAll(io, buffer[0..bytes_read]);
+  var wbuf: [1024]u8 = undefined;
+  var writer = conn.writer(io, &wbuf);
+  try writer.interface.writeAll(rbuf[0..bytes_read]);
+  try writer.interface.flush();
     }
 }
 ```
@@ -223,12 +231,12 @@ pub fn main() !void {
 | `std.net.Address` | `std.Io.net.IpAddress` |
 | `Address.parseIp4()` | `IpAddress.parse()` |
 | `Address.parseIp6()` | `IpAddress.parse()` |
-| `addr.listen(opts)` | `TcpListener.bind(io, addr)` |
-| `tcpConnectToAddress(addr)` | `TcpStream.connect(io, addr)` |
-| `listener.accept()` | `listener.accept(io)` |
+| `addr.listen(opts)` | `addr.listen(io, opts)` |
+| `tcpConnectToAddress(addr)` | `addr.connect(io, opts)` |
+| `server.accept()` | `server.accept(io)` |
 | `stream.close()` | `stream.close(io)` |
-| `stream.read(buf)` | `stream.read(io, buf)` |
-| `stream.writeAll(data)` | `stream.writeAll(io, data)` |
+| `stream.read(buf)` | `stream.reader(io, buffer).interface.readSliceShort(buf)` |
+| `stream.writeAll(data)` | `stream.writer(io, buffer).interface.writeAll(data)` |
 
 ## Common Errors
 
@@ -259,10 +267,10 @@ already includes the port, call `IpAddress.parseLiteral` instead.
 
 ```zig
 // Wrong
-const listener = try net.TcpListener.bind(addr);
+const server = try addr.listen(.{});
 
 // Fixed
-const listener = try net.TcpListener.bind(io, addr);
+var server = try addr.listen(io, .{});
 ```
 
 ## Testing Pattern
@@ -279,8 +287,8 @@ test "networking migration" {
     const addr = try net.IpAddress.parse("127.0.0.1", 0);
 
     // Bind to random port
-    const listener = try net.TcpListener.bind(io, addr);
-    defer listener.close(io);
+    var server = try addr.listen(io, .{});
+    defer server.deinit(io);
 
     // Test passes if binding succeeds
 }

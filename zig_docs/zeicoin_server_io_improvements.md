@@ -6,7 +6,7 @@ The main server loop has several manual complexity patterns that std.Io can elim
 
 ### 1. Manual Timestamp Polling (Lines 107-114)
 
-**Current Pattern:**
+**Legacy/pre-0.16 pattern being replaced:**
 ```zig
 var last_status_time = std.time.timestamp();
 var last_reconnection_check = std.time.timestamp();
@@ -88,7 +88,7 @@ fn periodicSyncCheck(io: std.Io, components: *NodeComponents) !void {
 
 ### 2. Manual Thread Spawning (Lines 71, 85, 157)
 
-**Current Pattern:**
+**Legacy/pre-0.16 pattern being replaced:**
 ```zig
 // Client API thread
 const api_thread = try std.Thread.spawn(.{}, client_api.ClientApiServer.start, .{&api_server.?});
@@ -458,7 +458,7 @@ test "periodic task isolated" {
 ## Next Steps
 
 1. Read this guide
-2. Try small change: Replace one std.time.sleep() with io.sleep()
+2. Try small change: Replace one legacy `std.time.sleep()` call with `io.sleep()`
 3. Test server behavior unchanged
 4. Gradually adopt concurrent() for background tasks
 5. Final step: Remove polling loop

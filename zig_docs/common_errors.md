@@ -104,8 +104,8 @@ c_function(str_z);  // Now works
 
 **For string literals:**
 ```zig
-// String literals are ALREADY null-terminated
-const str = "hello";  // Type is [:0]const u8
+// String literals are already null-terminated and coerce to [:0]const u8
+const str: [:0]const u8 = "hello";
 c_function(str);  // Works directly
 ```
 
@@ -114,7 +114,7 @@ c_function(str);  // Works directly
 var buffer: [256:0]u8 = undefined;  // ✅ Reserve space for null terminator
 const str = try std.fmt.bufPrint(&buffer, "value: {}", .{42});
 buffer[str.len] = 0;  // Add null terminator
-c_function(&buffer);
+c_function(buffer[0..str.len :0]);
 ```
 
 ---
@@ -123,19 +123,23 @@ c_function(&buffer);
 
 **Cause:** `allocPrintZ` was removed in Zig 0.16
 
-**Fix - Use allocPrint + dupeZ:**
+**Fix - Use `allocPrintSentinel`, or use `allocPrint` + `dupeZ` when you also need the plain slice:**
 ```zig
 // ❌ OLD (pre-0.16)
 const str = try std.fmt.allocPrintZ(allocator, "value: {}", .{val});
 defer allocator.free(str);
 
 // ✅ NEW (0.16+)
+const str_z = try std.fmt.allocPrintSentinel(allocator, "value: {}", .{val}, 0);
+defer allocator.free(str_z);
+
+// Or if you also need the non-null-terminated version:
 const str = try std.fmt.allocPrint(allocator, "value: {}", .{val});
 defer allocator.free(str);
 const str_z = try allocator.dupeZ(u8, str);
 defer allocator.free(str_z);
 
-// Or if you don't need the non-null-terminated version:
+// Or free the non-null-terminated version immediately:
 const str = try std.fmt.allocPrint(allocator, "value: {}", .{val});
 const str_z = try allocator.dupeZ(u8, str);
 allocator.free(str);  // Free original immediately
@@ -159,7 +163,7 @@ defer allocator.free(str_z);
 | `std.fs.Dir` | `std.Io.Dir` |
 | `std.time.timestamp()` | `std.Io.Clock.real.now(io).toSeconds()` |
 | `std.time.milliTimestamp()` | `std.Io.Clock.real.now(io).toMilliseconds()` |
-| `std.fmt.allocPrintZ()` | `std.fmt.allocPrint()` + `allocator.dupeZ()` |
+| `std.fmt.allocPrintZ()` | `std.fmt.allocPrintSentinel(..., 0)` or `allocPrint()` + `dupeZ()` |
 
 **Example fixes:**
 
@@ -230,7 +234,7 @@ try dir.deleteTree("path");
 
 // ✅ NEW (0.16)
 try dir.createDirPath(io, "path");
-try dir.deleteDir(io, "path");
+try dir.deleteTree(io, "path");
 ```
 
 ---
@@ -308,7 +312,7 @@ const other = @import("../../external/file.zig");
 // ✅ GOOD: Add to build.zig modules
 // In build.zig:
 const external = b.addModule("external", .{
-    .root_source_file = .{ .path = "external/file.zig" },
+    .root_source_file = b.path("external/file.zig"),
 });
 exe.root_module.addImport("external", external);
 
@@ -327,7 +331,7 @@ const external = @import("external");
 **Fix - Add to build.zig:**
 ```zig
 // In build.zig
-exe.linkLibC();  // Add this line
+exe.root_module.link_libc = true;
 ```
 
 **Or for tests:**
@@ -340,17 +344,20 @@ zig test file.zig -lc
 
 ### "use of undeclared identifier 'addLibraryPath'"
 
-**Cause:** `addLibraryPath` was removed in Zig 0.16
+**Cause:** In Zig 0.16, library paths are configured on the module, not directly on the compile step.
 
-**Fix - Use linkSystemLibrary:**
+**Fix - Configure the root module:**
 ```zig
 // ❌ OLD (pre-0.16)
 exe.addLibraryPath(.{ .path = "/usr/lib" });
 exe.linkSystemLibrary("pq");
 
 // ✅ NEW (0.16)
-exe.linkSystemLibrary("pq");  // Zig finds system libraries automatically
-// Or specify path in system environment: PKG_CONFIG_PATH, LIBRARY_PATH
+exe.root_module.addLibraryPath(b.path("vendor/lib"));
+exe.root_module.linkSystemLibrary("pq", .{});
+
+// If the library is discoverable by the system toolchain, the explicit
+// addLibraryPath call is often unnecessary.
 ```
 
 ---
@@ -435,7 +442,7 @@ doSomething() catch {};  // OK if you really want to ignore
 
 | Error Message | Old API | New API |
 |---------------|---------|---------|
-| "no member 'allocPrintZ'" | `std.fmt.allocPrintZ()` | `std.fmt.allocPrint()` + `allocator.dupeZ()` |
+| "no member 'allocPrintZ'" | `std.fmt.allocPrintZ()` | `std.fmt.allocPrintSentinel(..., 0)` or `allocPrint()` + `dupeZ()` |
 | "no member 'net'" | `std.net.Address` | `std.Io.net.IpAddress` |
 | "no member 'timestamp'" | `std.time.timestamp()` | `std.Io.Clock.real.now(io).toSeconds()` |
 | "expected N arguments, found M" (ArrayList) | `list.append(item)` | `list.append(allocator, item)` |
