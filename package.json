@@ -5,7 +5,7 @@
   "main": "build/index.js",
   "type": "module",
   "scripts": {
-    "audit:stdlib-docs": "npm run build && node build/audit-stdlib-docs.js",
+    "audit:stdlib-docs": "set -a; [ ! -f .env ] || . ./.env; set +a; npm run build && node build/audit-stdlib-docs.js",
     "build": "tsc && chmod 755 build/index.js",
     "start": "node build/index.js",
     "test": "vitest run",

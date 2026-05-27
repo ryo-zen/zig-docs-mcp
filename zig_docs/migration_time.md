@@ -47,8 +47,8 @@ std.debug.print("Unix time: {}\n", .{seconds});
 **Changes:**
 - `std.time.timestamp()` → `std.Io.Clock.real.now(io).toSeconds()`
 - Use `global_single_threaded.io()` for simple cases
-- Returns `Timestamp` type, call `.toSeconds()` for unix time
-- Can throw errors (hence `try`)
+- `Clock.now` returns a `Timestamp` directly; call `.toSeconds()` for Unix time
+- Sleep operations are fallible and still require `try`
 
 See [Simple Timestamp Pattern](simple_timestamp_016.md) for details.
 
@@ -324,7 +324,7 @@ try io.sleep(std.Io.Duration.fromSeconds(1), std.Io.Clock.awake);
 - [ ] Replace `std.time.sleep()` → `io.sleep(Duration, Clock)`
 - [ ] Replace `Timer.start()` → `Clock.awake.now(io)`
 - [ ] Update function signatures to accept `io: Io`
-- [ ] Handle errors with `try` (now fallible)
+- [ ] Handle errors with `try` for sleep and other fallible Io operations
 - [ ] Use `Clock.real` for wall time
 - [ ] Use `Clock.awake` for durations
 - [ ] Convert Timestamp to seconds when needed

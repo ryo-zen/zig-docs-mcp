@@ -157,8 +157,8 @@ defer allocator.free(str_z);
 | `std.net.*` | `std.Io.net.*` |
 | `std.fs.File` | `std.Io.File` |
 | `std.fs.Dir` | `std.Io.Dir` |
-| `std.time.timestamp()` | `std.Io.Clock.real.now(io)` |
-| `std.time.milliTimestamp()` | `std.Io.Clock.real.now(io)` |
+| `std.time.timestamp()` | `std.Io.Clock.real.now(io).toSeconds()` |
+| `std.time.milliTimestamp()` | `std.Io.Clock.real.now(io).toMilliseconds()` |
 | `std.fmt.allocPrintZ()` | `std.fmt.allocPrint()` + `allocator.dupeZ()` |
 
 **Example fixes:**
@@ -433,7 +433,7 @@ doSomething() catch {};  // OK if you really want to ignore
 |---------------|---------|---------|
 | "no member 'allocPrintZ'" | `std.fmt.allocPrintZ()` | `std.fmt.allocPrint()` + `allocator.dupeZ()` |
 | "no member 'net'" | `std.net.Address` | `std.Io.net.IpAddress` |
-| "no member 'timestamp'" | `std.time.timestamp()` | `std.Io.Clock.real.now(io)` |
+| "no member 'timestamp'" | `std.time.timestamp()` | `std.Io.Clock.real.now(io).toSeconds()` |
 | "expected N arguments, found M" (ArrayList) | `list.append(item)` | `list.append(allocator, item)` |
 | "expected N arguments, found M" (fs) | `dir.makePath(path)` | `dir.createDirPath(io, path)` |
 
