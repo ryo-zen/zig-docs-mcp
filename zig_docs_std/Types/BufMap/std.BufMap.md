@@ -7,10 +7,10 @@
 **Basic Key-Value Storage**
 ```zig
 const std = @import("std");
-var gpa = std.heap.GeneralPurposeAllocator(.{}){};
-defer _ = gpa.deinit();
+var da = std.heap.DebugAllocator(.{}){};
+defer _ = da.deinit();
 
-var map = std.BufMap.init(gpa.allocator());
+var map = std.BufMap.init(da.allocator());
 defer map.deinit();
 
 try map.put("name", "Alice");
@@ -97,10 +97,10 @@ Creates a new empty BufMap backed by the given allocator. The allocator will be 
 
 **Example:**
 ```zig
-var gpa = std.heap.GeneralPurposeAllocator(.{}){};
-defer _ = gpa.deinit();
+var da = std.heap.DebugAllocator(.{}){};
+defer _ = da.deinit();
 
-var map = std.BufMap.init(gpa.allocator());
+var map = std.BufMap.init(da.allocator());
 defer map.deinit();
 ```
 

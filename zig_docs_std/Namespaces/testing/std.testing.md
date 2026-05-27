@@ -509,7 +509,7 @@ test "expectFmt - formatted string testing" {
 
 ### `allocator` - General Purpose Allocator with Leak Detection
 
-A `GeneralPurposeAllocator` instance configured for testing with automatic leak detection and safety checks.
+A `DebugAllocator` instance configured for testing with automatic leak detection and safety checks.
 
 **Type:** `std.mem.Allocator`
 
@@ -1097,7 +1097,7 @@ Testing reader types for IO testing.
 ## See Also
 
 - **std.debug** - Debug printing (`std.debug.print`), panic handling, assertion utilities
-- **std.heap** - Production allocators (GeneralPurposeAllocator, ArenaAllocator, etc.)
+- **std.heap** - Production allocators (DebugAllocator, ArenaAllocator, etc.)
 - **std.mem** - Memory comparison (`eql`, `eqlBytes`), utilities for working with slices
 - **std.fmt** - String formatting used by assertion diagnostics
 - **std.Random** - Random number generation (use with `testing.random_seed` for determinism)

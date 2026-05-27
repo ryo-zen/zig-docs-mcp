@@ -155,10 +155,10 @@ A `Server` instance ready to accept connections.
 const std = @import("std");
 
 pub fn main() !void {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
-    defer _ = gpa.deinit();
+    var da = std.heap.DebugAllocator(.{}){};
+    defer _ = da.deinit();
 
-    var threaded = std.Io.Threaded.init(gpa.allocator(), .{ .environ = .empty });
+    var threaded = std.Io.Threaded.init(da.allocator(), .{ .environ = .empty });
     defer threaded.deinit();
     const io = threaded.io();
 
@@ -202,10 +202,10 @@ Creates a Unix domain socket and connects to the specified address.
 const std = @import("std");
 
 pub fn main() !void {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
-    defer _ = gpa.deinit();
+    var da = std.heap.DebugAllocator(.{}){};
+    defer _ = da.deinit();
 
-    var threaded = std.Io.Threaded.init(gpa.allocator(), .{ .environ = .empty });
+    var threaded = std.Io.Threaded.init(da.allocator(), .{ .environ = .empty });
     defer threaded.deinit();
     const io = threaded.io();
 
@@ -231,10 +231,10 @@ pub fn main() !void {
 const std = @import("std");
 
 pub fn main() !void {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
-    defer _ = gpa.deinit();
+    var da = std.heap.DebugAllocator(.{}){};
+    defer _ = da.deinit();
 
-    var threaded = std.Io.Threaded.init(gpa.allocator(), .{ .environ = .empty });
+    var threaded = std.Io.Threaded.init(da.allocator(), .{ .environ = .empty });
     defer threaded.deinit();
     const io = threaded.io();
 
@@ -281,10 +281,10 @@ pub fn main() !void {
 const std = @import("std");
 
 pub fn main() !void {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
-    defer _ = gpa.deinit();
+    var da = std.heap.DebugAllocator(.{}){};
+    defer _ = da.deinit();
 
-    var threaded = std.Io.Threaded.init(gpa.allocator(), .{ .environ = .empty });
+    var threaded = std.Io.Threaded.init(da.allocator(), .{ .environ = .empty });
     defer threaded.deinit();
     const io = threaded.io();
 

@@ -162,10 +162,10 @@ fn backgroundWorker(io: std.Io) !void {
 }
 
 pub fn main() !void {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
-    defer _ = gpa.deinit();
+    var da = std.heap.DebugAllocator(.{}){};
+    defer _ = da.deinit();
 
-    var threaded = std.Io.Threaded.init(gpa.allocator(), .{ .environ = .empty });
+    var threaded = std.Io.Threaded.init(da.allocator(), .{ .environ = .empty });
     defer threaded.deinit();
     const io = threaded.io();
 
@@ -251,10 +251,10 @@ fn workerLoop(io: std.Io) !void {
 }
 
 pub fn main() !void {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
-    defer _ = gpa.deinit();
+    var da = std.heap.DebugAllocator(.{}){};
+    defer _ = da.deinit();
 
-    var threaded = std.Io.Threaded.init(gpa.allocator(), .{ .environ = .empty });
+    var threaded = std.Io.Threaded.init(da.allocator(), .{ .environ = .empty });
     defer threaded.deinit();
     const io = threaded.io();
 

@@ -10,11 +10,11 @@
 ```zig
 const std = @import("std");
 
-var gpa = std.heap.GeneralPurposeAllocator(.{}){};
-defer _ = gpa.deinit();
+var da = std.heap.DebugAllocator(.{}){};
+defer _ = da.deinit();
 
 // For string keys, ALWAYS use StringHashMap
-var map = std.StringHashMap(i32).init(gpa.allocator());
+var map = std.StringHashMap(i32).init(da.allocator());
 defer map.deinit();
 
 try map.put("score", 100);
@@ -331,10 +331,10 @@ pub fn countWords(allocator: std.mem.Allocator, text: []const u8) !std.StringHas
 }
 
 pub fn main() !void {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
-    defer _ = gpa.deinit();
+    var da = std.heap.DebugAllocator(.{}){};
+    defer _ = da.deinit();
 
-    var counts = try countWords(gpa.allocator(), "foo bar foo baz foo");
+    var counts = try countWords(da.allocator(), "foo bar foo baz foo");
     defer counts.deinit();
 
     var iter = counts.iterator();
@@ -374,10 +374,10 @@ fn fibonacci(cache: *FibCache, n: u64) !u64 {
 }
 
 pub fn main() !void {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
-    defer _ = gpa.deinit();
+    var da = std.heap.DebugAllocator(.{}){};
+    defer _ = da.deinit();
 
-    var cache = FibCache.init(gpa.allocator());
+    var cache = FibCache.init(da.allocator());
     defer cache.deinit();
 
     const result = try fibonacci(&cache, 50);

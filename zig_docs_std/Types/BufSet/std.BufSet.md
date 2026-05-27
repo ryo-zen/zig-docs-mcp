@@ -7,10 +7,10 @@
 **Basic Set Operations**
 ```zig
 const std = @import("std");
-var gpa = std.heap.GeneralPurposeAllocator(.{}){};
-defer _ = gpa.deinit();
+var da = std.heap.DebugAllocator(.{}){};
+defer _ = da.deinit();
 
-var set = std.BufSet.init(gpa.allocator());
+var set = std.BufSet.init(da.allocator());
 defer set.deinit();
 
 try set.insert("apple");
@@ -105,10 +105,10 @@ Creates a new empty BufSet backed by the given allocator. The allocator will be 
 
 **Example:**
 ```zig
-var gpa = std.heap.GeneralPurposeAllocator(.{}){};
-defer _ = gpa.deinit();
+var da = std.heap.DebugAllocator(.{}){};
+defer _ = da.deinit();
 
-var set = std.BufSet.init(gpa.allocator());
+var set = std.BufSet.init(da.allocator());
 defer set.deinit();
 ```
 
@@ -223,7 +223,7 @@ Returns the allocator used by this set. Useful when you need to perform allocati
 
 **Example:**
 ```zig
-var set = std.BufSet.init(gpa.allocator());
+var set = std.BufSet.init(da.allocator());
 defer set.deinit();
 
 const set_allocator = set.allocator();
@@ -270,10 +270,10 @@ Creates a deep copy of the set using a different allocator. This is useful when 
 
 **Example:**
 ```zig
-var gpa1 = std.heap.GeneralPurposeAllocator(.{}){};
+var da1 = std.heap.DebugAllocator(.{}){};
 defer _ = gpa1.deinit();
 
-var gpa2 = std.heap.GeneralPurposeAllocator(.{}){};
+var da2 = std.heap.DebugAllocator(.{}){};
 defer _ = gpa2.deinit();
 
 var original = std.BufSet.init(gpa1.allocator());

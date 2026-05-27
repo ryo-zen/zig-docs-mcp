@@ -282,9 +282,9 @@ fn waitForSyncComplete(io: std.Io, sync_manager: *SyncManager) !void {
 pub fn main(init: std.process.Init) !void {
     printBanner();
 
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
-    defer _ = gpa.deinit();
-    const allocator = gpa.allocator();
+    var da = std.heap.DebugAllocator(.{}){};
+    defer _ = da.deinit();
+    const allocator = da.allocator();
 
     const args = try std.process.Args.toSlice(init.minimal.args, allocator);
     defer allocator.free(args);

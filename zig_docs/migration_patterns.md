@@ -9,9 +9,9 @@ const std = @import("std");
 
 pub fn main() !void {
     // 1. Allocator setup
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
-    defer _ = gpa.deinit();
-    const allocator = gpa.allocator();
+    var da = std.heap.DebugAllocator(.{}){};
+    defer _ = da.deinit();
+    const allocator = da.allocator();
 
     // 2. Io setup
     var threaded = std.Io.Threaded.init(allocator, .{ .environ = .empty });
@@ -31,9 +31,9 @@ If you don't need filesystem/network/time operations:
 const std = @import("std");
 
 pub fn main() !void {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
-    defer _ = gpa.deinit();
-    const allocator = gpa.allocator();
+    var da = std.heap.DebugAllocator(.{}){};
+    defer _ = da.deinit();
+    const allocator = da.allocator();
 
     // Use std.posix for simple file operations
     // Use ArrayList with allocator parameter

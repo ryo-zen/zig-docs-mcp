@@ -39,9 +39,9 @@ See [test_string_array_hash_map_unmanaged_comprehensive.zig](../../Examples/test
 ```zig
 const std = @import("std");
 
-var gpa = std.heap.GeneralPurposeAllocator(.{}){};
-defer _ = gpa.deinit();
-const allocator = gpa.allocator();
+var da = std.heap.DebugAllocator(.{}){};
+defer _ = da.deinit();
+const allocator = da.allocator();
 
 var map = std.array_hash_map.AutoArrayHashMapUnmanaged(u64, i32).empty;
 defer map.deinit(allocator);

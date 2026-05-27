@@ -10,11 +10,11 @@
 ```zig
 const Person = struct { name: []const u8, age: u32 };
 
-var gpa = std.heap.GeneralPurposeAllocator(.{}){};
-defer _ = gpa.deinit();
+var da = std.heap.DebugAllocator(.{}){};
+defer _ = da.deinit();
 
 const json_str = "{\"name\":\"Alice\",\"age\":30}";
-const parsed = try std.json.parseFromSlice(Person, gpa.allocator(), json_str, .{});
+const parsed = try std.json.parseFromSlice(Person, da.allocator(), json_str, .{});
 defer parsed.deinit();
 
 std.debug.print("Name: {s}, Age: {d}\n", .{parsed.value.name, parsed.value.age});
@@ -22,7 +22,7 @@ std.debug.print("Name: {s}, Age: {d}\n", .{parsed.value.name, parsed.value.age})
 
 **Parse into Dynamic Value**
 ```zig
-const parsed = try std.json.parseFromSlice(std.json.Value, gpa.allocator(), json_str, .{});
+const parsed = try std.json.parseFromSlice(std.json.Value, da.allocator(), json_str, .{});
 defer parsed.deinit();
 
 const name = parsed.value.object.get("name").?.string;
@@ -44,12 +44,12 @@ const json_output = writer.buffered();  // {"x":10.5,"y":20.299999237060547}
 
 **Stringify to Heap-Allocated String**
 ```zig
-var aw: std.Io.Writer.Allocating = .init(gpa.allocator());
+var aw: std.Io.Writer.Allocating = .init(da.allocator());
 defer aw.deinit();
 
 try std.json.Stringify.value(point, .{}, &aw.writer);
 const json_str = try aw.toOwnedSlice();
-defer gpa.allocator().free(json_str);
+defer da.allocator().free(json_str);
 ```
 
 **Arena Allocator Pattern (Recommended)**
@@ -150,9 +150,9 @@ const Config = struct {
 };
 
 pub fn main() !void {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
-    defer _ = gpa.deinit();
-    const allocator = gpa.allocator();
+    var da = std.heap.DebugAllocator(.{}){};
+    defer _ = da.deinit();
+    const allocator = da.allocator();
 
     const json =
   \\{
@@ -232,13 +232,13 @@ pub fn main() !void {
     const valid_json = "{\"key\": \"value\"}";
     const invalid_json = "{key: value}";  // Missing quotes
 
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
-    defer _ = gpa.deinit();
+    var da = std.heap.DebugAllocator(.{}){};
+    defer _ = da.deinit();
 
-    const is_valid = try std.json.validate(gpa.allocator(), valid_json);
+    const is_valid = try std.json.validate(da.allocator(), valid_json);
     std.debug.print("Valid: {}\n", .{is_valid});  // true
 
-    const is_invalid = try std.json.validate(gpa.allocator(), invalid_json);
+    const is_invalid = try std.json.validate(da.allocator(), invalid_json);
     std.debug.print("Invalid: {}\n", .{is_invalid});  // false
 }
 ```
@@ -312,12 +312,12 @@ pub fn stringifyToOwned(value: anytype, allocator: std.mem.Allocator) ![]const u
 }
 
 pub fn main() !void {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
-    defer _ = gpa.deinit();
+    var da = std.heap.DebugAllocator(.{}){};
+    defer _ = da.deinit();
 
     const data = .{ .x = 10, .y = 20 };
-    const json_str = try stringifyToOwned(data, gpa.allocator());
-    defer gpa.allocator().free(json_str);
+    const json_str = try stringifyToOwned(data, da.allocator());
+    defer da.allocator().free(json_str);
 
     std.debug.print("JSON: {s}\n", .{json_str});
 }
@@ -348,9 +348,9 @@ Token-based JSON parser for streaming or custom parsing logic.
 const std = @import("std");
 
 pub fn main() !void {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
-    defer _ = gpa.deinit();
-    const allocator = gpa.allocator();
+    var da = std.heap.DebugAllocator(.{}){};
+    defer _ = da.deinit();
+    const allocator = da.allocator();
 
     const json = "{\"name\":\"Bob\",\"age\":25}";
 

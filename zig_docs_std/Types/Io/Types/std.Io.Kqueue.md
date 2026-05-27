@@ -8,11 +8,11 @@
 const std = @import("std");
 
 pub fn main() !void {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
-    defer _ = gpa.deinit();
+    var da = std.heap.DebugAllocator(.{}){};
+    defer _ = da.deinit();
 
     var kq: std.Io.Kqueue = undefined;
-    try kq.init(gpa.allocator(), .{});
+    try kq.init(da.allocator(), .{});
     defer kq.deinit();
 
     const io = kq.io();
@@ -29,11 +29,11 @@ pub fn main() !void {
 const std = @import("std");
 
 pub fn main() !void {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
-    defer _ = gpa.deinit();
+    var da = std.heap.DebugAllocator(.{}){};
+    defer _ = da.deinit();
 
     var kq: std.Io.Kqueue = undefined;
-    try kq.init(gpa.allocator(), .{});
+    try kq.init(da.allocator(), .{});
     defer kq.deinit();
 
     const io = kq.io();
@@ -141,7 +141,7 @@ Initializes the Kqueue backend with the specified allocator and options.
 **Example:**
 ```zig
 var kq: std.Io.Kqueue = undefined;
-try kq.init(gpa.allocator(), .{ .num_threads = null }); // Default thread count
+try kq.init(da.allocator(), .{ .num_threads = null }); // Default thread count
 defer kq.deinit();
 ```
 
@@ -274,11 +274,11 @@ Errors that can occur during `kevent(2)` syscall.
 const std = @import("std");
 
 pub fn main() !void {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
-    defer _ = gpa.deinit();
+    var da = std.heap.DebugAllocator(.{}){};
+    defer _ = da.deinit();
 
     var kq: std.Io.Kqueue = undefined;
-    try kq.init(gpa.allocator(), .{});
+    try kq.init(da.allocator(), .{});
     defer kq.deinit();
 
     const io = kq.io();
@@ -302,11 +302,11 @@ pub fn main() !void {
 const std = @import("std");
 
 pub fn main() !void {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
-    defer _ = gpa.deinit();
+    var da = std.heap.DebugAllocator(.{}){};
+    defer _ = da.deinit();
 
     var kq: std.Io.Kqueue = undefined;
-    try kq.init(gpa.allocator(), .{});
+    try kq.init(da.allocator(), .{});
     defer kq.deinit();
 
     const io = kq.io();
@@ -357,7 +357,7 @@ pub fn main() !void {
 1. **Match Thread Count to Workload**: For CPU-bound tasks, use core count; for I/O-bound, use 2x core count
 2. **Batch Events**: Process multiple events per `kevent()` call when possible
 3. **Monitor Resource Usage**: Check file descriptor count (`lsof -p <pid> | wc -l`)
-4. **Use Proper Allocator**: `GeneralPurposeAllocator` is thread-safe and efficient
+4. **Use Proper Allocator**: `DebugAllocator` is thread-safe and efficient
 
 ## Troubleshooting
 

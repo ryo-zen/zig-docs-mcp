@@ -26,7 +26,8 @@ If you remember one rule, use this: every allocation site should have an explici
 
 | Allocator | Use When | Performance | Memory Overhead | Debug Features |
 |-----------|----------|-------------|-----------------|----------------|
-| `GeneralPurposeAllocator` | Most applications | Good | Medium | ✅ Leak detection, double-free, use-after-free |
+| `DebugAllocator` | Debug/dev builds — general applications | Good | Medium | ✅ Leak detection, double-free, use-after-free |
+| `smp_allocator` | ReleaseFast/production — general applications | Excellent | Low | ❌ |
 | `ArenaAllocator` | Batch deallocation (request handlers, frames) | Excellent | Low | ❌ (uses child allocator's) |
 | `FixedBufferAllocator` | Known max memory, embedded systems | Fastest | None | ❌ Fails on overflow |
 | `c_allocator` | Linking with C libraries | Variable | Variable | ❌ (depends on libc) |
@@ -40,10 +41,11 @@ Use this in order:
 1. Need C ABI-compatible allocation behavior? Use `c_allocator`.
 2. Need strict memory budget/no heap? Use `FixedBufferAllocator`.
 3. Have phase-based lifetime (request/frame/job) with bulk cleanup? Use `ArenaAllocator`.
-4. Need general app allocator with safety diagnostics? Use `GeneralPurposeAllocator`.
-5. Need very large/page-granular allocations? Consider `page_allocator`.
+4. Need general app allocator with safety diagnostics (Debug build)? Use `DebugAllocator`.
+5. Need fast general app allocator for production (ReleaseFast)? Use `smp_allocator`.
+6. Need very large/page-granular allocations? Consider `page_allocator`.
 
-When unsure, start with `GeneralPurposeAllocator`, then optimize with measurement.
+When unsure, start with `DebugAllocator` in Debug mode, then switch to `smp_allocator` in ReleaseFast.
 
 ## Allocators
 
@@ -82,16 +84,23 @@ fn concat(allocator: Allocator, a: []const u8, b: []const u8) ![]u8 {
 
 Different problems require different memory strategies. Use this guide to choose the right tool:
 
-### 1. General Purpose
-For most applications, use `std.heap.GeneralPurposeAllocator`.
-*   **Debug Mode:** Automatically detects memory leaks, double-frees, and use-after-frees.
-*   **Release Mode:** Becomes a high-performance allocator (backing off to `smp_allocator` or similar).
+### 1. General Purpose (Debug)
+For Debug/development builds, use `std.heap.DebugAllocator`. It takes a comptime config struct and returns a type — set up one instance in `main` and pass its `.allocator()` around.
+
+*   **Leak detection:** Reports un-freed memory at exit.
+*   **Double-free / use-after-free detection:** Panics on misuse.
 
 ```zig
-var gpa = std.heap.GeneralPurposeAllocator(.{}){};
-// Check for leaks at program exit (returns true if leak detected)
-defer _ = gpa.deinit();
-const allocator = gpa.allocator();
+var da = std.heap.DebugAllocator(.{}){};
+defer _ = da.deinit();
+const allocator = da.allocator();
+```
+
+### 1b. General Purpose (ReleaseFast)
+For production/release builds, use `std.heap.smp_allocator`. It is a direct value (not a type), so no setup is needed:
+
+```zig
+const allocator = std.heap.smp_allocator;
 ```
 
 ------
@@ -290,7 +299,7 @@ Standard pointers (`*T`) **cannot** be null.
 Accessing arrays and slices (`[]T`) is checked at runtime in `Debug` and `ReleaseSafe` modes. Buffer overflows result in a safe panic rather than a security vulnerability.
 
 ### 3. Debug Tooling (GPA)
-The `std.heap.GeneralPurposeAllocator` is not just for allocation; it is a safety tool. In Debug mode, it detects:
+The `std.heap.DebugAllocator` is not just for allocation; it is a safety tool. In Debug mode, it detects:
 *   **Memory Leaks:** Prints a report of un-freed bytes at exit.
 *   **Double Free:** Panics if you free the same pointer twice.
 *   **Use-After-Free:** Attempts to detect access to freed memory (implementation dependent, usually by scrubbing memory).
@@ -313,18 +322,18 @@ If any answer is unclear, encode the assumption with an assertion or redesign AP
 
 ## Debugging Memory Issues
 
-### Finding Memory Leaks with GPA
+### Finding Memory Leaks with DebugAllocator
 
-**Step 1:** Wrap your allocator in GPA
+**Step 1:** Wrap your allocator in DebugAllocator
 ```zig
-var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+var da = std.heap.DebugAllocator(.{}){};
 defer {
-    const leaked = gpa.deinit();
+    const leaked = da.deinit();
     if (leaked == .leak) {
   std.debug.print("❌ MEMORY LEAK DETECTED\n", .{});
     }
 }
-const allocator = gpa.allocator();
+const allocator = da.allocator();
 ```
 
 **Step 2:** Run in Debug mode
@@ -353,13 +362,13 @@ Allocated at:
 
 ### Debugging Use-After-Free
 
-GPA can detect some use-after-free bugs by scrubbing freed memory:
+`DebugAllocator` can detect some use-after-free bugs by scrubbing freed memory:
 
 ```zig
 test "detecting use-after-free" {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
-    defer _ = gpa.deinit();
-    const allocator = gpa.allocator();
+    var da = std.heap.DebugAllocator(.{}){};
+    defer _ = da.deinit();
+    const allocator = da.allocator();
 
     const ptr = try allocator.create(i32);
     ptr.* = 42;
@@ -370,19 +379,19 @@ test "detecting use-after-free" {
 }
 ```
 
-**Tip:** In Debug builds, GPA often fills freed memory with `0xaa`, making use-after-free bugs more visible.
+**Tip:** In Debug builds, `DebugAllocator` fills freed memory with `0xaa`, making use-after-free bugs more visible.
 
 ------
 
 ### Debugging Double-Free
 
-GPA immediately panics on double-free:
+`DebugAllocator` immediately panics on double-free:
 
 ```zig
 test "detecting double-free" {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
-    defer _ = gpa.deinit();
-    const allocator = gpa.allocator();
+    var da = std.heap.DebugAllocator(.{}){};
+    defer _ = da.deinit();
+    const allocator = da.allocator();
 
     const ptr = try allocator.create(i32);
     allocator.destroy(ptr);
@@ -563,8 +572,9 @@ test "complex data structure" {
 - **Frequent allocations** - Every allocation is a syscall (expensive)
 - **Example:** Allocating hundreds of small structs individually
 
-### ❌ Don't use GeneralPurposeAllocator for:
+### ❌ Don't use DebugAllocator for:
 - **Embedded systems with tiny RAM** - Debug features add overhead
 - **Hard real-time systems** - Lock contention and debug checks add latency
 - **When linking with C libraries that use malloc** - Use `c_allocator` instead for interop
 - **Example:** Microcontroller with 32KB RAM running a control loop
+- **Production/release builds** - Use `smp_allocator` instead

@@ -25,9 +25,9 @@ The full field, value, and method surface is documented by the `std.array_hash_m
 ```zig
 const std = @import("std");
 
-var gpa = std.heap.GeneralPurposeAllocator(.{}){};
-defer _ = gpa.deinit();
-const allocator = gpa.allocator();
+var da = std.heap.DebugAllocator(.{}){};
+defer _ = da.deinit();
+const allocator = da.allocator();
 
 // Define custom hash context
 const StringContext = struct {

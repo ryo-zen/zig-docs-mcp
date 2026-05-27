@@ -9,9 +9,9 @@
 **Basic Key-Value Storage**
 ```zig
 const std = @import("std");
-var gpa = std.heap.GeneralPurposeAllocator(.{}){};
-defer _ = gpa.deinit();
-const allocator = gpa.allocator();
+var da = std.heap.DebugAllocator(.{}){};
+defer _ = da.deinit();
+const allocator = da.allocator();
 
 // For string keys, use StringHashMap (not AutoHashMap with []const u8)
 var map = std.StringHashMap(i32).init(allocator);

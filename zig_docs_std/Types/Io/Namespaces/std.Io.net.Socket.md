@@ -11,9 +11,9 @@ const std = @import("std");
 const net = std.Io.net;
 
 pub fn main() !void {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
-    defer _ = gpa.deinit();
-    const allocator = gpa.allocator();
+    var da = std.heap.DebugAllocator(.{}){};
+    defer _ = da.deinit();
+    const allocator = da.allocator();
 
     // Setup IO
     var threaded = std.Io.Threaded.init(allocator, .{ .environ = .empty });

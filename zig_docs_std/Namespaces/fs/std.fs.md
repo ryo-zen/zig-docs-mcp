@@ -68,10 +68,10 @@ const parsed = std.fs.path.parsePath(path);
 const file = try std.fs.cwd().openFile("data.txt", .{});
 
 // ✅ NEW (0.16+) - Use std.Io.Dir
-var gpa = std.heap.GeneralPurposeAllocator(.{}){};
-defer _ = gpa.deinit();
+var da = std.heap.DebugAllocator(.{}){};
+defer _ = da.deinit();
 
-var threaded = std.Io.Threaded.init(gpa.allocator(), .{ .environ = .empty });
+var threaded = std.Io.Threaded.init(da.allocator(), .{ .environ = .empty });
 defer threaded.deinit();
 const io = threaded.io();
 

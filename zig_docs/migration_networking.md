@@ -76,9 +76,9 @@ pub fn main() !void {
 const std = @import("std");
 
 pub fn main() !void {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
-    defer _ = gpa.deinit();
-    const allocator = gpa.allocator();
+    var da = std.heap.DebugAllocator(.{}){};
+    defer _ = da.deinit();
+    const allocator = da.allocator();
 
     var threaded = std.Io.Threaded.init(allocator, .{ .environ = .empty });
     defer threaded.deinit();
@@ -121,9 +121,9 @@ pub fn main() !void {
 const std = @import("std");
 
 pub fn main() !void {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
-    defer _ = gpa.deinit();
-    const allocator = gpa.allocator();
+    var da = std.heap.DebugAllocator(.{}){};
+    defer _ = da.deinit();
+    const allocator = da.allocator();
 
     var threaded = std.Io.Threaded.init(allocator, .{ .environ = .empty });
     defer threaded.deinit();
@@ -169,9 +169,9 @@ pub fn main() !void {
 const std = @import("std");
 
 pub fn main() !void {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
-    defer _ = gpa.deinit();
-    const allocator = gpa.allocator();
+    var da = std.heap.DebugAllocator(.{}){};
+    defer _ = da.deinit();
+    const allocator = da.allocator();
 
     var threaded = std.Io.Threaded.init(allocator, .{ .environ = .empty });
     defer threaded.deinit();
@@ -190,9 +190,9 @@ pub fn main() !void {
 const std = @import("std");
 
 pub fn main() !void {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
-    defer _ = gpa.deinit();
-    const allocator = gpa.allocator();
+    var da = std.heap.DebugAllocator(.{}){};
+    defer _ = da.deinit();
+    const allocator = da.allocator();
 
     var threaded = std.Io.Threaded.init(allocator, .{ .environ = .empty });
     defer threaded.deinit();

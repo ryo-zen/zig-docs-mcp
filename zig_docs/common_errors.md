@@ -258,21 +258,21 @@ list.deinit(allocator);
 
 ---
 
-### "expected type 'std.mem.Allocator', found 'std.heap.GeneralPurposeAllocator(...)'"
+### "expected type 'std.mem.Allocator', found 'std.heap.DebugAllocator(...)'"
 
 **Cause:** Need to call `.allocator()` to get the Allocator interface
 
 **Fix:**
 ```zig
-// ❌ BAD: Passing GPA directly
-var gpa = std.heap.GeneralPurposeAllocator(.{}){};
-var list = std.ArrayList(u32).empty;
-try list.append(gpa, 42);  // ERROR
+// ❌ BAD: Passing DebugAllocator directly
+var da = std.heap.DebugAllocator(.{}){};
+var list: std.ArrayList(u32) = .empty;
+try list.append(da, 42);  // ERROR
 
 // ✅ GOOD: Call .allocator()
-var gpa = std.heap.GeneralPurposeAllocator(.{}){};
-defer _ = gpa.deinit();
-try list.append(gpa.allocator(), 42);  // OK
+var da = std.heap.DebugAllocator(.{}){};
+defer _ = da.deinit();
+try list.append(da.allocator(), 42);  // OK
 ```
 
 ---

@@ -10,9 +10,9 @@
 ```zig
 const std = @import("std");
 
-var gpa = std.heap.GeneralPurposeAllocator(.{}){};
-defer _ = gpa.deinit();
-const allocator = gpa.allocator();
+var da = std.heap.DebugAllocator(.{}){};
+defer _ = da.deinit();
+const allocator = da.allocator();
 
 // Define custom hash context
 const StringContext = struct {
@@ -808,15 +808,15 @@ const CaseInsensitiveContext = struct {
 };
 
 pub fn main() !void {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
-    defer _ = gpa.deinit();
+    var da = std.heap.DebugAllocator(.{}){};
+    defer _ = da.deinit();
 
     var map = std.array_hash_map.ArrayHashMap(
   []const u8,
   i32,
   CaseInsensitiveContext,
   true
-    ).init(gpa.allocator());
+    ).init(da.allocator());
     defer map.deinit();
 
     try map.put("Hello", 1);
@@ -889,15 +889,15 @@ const PointContext = struct {
 };
 
 pub fn main() !void {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
-    defer _ = gpa.deinit();
+    var da = std.heap.DebugAllocator(.{}){};
+    defer _ = da.deinit();
 
     var map = std.array_hash_map.ArrayHashMap(
   Point,
   []const u8,
   PointContext,
   false
-    ).init(gpa.allocator());
+    ).init(da.allocator());
     defer map.deinit();
 
     try map.put(Point{ .x = 10, .y = 20 }, "A");

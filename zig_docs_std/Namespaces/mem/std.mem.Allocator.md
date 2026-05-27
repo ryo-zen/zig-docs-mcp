@@ -251,9 +251,9 @@ Used internally when building allocator vtables:
 const std = @import("std");
 
 pub fn main() !void {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
-    defer _ = gpa.deinit();
-    const allocator = gpa.allocator();
+    var da = std.heap.DebugAllocator(.{}){};
+    defer _ = da.deinit();
+    const allocator = da.allocator();
 
     // Allocate a buffer
     const buf = try allocator.alloc(u8, 256);

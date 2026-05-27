@@ -446,10 +446,10 @@ These assert that the provided path is absolute.
 
 ### Nested Directory with File
 ```zig
-var gpa = std.heap.GeneralPurposeAllocator(.{}){};
-defer _ = gpa.deinit();
+var da = std.heap.DebugAllocator(.{}){};
+defer _ = da.deinit();
 
-var threaded = std.Io.Threaded.init(gpa.allocator(), .{ .environ = .empty });
+var threaded = std.Io.Threaded.init(da.allocator(), .{ .environ = .empty });
 defer threaded.deinit();
 const io = threaded.io();
 

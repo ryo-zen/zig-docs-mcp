@@ -90,9 +90,9 @@ try list.ensureTotalCapacity(allocator, 1000);
 const std = @import("std");
 
 pub fn main() !void {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
-    defer _ = gpa.deinit();
-    const allocator = gpa.allocator();
+    var da = std.heap.DebugAllocator(.{}){};
+    defer _ = da.deinit();
+    const allocator = da.allocator();
 
     // Create list
     var list: std.ArrayList(u32) = .{};

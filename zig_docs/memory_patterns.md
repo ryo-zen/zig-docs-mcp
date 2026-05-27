@@ -284,11 +284,11 @@ fn processRequest(parent_allocator: std.mem.Allocator) !Response {
 
 ```zig
 const Server = struct {
-    gpa: std.heap.GeneralPurposeAllocator(.{}),
+    da: std.heap.DebugAllocator(.{}),
 
     fn handleRequest(self: *Server, request: Request) !Response {
   // Arena for this request only
-  var arena = std.heap.ArenaAllocator.init(self.gpa.allocator());
+  var arena = std.heap.ArenaAllocator.init(self.da.allocator());
   defer arena.deinit();
 
   return try processRequest(arena.allocator(), request);

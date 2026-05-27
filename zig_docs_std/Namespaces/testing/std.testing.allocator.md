@@ -10,7 +10,7 @@
 
 ## Overview
 
-A `GeneralPurposeAllocator` instance configured for testing with automatic leak detection and safety checks. This is the **recommended allocator for all unit tests**.
+A `DebugAllocator` instance configured for testing with automatic leak detection and safety checks. This is the **recommended allocator for all unit tests**.
 
 **Key Features:**
 - ✅ Automatic leak detection - test fails if memory isn't freed
@@ -44,14 +44,14 @@ test "using testing.allocator" {
 pub const allocator = allocator_instance.allocator();
 ```
 
-The underlying instance is a `GeneralPurposeAllocator` with stack trace frames enabled.
+The underlying instance is a `DebugAllocator` with stack trace frames enabled.
 
 ---
 
 ## Related
 
 - **[std.testing.failing_allocator](./std.testing.failing_allocator.md)** - Always fails, for testing OOM paths
-- **[std.heap.GeneralPurposeAllocator](../heap/std.heap.md)** - The underlying allocator type
+- **[std.heap.DebugAllocator](../heap/std.heap.md)** - The underlying allocator type
 - **[std.testing main docs](./std.testing.md)** - Complete testing guide
 
 ---

@@ -6,14 +6,14 @@
 
 ### Most Common Patterns
 
-**GeneralPurposeAllocator (Recommended for Development)**
+**DebugAllocator (Recommended for Development/Debug builds)**
 ```zig
-var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+var da = std.heap.DebugAllocator(.{}){};
 defer {
-    const deinit_status = gpa.deinit();
+    const deinit_status = da.deinit();
     if (deinit_status == .leak) @panic("Memory leak detected!");
 }
-const allocator = gpa.allocator();
+const allocator = da.allocator();
 
 const bytes = try allocator.alloc(u8, 100);
 defer allocator.free(bytes);
@@ -88,7 +88,7 @@ defer arena.deinit(); // Frees everything
 **Key Characteristics:**
 - **Explicit allocation**: No hidden allocations - you control when and how memory is allocated
 - **Pluggable allocators**: Single `Allocator` interface works with any backing implementation
-- **Safety by default**: GeneralPurposeAllocator detects use-after-free and double-free in debug builds
+- **Safety by default**: DebugAllocator detects use-after-free and double-free in debug builds
 - **Zero overhead abstractions**: Allocator interface compiles to direct calls
 - **Composition**: Allocators can wrap other allocators (logging, thread-safety, debugging)
 
@@ -100,7 +100,7 @@ defer arena.deinit(); // Frees everything
 - Interfacing with C libraries
 
 **Allocator Selection Guide:**
-- **Development/Testing**: `GeneralPurposeAllocator` (safety checks)
+- **Development/Testing**: `DebugAllocator` (safety checks)
 - **Bulk allocations**: `ArenaAllocator` (free everything at once)
 - **Small/predictable sizes**: `FixedBufferAllocator` (stack-based)
 - **Production/performance**: `page_allocator` or `c_allocator`
@@ -110,11 +110,11 @@ defer arena.deinit(); // Frees everything
 
 ## Core Allocators
 
-### GeneralPurposeAllocator
+### DebugAllocator
 
 The recommended allocator for development and testing. Provides safety checks including leak detection, double-free detection, and use-after-free detection in debug builds.
 
-**Type:** `std.heap.GeneralPurposeAllocator(config: GeneralPurposeAllocatorConfig)`
+**Type:** `std.heap.DebugAllocator(config: DebugAllocatorConfig)`
 
 **Key Features:**
 - **Leak detection**: Reports memory leaks on deinit
@@ -125,7 +125,7 @@ The recommended allocator for development and testing. Provides safety checks in
 
 **Configuration Options:**
 ```zig
-pub const GeneralPurposeAllocatorConfig = struct {
+pub const DebugAllocatorConfig = struct {
     safety: bool = std.debug.runtime_safety,
     thread_safe: bool = true,
     never_unmap: bool = false,
@@ -140,14 +140,14 @@ const std = @import("std");
 
 pub fn main() !void {
     // Default configuration (safety checks enabled)
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var da = std.heap.DebugAllocator(.{}){};
     defer {
-  const deinit_status = gpa.deinit();
+  const deinit_status = da.deinit();
   if (deinit_status == .leak) {
       std.debug.print("Memory leak detected!\n", .{});
   }
     }
-    const allocator = gpa.allocator();
+    const allocator = da.allocator();
 
     // Allocate and use memory
     const numbers = try allocator.alloc(i32, 10);
@@ -309,7 +309,7 @@ pub fn main() !void {
 
 **When to use:**
 - Large allocations (> 4 KB)
-- Backing allocator for ArenaAllocator or GeneralPurposeAllocator
+- Backing allocator for ArenaAllocator or DebugAllocator
 - Simple programs where allocation frequency is low
 - Memory-mapped file-like patterns
 
@@ -359,7 +359,7 @@ pub fn main() !void {
 
 **When NOT to use:**
 - When avoiding libc dependency
-- When you need leak detection (use GeneralPurposeAllocator instead)
+- When you need leak detection (use DebugAllocator instead)
 - When maximum performance is critical (syscalls may be faster)
 
 ------
@@ -506,12 +506,12 @@ const std = @import("std");
 
 pub fn main() !void {
     // Use GPA for development
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var da = std.heap.DebugAllocator(.{}){};
     defer {
-  const deinit_status = gpa.deinit();
+  const deinit_status = da.deinit();
   if (deinit_status == .leak) @panic("LEAK");
     }
-    const allocator = gpa.allocator();
+    const allocator = da.allocator();
 
     // Pass allocator to your application
     try runApp(allocator);
@@ -666,9 +666,9 @@ const data = try allocator.alloc(u8, 100);
 defer allocator.free(data); // ✅ Immediately after
 ```
 
-✅ **Check GeneralPurposeAllocator.deinit() return** - Always check for leaks:
+✅ **Check DebugAllocator.deinit() return** - Always check for leaks:
 ```zig
-const deinit_status = gpa.deinit();
+const deinit_status = da.deinit();
 if (deinit_status == .leak) @panic("LEAK!");
 ```
 
@@ -694,7 +694,7 @@ if (deinit_status == .leak) @panic("LEAK!");
    - **Hot loops**: FixedBufferAllocator or MemoryPool
    - **Request/response**: ArenaAllocator
    - **Large allocations**: page_allocator
-   - **Development**: GeneralPurposeAllocator
+   - **Development**: DebugAllocator (Debug) or smp_allocator (ReleaseFast)
 
 2. **Use ArenaAllocator for temporary allocations:**
    ```zig
@@ -721,9 +721,9 @@ if (deinit_status == .leak) @panic("LEAK!");
 
 7. **Avoid page_allocator for tiny allocations** - Syscall overhead dominates
 
-8. **Profile before optimizing** - GeneralPurposeAllocator is often fast enough
+8. **Profile before optimizing** - DebugAllocator or smp_allocator should suffice for most cases
 
-9. **Use GeneralPurposeAllocator in development** - Catch bugs early even if slightly slower
+9. **Use DebugAllocator in development** - Catch bugs early even if slightly slower
 
 10. **Consider alignment requirements** - Over-aligned allocations may waste memory
 

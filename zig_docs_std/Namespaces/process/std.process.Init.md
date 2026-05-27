@@ -42,7 +42,7 @@ pub fn main(init: std.process.Init) !void {
 This pattern replaces the manual initialization of allocators and fetching of arguments/environment variables that was common in previous Zig versions.
 
 **Key Benefits:**
-- **Zero Boilerplate**: No need to manually set up a `GeneralPurposeAllocator` or `ArenaAllocator`.
+- **Zero Boilerplate**: No need to manually set up a `DebugAllocator` or `ArenaAllocator`.
 - **Platform Optimized**: The `io` and `gpa` fields are automatically selected to be the best options for your target platform and build mode.
 - **Safety**: In debug builds, the provided `gpa` automatically includes leak detection.
 - **WASI Support**: Includes `preopens` for seamless file system access on WASI.
@@ -61,7 +61,7 @@ An arena allocator that persists for the entire lifetime of the process. It is a
 
 `gpa: Allocator`
 ------
-A thread-safe `std.mem.Allocator`. In Debug and ReleaseSafe modes, this is typically a `GeneralPurposeAllocator` with leak detection enabled. In ReleaseFast and ReleaseSmall, it is optimized for performance/size.
+A thread-safe `std.mem.Allocator`. In Debug and ReleaseSafe modes, this is typically a `DebugAllocator` with leak detection enabled. In ReleaseFast and ReleaseSmall, it is optimized for performance/size.
 
 `io: std.Io`
 ------
@@ -106,4 +106,4 @@ A smaller version of `Init` for programs that require more control.
 - **std.process.Args** - For details on how to use the arguments provided in `init.minimal.args`.
 - **std.process.Environ** - For details on environment variable access.
 - **std.Io** - The interface used by `init.io`.
-- **std.heap.GeneralPurposeAllocator** - The underlying allocator typically used for `init.gpa`.
+- **std.heap.DebugAllocator** - The underlying allocator typically used for `init.gpa`.

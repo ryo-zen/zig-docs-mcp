@@ -7,10 +7,10 @@
 **Basic Stack Operations**
 ```zig
 const std = @import("std");
-var gpa = std.heap.GeneralPurposeAllocator(.{}){};
-defer _ = gpa.deinit();
+var da = std.heap.DebugAllocator(.{}){};
+defer _ = da.deinit();
 
-var stack = std.BitStack.init(gpa.allocator());
+var stack = std.BitStack.init(da.allocator());
 defer stack.deinit();
 
 try stack.push(1);
@@ -23,7 +23,7 @@ const bit = stack.pop();  // Returns 1 and removes it
 
 **Pre-allocated for Known Size**
 ```zig
-var stack = std.BitStack.init(gpa.allocator());
+var stack = std.BitStack.init(da.allocator());
 defer stack.deinit();
 
 // Pre-allocate for 1000 bits to avoid repeated allocations
@@ -94,10 +94,10 @@ Creates a new empty BitStack backed by the given allocator. The stack starts wit
 
 **Example:**
 ```zig
-var gpa = std.heap.GeneralPurposeAllocator(.{}){};
-defer _ = gpa.deinit();
+var da = std.heap.DebugAllocator(.{}){};
+defer _ = da.deinit();
 
-var stack = std.BitStack.init(gpa.allocator());
+var stack = std.BitStack.init(da.allocator());
 defer stack.deinit();
 
 // Stack is ready to use

@@ -41,8 +41,8 @@ Creates a new `ValidationAllocator` wrapping the provided allocator.
 
 **Example**:
 ```zig
-var gpa = std.heap.GeneralPurposeAllocator(.{}){};
-var validating = std.mem.ValidationAllocator.init(gpa.allocator());
+var da = std.heap.DebugAllocator(.{}){};
+var validating = std.mem.ValidationAllocator.init(da.allocator());
 const allocator = validating.allocator();
 ```
 
@@ -125,10 +125,10 @@ Validates and attempts to resize/move an allocation (combines resize + potential
 const std = @import("std");
 
 // Wrap any allocator with validation
-var gpa = std.heap.GeneralPurposeAllocator(.{}){};
-defer _ = gpa.deinit();
+var da = std.heap.DebugAllocator(.{}){};
+defer _ = da.deinit();
 
-var validating = std.mem.ValidationAllocator.init(gpa.allocator());
+var validating = std.mem.ValidationAllocator.init(da.allocator());
 const allocator = validating.allocator();
 
 // Use normally - violations will trigger assertions
@@ -148,7 +148,7 @@ defer allocator.free(slice);
 const allocator = if (builtin.mode == .Debug)
     validating.allocator()
 else
-    gpa.allocator();
+    da.allocator();
 ```
 
 **Release builds**: Skip validation for performance

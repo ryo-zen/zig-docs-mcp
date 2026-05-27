@@ -11,10 +11,10 @@
 const std = @import("std");
 
 pub fn main() !void {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
-    defer _ = gpa.deinit();
+    var da = std.heap.DebugAllocator(.{}){};
+    defer _ = da.deinit();
 
-    var threaded = std.Io.Threaded.init(gpa.allocator(), .{ .environ = .empty });
+    var threaded = std.Io.Threaded.init(da.allocator(), .{ .environ = .empty });
     defer threaded.deinit();
     const io = threaded.io();
 
@@ -164,10 +164,10 @@ const server = try addr.listen(io, .{
 const std = @import("std");
 
 pub fn main() !void {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
-    defer _ = gpa.deinit();
+    var da = std.heap.DebugAllocator(.{}){};
+    defer _ = da.deinit();
 
-    var threaded = std.Io.Threaded.init(gpa.allocator(), .{ .environ = .empty });
+    var threaded = std.Io.Threaded.init(da.allocator(), .{ .environ = .empty });
     defer threaded.deinit();
     const io = threaded.io();
 
@@ -198,10 +198,10 @@ pub fn main() !void {
 const std = @import("std");
 
 pub fn main() !void {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
-    defer _ = gpa.deinit();
+    var da = std.heap.DebugAllocator(.{}){};
+    defer _ = da.deinit();
 
-    var threaded = std.Io.Threaded.init(gpa.allocator(), .{ .environ = .empty });
+    var threaded = std.Io.Threaded.init(da.allocator(), .{ .environ = .empty });
     defer threaded.deinit();
     const io = threaded.io();
 
@@ -266,10 +266,10 @@ fn handleConnection(io: std.Io, stream: std.Io.net.Stream) void {
 }
 
 pub fn main() !void {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
-    defer _ = gpa.deinit();
+    var da = std.heap.DebugAllocator(.{}){};
+    defer _ = da.deinit();
 
-    var threaded = std.Io.Threaded.init(gpa.allocator(), .{ .environ = .empty });
+    var threaded = std.Io.Threaded.init(da.allocator(), .{ .environ = .empty });
     defer threaded.deinit();
     const io = threaded.io();
 
@@ -298,10 +298,10 @@ pub fn main() !void {
 const std = @import("std");
 
 pub fn main() !void {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
-    defer _ = gpa.deinit();
+    var da = std.heap.DebugAllocator(.{}){};
+    defer _ = da.deinit();
 
-    var threaded = std.Io.Threaded.init(gpa.allocator(), .{ .environ = .empty });
+    var threaded = std.Io.Threaded.init(da.allocator(), .{ .environ = .empty });
     defer threaded.deinit();
     const io = threaded.io();
 
@@ -538,7 +538,7 @@ pub fn main() !void {
     // Accept and enqueue
     while (true) {
   const stream = try server.accept(io);
-  const node = try gpa.allocator().create(WorkQueue.Node);
+  const node = try da.allocator().create(WorkQueue.Node);
   node.* = .{ .data = stream };
   queue.put(node);
     }
@@ -859,10 +859,10 @@ Common mistakes and how to fix them:
 
 ```zig
 test "server accepts connection" {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
-    defer _ = gpa.deinit();
+    var da = std.heap.DebugAllocator(.{}){};
+    defer _ = da.deinit();
 
-    var threaded = std.Io.Threaded.init(gpa.allocator(), .{ .environ = .empty });
+    var threaded = std.Io.Threaded.init(da.allocator(), .{ .environ = .empty });
     defer threaded.deinit();
     const io = threaded.io();
 

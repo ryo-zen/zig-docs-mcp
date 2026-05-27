@@ -13,9 +13,9 @@
 
 **Basic Key-Value Storage**
 ```zig
-var gpa = std.heap.GeneralPurposeAllocator(.{}){};
-defer _ = gpa.deinit();
-const allocator = gpa.allocator();
+var da = std.heap.DebugAllocator(.{}){};
+defer _ = da.deinit();
+const allocator = da.allocator();
 
 // Unmanaged version requires passing allocator to each operation
 var map = std.AutoHashMapUnmanaged(u32, []const u8){};

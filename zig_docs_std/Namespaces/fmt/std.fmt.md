@@ -240,9 +240,9 @@ Formats into heap-allocated memory. Use when output size is unknown or potential
 const std = @import("std");
 
 pub fn main() !void {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
-    defer _ = gpa.deinit();
-    const allocator = gpa.allocator();
+    var da = std.heap.DebugAllocator(.{}){};
+    defer _ = da.deinit();
+    const allocator = da.allocator();
 
     const msg = try std.fmt.allocPrint(allocator, "Dynamic: {s} = {d}", .{"answer", 42});
     defer allocator.free(msg);

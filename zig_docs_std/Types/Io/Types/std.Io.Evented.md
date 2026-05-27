@@ -57,9 +57,9 @@ pub fn main() !void {
   return;
     }
 
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
-    defer _ = gpa.deinit();
-    const allocator = gpa.allocator();
+    var da = std.heap.DebugAllocator(.{}){};
+    defer _ = da.deinit();
+    const allocator = da.allocator();
 
     var loop: std.Io.Evented = undefined;
 

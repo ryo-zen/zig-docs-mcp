@@ -24,9 +24,9 @@ See [test_string_array_hash_map_comprehensive.zig](../../Examples/test_string_ar
 ```zig
 const std = @import("std");
 
-var gpa = std.heap.GeneralPurposeAllocator(.{}){};
-defer _ = gpa.deinit();
-const allocator = gpa.allocator();
+var da = std.heap.DebugAllocator(.{}){};
+defer _ = da.deinit();
+const allocator = da.allocator();
 
 var map = std.array_hash_map.AutoArrayHashMap(u64, i32).init(allocator);
 defer map.deinit();

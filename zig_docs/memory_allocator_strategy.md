@@ -14,13 +14,14 @@ Practical allocator selection and ownership design for production Zig code.
 In Zig, allocator choice is an architectural decision, not an implementation detail.
 The right allocator depends on workload shape, lifetime model, failure policy, and platform constraints.
 
-If you are unsure, start with `GeneralPurposeAllocator` and move only after measurement.
+If you are unsure, start with `DebugAllocator` (Debug builds) or `smp_allocator` (ReleaseFast) and move only after measurement.
 
 ## Decision Matrix
 
 | Allocator | Best For | Strengths | Risks / Tradeoffs |
 |---|---|---|---|
-| `std.heap.GeneralPurposeAllocator` | General applications and services | Strong debug diagnostics, good default behavior | More overhead than specialized allocators |
+| `std.heap.DebugAllocator` | General applications and services (Debug/dev builds) | Strong debug diagnostics, leak/double-free detection | More overhead — use `smp_allocator` in release |
+| `std.heap.smp_allocator` | General applications and services (ReleaseFast/production) | Fast, thread-safe, no setup needed | No debug diagnostics |
 | `std.heap.ArenaAllocator` | Request/frame/job-scoped lifetimes | Fast allocation, simple bulk cleanup | No individual free, memory can balloon if scope is too large |
 | `std.heap.FixedBufferAllocator` | Hard memory budgets, embedded, bounded parsing | Deterministic memory footprint, fast | Fails with `error.OutOfMemory` when full |
 | `std.heap.page_allocator` | Large page-aligned buffers, low-level tooling | Simple, OS-backed pages | Costly for many small allocations |
@@ -38,7 +39,7 @@ Use `FixedBufferAllocator`.
 3. Are allocations naturally phase-scoped (request/frame/task)?
 Use `ArenaAllocator`.
 4. Are allocations general-purpose with mixed lifetimes?
-Use `GeneralPurposeAllocator`.
+Use `DebugAllocator` (Debug) or `smp_allocator` (ReleaseFast).
 5. Are allocations mostly large page-granular blocks?
 Use `page_allocator`.
 6. Do you need policy not provided above (quotas, accounting, controlled failures)?

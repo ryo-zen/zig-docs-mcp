@@ -10,15 +10,15 @@
 ```zig
 const std = @import("std");
 
-var gpa = std.heap.GeneralPurposeAllocator(.{}){};
-defer _ = gpa.deinit();
+var da = std.heap.DebugAllocator(.{}){};
+defer _ = da.deinit();
 
 var list: std.ArrayList(i32) = .empty;
-defer list.deinit(gpa.allocator());
+defer list.deinit(da.allocator());
 
-try list.append(gpa.allocator(), 42);
-try list.append(gpa.allocator(), 100);
-try list.append(gpa.allocator(), 7);
+try list.append(da.allocator(), 42);
+try list.append(da.allocator(), 100);
+try list.append(da.allocator(), 7);
 
 std.debug.print("Items: {any}\n", .{list.items}); // [42, 100, 7]
 ```
@@ -362,11 +362,11 @@ pub fn buildGreeting(allocator: std.mem.Allocator, name: []const u8) ![]u8 {
 }
 
 pub fn main() !void {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
-    defer _ = gpa.deinit();
+    var da = std.heap.DebugAllocator(.{}){};
+    defer _ = da.deinit();
 
-    const greeting = try buildGreeting(gpa.allocator(), "Zig");
-    defer gpa.allocator().free(greeting);
+    const greeting = try buildGreeting(da.allocator(), "Zig");
+    defer da.allocator().free(greeting);
 
     std.debug.print("{s}\n", .{greeting});  // "Hello, Zig!"
 }
