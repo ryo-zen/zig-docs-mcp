@@ -58,7 +58,7 @@ const AllocationError = error{
 
 test "coerce subset to superset" {
     const err = foo(AllocationError.OutOfMemory);
-    try std.testing.expect(err == FileOpenError.OutOfMemory);
+    try std.testing.expectEqual(FileOpenError.OutOfMemory, err);
 }
 
 fn foo(err: AllocationError) FileOpenError {
@@ -182,7 +182,7 @@ fn charToDigit(c: u8) u8 {
 
 test "parse u64" {
     const result = try parseU64("1234", 10);
-    try std.testing.expect(result == 1234);
+    try std.testing.expectEqual(1234, result);
 }
 ```
 Shell$ zig test error_union_parsing_u64.zig
@@ -295,7 +295,7 @@ fn doAThing(str: []u8) void {
     if (parseU64(str, 10)) |number| {
   doSomethingWithNumber(number);
     } else |err| switch (err) {
-  error.Overflow => {
+  error.OverFlow => {
       // handle overflow...
   },
   // we promise that InvalidChar won't happen (or crash in debug mode if it does)
@@ -313,7 +313,7 @@ fn doAnotherThing(str: []u8) error{InvalidChar}!void {
     if (parseU64(str, 10)) |number| {
   doSomethingWithNumber(number);
     } else |err| switch (err) {
-  error.Overflow => {
+  error.OverFlow => {
       // handle overflow...
   },
   else => |leftover_err| return leftover_err,
@@ -420,7 +420,7 @@ You can use compile-time reflection to access the child type of an error union:
 
 test_error_union.zig
 ```zig
-const expect = @import("std").testing.expect;
+const expectEqual = @import("std").testing.expectEqual;
 
 test "error union" {
     var foo: anyerror!i32 = undefined;
@@ -432,10 +432,10 @@ test "error union" {
     foo = error.SomeError;
 
     // Use compile-time reflection to access the payload type of an error union:
-    try comptime expect(@typeInfo(@TypeOf(foo)).error_union.payload == i32);
+    try comptime expectEqual(i32, @typeInfo(@TypeOf(foo)).error_union.payload);
 
     // Use compile-time reflection to access the error set type of an error union:
-    try comptime expect(@typeInfo(@TypeOf(foo)).error_union.error_set == anyerror);
+    try comptime expectEqual(anyerror, @typeInfo(@TypeOf(foo)).error_union.error_set);
 }
 ```
 Shell$ zig test test_error_union.zig

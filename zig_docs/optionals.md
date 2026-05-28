@@ -1,5 +1,7 @@
 # Optionals
 
+**Runnable examples:** `zig_docs_std/Examples/errors_optionals_language.tests.zig`
+
 One area that Zig provides safety without compromising efficiency or
 readability is with the optional type.
 
@@ -35,7 +37,7 @@ Task: call malloc, if the result is null, return null.
 C code
 
 call_malloc_in_c.c
-```zig
+```c
 // malloc prototype included for reference
 void *malloc(size_t size);
 
@@ -67,7 +69,7 @@ fn doAThing() ?*Foo {
   The other form of checking against NULL you might see looks like this:
 
 checking_null_in_c.c
-```zig
+```c
 void do_a_thing(struct Foo *foo) {
     // do some stuff
 
@@ -116,7 +118,7 @@ reflection to access the child type of an optional:
 
 test_optional_type.zig
 ```zig
-const expect = @import("std").testing.expect;
+const expectEqual = @import("std").testing.expectEqual;
 
 test "optional type" {
     // Declare an optional and coerce from null:
@@ -126,7 +128,7 @@ test "optional type" {
     foo = 1234;
 
     // Use compile-time reflection to access the child type of the optional:
-    try comptime expect(@typeInfo(@TypeOf(foo)).optional.child == i32);
+    try comptime expectEqual(i32, @typeInfo(@TypeOf(foo)).optional.child);
 }
 ```
 Shell$ zig test test_optional_type.zig
@@ -150,7 +152,7 @@ the optional is guaranteed to be address 0.
 
 test_optional_pointer.zig
 ```zig
-const expect = @import("std").testing.expect;
+const expectEqual = @import("std").testing.expectEqual;
 
 test "optional pointers" {
     // Pointers cannot be null. If you want a null pointer, use the optional
@@ -160,11 +162,11 @@ test "optional pointers" {
     var x: i32 = 1;
     ptr = &x;
 
-    try expect(ptr.?.* == 1);
+    try expectEqual(1, ptr.?.*);
 
     // Optional pointers are the same size as normal pointers, because pointer
     // value 0 is used as the null value.
-    try expect(@sizeOf(?*i32) == @sizeOf(*i32));
+    try expectEqual(@sizeOf(?*i32), @sizeOf(*i32));
 }
 ```
 Shell$ zig test test_optional_pointer.zig
