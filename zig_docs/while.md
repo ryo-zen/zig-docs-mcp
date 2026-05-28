@@ -9,7 +9,7 @@ const expect = @import("std").testing.expect;
 
 test "while basic" {
     var i: usize = 0;
-    while (i 10) {
+    while (i < 10) {
   i += 1;
     }
     try expect(i == 10);
@@ -49,7 +49,7 @@ test "while continue" {
     var i: usize = 0;
     while (true) {
   i += 1;
-  if (i 10)
+  if (i < 10)
       continue;
   break;
     }
@@ -69,19 +69,19 @@ const expect = @import("std").testing.expect;
 
 test "while loop continue expression" {
     var i: usize = 0;
-    while (i 10) : (i += 1) {}
+    while (i < 10) : (i += 1) {}
     try expect(i == 10);
 }
 
 test "while loop continue expression, more complicated" {
     var i: usize = 1;
     var j: usize = 1;
-    while (i * j 2000) : ({
+    while (i * j < 2000) : ({
   i *= 2;
   j *= 3;
     }) {
   const my_ij = i * j;
-  try expect(my_ij 2000);
+  try expect(my_ij < 2000);
     }
 }
 ```
@@ -110,7 +110,7 @@ test "while else" {
 
 fn rangeHasNumber(begin: usize, end: usize, number: usize) bool {
     var i = begin;
-    return while (i 1) {
+    return while (i < end) : (i += 1) {
   if (i == number) {
       break true;
   }
@@ -138,7 +138,7 @@ test "nested break" {
 
 test "nested continue" {
     var i: usize = 0;
-    outer: while (i 10) : (i += 1) {
+    outer: while (i < 10) : (i += 1) {
   while (true) {
       continue :outer;
   }
@@ -255,7 +255,7 @@ const expect = @import("std").testing.expect;
 test "inline while loop" {
     comptime var i = 0;
     var sum: usize = 0;
-    inline while (i 3) : (i += 1) {
+    inline while (i < 3) : (i += 1) {
   const T = switch (i) {
       0 => f32,
       1 => i8,

@@ -1616,7 +1616,7 @@ test_without_setEvalBranchQuota_builtin.zig
 test "foo" {
     comptime {
   var i = 0;
-  while (i 1001) : (i += 1) {}
+  while (i < 1001) : (i += 1) {}
     }
 }
 ```
@@ -1634,7 +1634,7 @@ test "foo" {
     comptime {
   @setEvalBranchQuota(1001);
   var i = 0;
-  while (i 1001) : (i += 1) {}
+  while (i < 1001) : (i += 1) {}
     }
 }
 ```

@@ -5,7 +5,9 @@ and top-level doc comments are used by the compiler to generate the package docu
 
 The generated documentation is still experimental, and can be produced with:
 
-Shellzig test -femit-docs main.zig
+```sh
+zig test -femit-docs main.zig
+```
 
 comments.zig
 ```zig

@@ -84,7 +84,7 @@ test "separate scopes" {
     }
     {
   var pi: bool = true;
-  _ = π
+  _ = &pi;
     }
 }
 ```

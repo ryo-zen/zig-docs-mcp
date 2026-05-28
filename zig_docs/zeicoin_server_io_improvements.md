@@ -84,7 +84,7 @@ fn periodicSyncCheck(io: std.Io, components: *NodeComponents) !void {
 - ✅ No manual interval math
 - ✅ Each task isolated (easier to test)
 - ✅ Automatic cleanup on shutdown
-- ✅ Cancellable via io.cancel()
+- ✅ Cancellable via `Future.cancel(io)`
 
 ### 2. Manual Thread Spawning (Lines 71, 85, 157)
 
@@ -224,10 +224,18 @@ if (!mining_started and components.blockchain.mining_manager != null) {
 ```zig
 fn miningStartupTask(io: std.Io, components: *NodeComponents) !void {
     // Wait for sync to complete or timeout
-    const result = io.select(.{
-  .sync_done = waitForSyncComplete(io, components.sync_manager),
-  .timeout = io.async(sleepAndReturn, .{io, 5}),
-    });
+    const StartupResult = union(enum) {
+        sync_done: void,
+        timeout: void,
+    };
+    var select_buffer: [2]StartupResult = undefined;
+    var select = std.Io.Select(StartupResult).init(io, &select_buffer);
+
+    select.async(.sync_done, waitForSyncComplete, .{io, components.sync_manager});
+    select.async(.timeout, sleepAndReturn, .{io, 5});
+
+    const result = try select.await();
+    select.cancelDiscard();
 
     switch (result) {
   .sync_done => |_| {
@@ -300,23 +308,23 @@ pub fn main(init: std.process.Init) !void {
     const io = init.io;
 
     // Launch all background tasks
-    var tasks = std.ArrayList(std.Io.Future(void)).init(allocator);
-    defer tasks.deinit();
+    var tasks: std.ArrayList(std.Io.Future(!void)) = .empty;
+    defer tasks.deinit(allocator);
 
     // Periodic maintenance
-    try tasks.append(try io.concurrent(periodicStatus, .{io, &components}));
-    try tasks.append(try io.concurrent(periodicMaintenance, .{io, &components}));
-    try tasks.append(try io.concurrent(periodicSyncCheck, .{io, &components}));
+    try tasks.append(allocator, try io.concurrent(periodicStatus, .{io, &components}));
+    try tasks.append(allocator, try io.concurrent(periodicMaintenance, .{io, &components}));
+    try tasks.append(allocator, try io.concurrent(periodicSyncCheck, .{io, &components}));
 
     // Servers
     if (!config.client_api_disabled) {
-  try tasks.append(try io.concurrent(runClientApi, .{io, allocator, &components, config}));
+  try tasks.append(allocator, try io.concurrent(runClientApi, .{io, allocator, &components, config}));
     }
-    try tasks.append(try io.concurrent(runRpcServer, .{io, allocator, &components}));
+    try tasks.append(allocator, try io.concurrent(runRpcServer, .{io, allocator, &components}));
 
     // Mining startup
     if (components.blockchain.mining_manager != null) {
-  try tasks.append(try io.concurrent(miningStartupTask, .{io, &components}));
+  try tasks.append(allocator, try io.concurrent(miningStartupTask, .{io, &components}));
     }
 
     std.log.info("✅ ZeiCoin node started successfully", .{});
@@ -432,10 +440,10 @@ test "periodic task isolated" {
     defer components.deinit();
 
     // Test runs for 3 iterations then cancels
-    const future = try io.concurrent(periodicStatus, .{io, &components});
+    var future = try io.concurrent(periodicStatus, .{io, &components});
 
     try io.sleep(std.Io.Duration.fromSeconds(100), std.Io.Clock.awake);
-    io.cancel(future);
+    _ = future.cancel(io);
 
     // Should have printed status ~3 times
 }

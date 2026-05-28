@@ -516,7 +516,7 @@ fn add(count: c_int, ...) callconv(.c) c_int {
     defer @cVaEnd(&ap);
     var i: usize = 0;
     var sum: c_int = 0;
-    while (i 1) {
+    while (i < count) : (i += 1) {
   sum += @cVaArg(&ap, c_int);
     }
     return sum;

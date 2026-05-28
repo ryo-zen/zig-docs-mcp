@@ -126,7 +126,7 @@ fn example() !void {
     const ptr = try allocator.create(Thing);
     errdefer allocator.destroy(ptr);  // ✅ Only runs if error after this point
 
-    try list.append(ptr);  // If THIS fails, errdefer cleans up
+    try list.append(allocator, ptr);  // If THIS fails, errdefer cleans up
 
     // If we get here (no error), errdefer does NOT run
     // Caller now owns ptr

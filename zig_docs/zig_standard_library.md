@@ -12,4 +12,6 @@ this documentation. To learn more about the Zig Standard Library,
 provided with each Zig distribution. It can be rendered via a local
 webserver with:
 
-Shellzig std
+```sh
+zig std
+```

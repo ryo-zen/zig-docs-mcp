@@ -25,7 +25,7 @@ const mining_future = try io.concurrent(mineBlockTask, .{
 });
 
 // Later, get result when needed
-const block = try io.await(mining_future);
+const block = try mining_future.await(io);
 ```
 
 **Benefits:**
@@ -56,10 +56,10 @@ const BlockHashFuture = struct {
 };
 
 // Send request
-const future = io.async(requestBlockHash, .{peer, height});
+var future = io.async(requestBlockHash, .{peer, height});
 
 // Wait for response (blocks until ready)
-const response = try io.await(future);
+const response = try future.await(io);
 ```
 
 **Benefits:**
@@ -112,13 +112,14 @@ ctx.mining_state.mutex.unlock();
 
 **std.Io Improvement:**
 ```zig
-const tx_queue = std.Io.Queue(types.Transaction).init(allocator);
+var tx_buffer: [128]types.Transaction = undefined;
+var tx_queue: std.Io.Queue(types.Transaction) = .init(&tx_buffer);
 
 // Producer (when tx arrives)
-try tx_queue.push(io, transaction);
+try tx_queue.putOne(io, transaction);
 
 // Consumer (mining thread)
-const tx = try tx_queue.pop(io); // Blocks until available
+const tx = try tx_queue.getOne(io); // Blocks until available
 ```
 
 **Benefits:**
@@ -143,7 +144,7 @@ try io.sleep(std.Io.Duration.fromSeconds(1), std.Io.Clock.awake);
 
 **Benefits:**
 - ✅ More readable (no ns_per_s math)
-- ✅ Cancellable (respects io.cancel())
+- ✅ Cancellable (respects `Future.cancel(io)`)
 - ✅ Consistent with io timing
 
 ### 6. Parallel Block Downloads
@@ -162,23 +163,23 @@ pub fn downloadBlocksParallel(
     allocator: Allocator,
     tasks: []DownloadTask
 ) ![]types.Block {
-    var futures = std.ArrayList(std.Io.Future(types.Block)).init(allocator);
-    defer futures.deinit();
+    var futures: std.ArrayList(std.Io.Future(!types.Block)) = .empty;
+    defer futures.deinit(allocator);
 
     // Launch all downloads concurrently
     for (tasks) |task| {
   const future = try io.concurrent(downloadBlock, .{task.peer, task.height});
-  try futures.append(future);
+  try futures.append(allocator, future);
     }
 
     // Collect results
-    var blocks = std.ArrayList(types.Block).init(allocator);
-    for (futures.items) |future| {
-  const block = try io.await(future);
-  try blocks.append(block);
+    var blocks: std.ArrayList(types.Block) = .empty;
+    for (futures.items) |*future| {
+  const block = try future.await(io);
+  try blocks.append(allocator, block);
     }
 
-    return blocks.toOwnedSlice();
+    return blocks.toOwnedSlice(allocator);
 }
 ```
 
@@ -272,8 +273,8 @@ pub fn stopMining(self: *MiningManager) void {
 ```zig
 pub fn startMining(self: *MiningManager, io: std.Io, miner_keypair: key.KeyPair) !void {
     // Cancel any existing mining
-    if (self.mining_task) |task| {
-  io.cancel(task);
+    if (self.mining_task) |*task| {
+  _ = task.cancel(io);
     }
 
     // Start new mining task
@@ -283,8 +284,8 @@ pub fn startMining(self: *MiningManager, io: std.Io, miner_keypair: key.KeyPair)
 }
 
 pub fn stopMining(self: *MiningManager, io: std.Io) void {
-    if (self.mining_task) |task| {
-  io.cancel(task);
+    if (self.mining_task) |*task| {
+  _ = task.cancel(io);
   self.mining_task = null;
     }
 }
@@ -332,7 +333,7 @@ fn miningLoop(io: std.Io, ctx: MiningContext, keypair: key.KeyPair, addr: types.
 
 ## Next Steps for ZeiCoin
 
-1. **Read the code**: Understand `io.concurrent()` and `io.await()`
+1. **Read the code**: Understand `io.concurrent()` and `Future.await(io)`
 2. **Start small**: Replace sleep/timeout patterns first
 3. **Test incrementally**: One subsystem at a time
 4. **Measure**: Compare complexity before/after

@@ -98,7 +98,7 @@ See also:
 ## [Relationship with Arrays](#toc-Relationship-with-Arrays) §
 
 Vectors and [Arrays](#Arrays) each have a well-defined **bit layout**
-and therefore support [@bitCast](#bitCast) between each other. [Type Coercion](#Type-Coercion) implicitly peforms
+and therefore support [@bitCast](#bitCast) between each other. [Type Coercion](#Type-Coercion) implicitly performs
 `@bitCast`.
 
 Arrays have well-defined byte layout, but vectors do not, making [@ptrCast](#ptrCast) between

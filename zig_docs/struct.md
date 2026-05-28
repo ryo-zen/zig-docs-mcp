@@ -711,18 +711,19 @@ pub fn main() void {
     const digits = [_]i8 { 3, 8, 9, 0, 7, 4, 1 };
 
     const min, const max = blk: {
-  var min: i8 = 127;
-  var max: i8 = -128;
+        var min: i8 = 127;
+        var max: i8 = -128;
 
-  for (digits) |digit| {
-      if (digit if (digit > max) max = digit;
-  }
+        for (digits) |digit| {
+            if (digit < min) min = digit;
+            if (digit > max) max = digit;
+        }
 
-  break :blk .{ min, max };
+        break :blk .{ min, max };
     };
 
-    print("min = {}\n", .{ min });
-    print("max = {}\n", .{ max });
+    print("min = {}\n", .{min});
+    print("max = {}\n", .{max});
 }
 ```
 Shell$ zig build-exe destructuring_block.zig

@@ -250,6 +250,28 @@ A `packed union` has well-defined in-memory layout and is eligible
 
 All fields in a packed union must have the same [@bitSizeOf](#bitSizeOf).
 
+Equating packed unions results in a comparison of the backing integer, and only
+works for the `==` and `!=` [Operators](#Operators).
+
+test_packed_union_equality.zig
+```zig
+const std = @import("std");
+const expectEqual = std.testing.expectEqual;
+
+test "packed union equality" {
+    const U = packed union {
+        a: u4,
+        b: i4,
+    };
+    const x: U = .{ .a = 3 };
+    const y: U = .{ .b = 3 };
+    try expectEqual(x, y);
+}
+```
+Shell$ zig test test_packed_union_equality.zig
+1/1 test_packed_union_equality.test.packed union equality...OK
+All 1 tests passed.
+
 ## [Anonymous Union Literals](#toc-Anonymous-Union-Literals) §
 
 [Anonymous Struct Literals](#Anonymous-Struct-Literals) syntax can be used to initialize unions without specifying

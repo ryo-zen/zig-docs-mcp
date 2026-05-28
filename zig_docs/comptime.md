@@ -233,7 +233,9 @@ Inside a `comptime` block:
 
 - Variables are compile-time variables.
 - Control flow (`if`, `while`, `for`, `switch`) must be evaluable at compile time.
+- `return` and `try` are invalid unless the containing function itself is being called at compile time.
 - Runtime side effects are invalid.
+- Function calls are interpreted at compile time, and fail to compile if they require global runtime side effects.
 
 This lets one function be evaluated in both runtime and compile-time contexts without separate implementations.
 

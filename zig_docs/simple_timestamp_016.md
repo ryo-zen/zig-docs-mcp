@@ -1,5 +1,7 @@
 # Simple Unix Timestamp (0.16)
 
+📚 **Runnable Examples:** `zig_docs_std/Examples/simple_timestamp_016.tests.zig`
+
 ## The Simplest Pattern
 
 For getting Unix timestamps without passing `io` everywhere, use the global single-threaded Io:
@@ -170,9 +172,11 @@ const timestamp = std.time.timestamp();
 const timestamp = getTime();  // Uses global_single_threaded internally
 ```
 
-## Why No `std.time.timestamp()` in 0.16?
+## Why Use `std.Io.Clock` in 0.16?
 
-The old `std.time.timestamp()` used hidden global state and wasn't async-aware. The new Io-based approach:
+In Zig 0.16, timestamp examples should use `std.Io.Clock.real` rather than
+the older `std.time.timestamp()` convenience call. The Io-based approach keeps
+time access aligned with the rest of the 0.16 I/O APIs:
 
 1. **Explicit dependencies**: You know when you're doing I/O
 2. **Async-ready**: Works with async/await when needed

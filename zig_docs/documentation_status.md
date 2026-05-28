@@ -1,12 +1,12 @@
 # Zig Language Docs Status
 
-Last updated: 2026-02-14
+Last updated: 2026-05-28
 
 ## Coverage Summary
 
 - Language docs in `zig_docs/`: maintained
 - Playbook-style docs (memory, unsafe boundaries, errors, concurrency, I/O, performance): complete
-- Remaining focus: cross-link consistency and targeted depth improvements
+- Remaining focus: preserving 0.16 API accuracy as the docs evolve
 
 ## Area Tracker
 
