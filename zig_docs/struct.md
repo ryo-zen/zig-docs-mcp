@@ -177,7 +177,7 @@ const Threshold = struct {
 
     fn categorize(t: Threshold, value: f32) Category {
   assert(t.maximum >= t.minimum);
-  if (value return .low;
+  if (value < t.minimum) return .low;
   if (value > t.maximum) return .high;
   return .medium;
     }
@@ -265,14 +265,15 @@ Packed structs have well-defined memory layout - exactly the same ABI as their b
 Each field of a packed struct is interpreted as a logical sequence of bits, arranged from
 least to most significant. Allowed field types:
 
-  An [integer](#Integers) field uses exactly as many bits as its
+- An [integer](#Integers) field uses exactly as many bits as its
   bit width. For example, a `u5` will use 5 bits of
   the backing integer.
 
 - A [bool](#Primitive-Types) field uses exactly 1 bit.
 
 - An [enum](#enum) field uses exactly the bit width of its integer tag type.
-  A [packed union](#packed-union) field uses exactly the bit width of the union field with
+
+- A [packed union](#packed-union) field uses exactly the bit width of the union field with
   the largest bit width.
 
 - A `packed struct` field uses the bits of its backing integer.
@@ -571,14 +572,16 @@ pub fn writeToGpio(new_states: GpioRegister) void {
 
 Since all structs are anonymous, Zig infers the type name based on a few rules.
 
-    If the struct is in the initialization expression of a variable, it gets named after
-    that variable.
-    If the struct is in the `return` expression, it gets named after
-    the function it is returning from, with the parameter values serialized.
+- If the struct is in the initialization expression of a variable, it gets named after
+  that variable.
+
+- If the struct is in the `return` expression, it gets named after
+  the function it is returning from, with the parameter values serialized.
 
 - Otherwise, the struct gets a name such as `(filename.funcname__struct_ID)`.
-    If the struct is declared inside another struct, it gets named after both the parent
-    struct and the name inferred by the previous rules, separated by a dot.
+
+- If the struct is declared inside another struct, it gets named after both the parent
+  struct and the name inferred by the previous rules, separated by a dot.
 
 struct_name.zig
 ```zig

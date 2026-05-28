@@ -46,7 +46,7 @@ You can activate another field by assigning the entire union:
 test_simple_union.zig
 ```zig
 const std = @import("std");
-const expect = std.testing.expect;
+const expectEqual = std.testing.expectEqual;
 
 const Payload = union {
     int: i64,
@@ -55,9 +55,9 @@ const Payload = union {
 };
 test "simple union" {
     var payload = Payload{ .int = 1234 };
-    try expect(payload.int == 1234);
+    try expectEqual(1234, payload.int);
     payload = Payload{ .float = 12.34 };
-    try expect(payload.float == 12.34);
+    try expectEqual(12.34, payload.float);
 }
 ```
 Shell$ zig test test_simple_union.zig
@@ -79,7 +79,7 @@ Tagged unions coerce to their tag type: [Type Coercion: Unions and Enums](#Type-
 test_tagged_union.zig
 ```zig
 const std = @import("std");
-const expect = std.testing.expect;
+const expectEqual = std.testing.expectEqual;
 
 const ComplexTypeTag = enum {
     ok,
@@ -92,24 +92,24 @@ const ComplexType = union(ComplexTypeTag) {
 
 test "switch on tagged union" {
     const c = ComplexType{ .ok = 42 };
-    try expect(@as(ComplexTypeTag, c) == ComplexTypeTag.ok);
+    try expectEqual(ComplexTypeTag.ok, @as(ComplexTypeTag, c));
 
     switch (c) {
-  .ok => |value| try expect(value == 42),
-  .not_ok => unreachable,
+        .ok => |value| try expectEqual(42, value),
+        .not_ok => unreachable,
     }
 
     switch (c) {
-  .ok => |_, tag| {
-      // Because we're in the '.ok' prong, 'tag' is compile-time known to be '.ok':
-      comptime std.debug.assert(tag == .ok);
-  },
-  .not_ok => unreachable,
+        .ok => |_, tag| {
+            // Because we're in the '.ok' prong, 'tag' is compile-time known to be '.ok':
+            comptime std.debug.assert(tag == .ok);
+        },
+        .not_ok => unreachable,
     }
 }
 
 test "get tag type" {
-    try expect(std.meta.Tag(ComplexType) == ComplexTypeTag);
+    try expectEqual(ComplexTypeTag, std.meta.Tag(ComplexType));
 }
 ```
 Shell$ zig test test_tagged_union.zig
@@ -123,7 +123,7 @@ place a `*` before the variable name to make it a pointer:
 test_switch_modify_tagged_union.zig
 ```zig
 const std = @import("std");
-const expect = std.testing.expect;
+const expectEqual = std.testing.expectEqual;
 
 const ComplexTypeTag = enum {
     ok,
@@ -138,11 +138,11 @@ test "modify tagged union in switch" {
     var c = ComplexType{ .ok = 42 };
 
     switch (c) {
-  ComplexTypeTag.ok => |*value| value.* += 1,
-  ComplexTypeTag.not_ok => unreachable,
+        ComplexTypeTag.ok => |*value| value.* += 1,
+        ComplexTypeTag.not_ok => unreachable,
     }
 
-    try expect(c.ok == 43);
+    try expectEqual(43, c.ok);
 }
 ```
 Shell$ zig test test_switch_modify_tagged_union.zig
@@ -165,11 +165,11 @@ const Variant = union(enum) {
     none,
 
     fn truthy(self: Variant) bool {
-  return switch (self) {
-      Variant.int => |x_int| x_int != 0,
-      Variant.boolean => |x_bool| x_bool,
-      Variant.none => false,
-  };
+        return switch (self) {
+            Variant.int => |x_int| x_int != 0,
+            Variant.boolean => |x_bool| x_bool,
+            Variant.none => false,
+        };
     }
 };
 
@@ -194,7 +194,7 @@ This requires the tag to specify an explicit integer type.
 test_tagged_union_with_tag_values.zig
 ```zig
 const std = @import("std");
-const expect = std.testing.expect;
+const expectEqual = std.testing.expectEqual;
 
 const Tagged = union(enum(u32)) {
     int: i64 = 123,
@@ -203,10 +203,10 @@ const Tagged = union(enum(u32)) {
 
 test "tag values" {
     const int: Tagged = .{ .int = -40 };
-    try expect(@intFromEnum(int) == 123);
+    try expectEqual(123, @intFromEnum(int));
 
     const boolean: Tagged = .{ .boolean = false };
-    try expect(@intFromEnum(boolean) == 67);
+    try expectEqual(67, @intFromEnum(boolean));
 }
 ```
 Shell$ zig test test_tagged_union_with_tag_values.zig
@@ -219,7 +219,7 @@ All 1 tests passed.
 test_tagName.zig
 ```zig
 const std = @import("std");
-const expect = std.testing.expect;
+const expectEqualSlices = std.testing.expectEqualSlices;
 
 const Small2 = union(enum) {
     a: i32,
@@ -227,7 +227,7 @@ const Small2 = union(enum) {
     c: u8,
 };
 test "@tagName" {
-    try expect(std.mem.eql(u8, @tagName(Small2.a), "a"));
+    try expectEqualSlices(u8, "a", @tagName(Small2.a));
 }
 ```
 Shell$ zig test test_tagName.zig
@@ -246,7 +246,7 @@ See also:
 ## [packed union](#toc-packed-union) §
 
 A `packed union` has well-defined in-memory layout and is eligible
-    to be in a [packed struct](#packed-struct).
+to be in a [packed struct](#packed-struct).
 
 All fields in a packed union must have the same [@bitSizeOf](#bitSizeOf).
 
@@ -280,7 +280,7 @@ the type:
 test_anonymous_union.zig
 ```zig
 const std = @import("std");
-const expect = std.testing.expect;
+const expectEqual = std.testing.expectEqual;
 
 const Number = union {
     int: i32,
@@ -290,8 +290,8 @@ const Number = union {
 test "anonymous union literal syntax" {
     const i: Number = .{ .int = 42 };
     const f = makeNumber();
-    try expect(i.int == 42);
-    try expect(f.float == 12.34);
+    try expectEqual(42, i.int);
+    try expectEqual(12.34, f.float);
 }
 
 fn makeNumber() Number {
