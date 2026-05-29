@@ -28,6 +28,15 @@ test "integer to float coercion example marks runtime var by address" {
     try testing.expectEqual(int, int_from_float);
 }
 
+test "peer type resolution handles small int and float" {
+    var i: u8 = 12;
+    var f: f32 = 34;
+    _ = .{ &i, &f };
+    const x = i + f;
+    try testing.expectEqual(x, 46.0);
+    try testing.expectEqual(@TypeOf(x), f32);
+}
+
 test "separate block scopes can reuse a name" {
     {
         const pi = 3.14;

@@ -1,6 +1,7 @@
 # Casting
 
 📘 **Safety Guide:** [Unsafe Boundaries and Invariants](unsafe_boundaries.md)
+📚 **Runnable casting examples:** `zig_docs_std/Examples/casting.tests.zig`
 📚 **Runnable guard-rail examples:** `zig_docs_std/Examples/unsafe_boundaries.tests.zig`
 
 Before using explicit casts across representation boundaries, validate:
@@ -85,13 +86,13 @@ In addition, pointers coerce to const optional pointers:
 test_pointer_coerce_const_optional.zig
 ```zig
 const std = @import("std");
-const expect = std.testing.expect;
+const expectEqualStrings = std.testing.expectEqualStrings;
 const mem = std.mem;
 
 test "cast *[1][*:0]const u8 to []const ?[*:0]const u8" {
     const window_name = [1][*:0]const u8{"window name"};
     const x: []const ?[*:0]const u8 = &window_name;
-    try expect(mem.eql(u8, mem.span(x[0].?), "window name"));
+    try expectEqualStrings("window name", mem.span(x[0].?));
 }
 ```
 Shell$ zig test test_pointer_coerce_const_optional.zig
@@ -107,7 +108,7 @@ test_integer_widening.zig
 ```zig
 const std = @import("std");
 const builtin = @import("builtin");
-const expect = std.testing.expect;
+const expectEqual = std.testing.expectEqual;
 const mem = std.mem;
 
 test "integer widening" {
@@ -117,13 +118,13 @@ test "integer widening" {
     const d: u64 = c;
     const e: u64 = d;
     const f: u128 = e;
-    try expect(f == a);
+    try expectEqual(f, a);
 }
 
 test "implicit unsigned integer to signed integer" {
     const a: u8 = 250;
     const b: i16 = a;
-    try expect(b == 250);
+    try expectEqual(250, b);
 }
 
 test "float widening" {
@@ -131,7 +132,7 @@ test "float widening" {
     const b: f32 = a;
     const c: f64 = b;
     const d: f128 = c;
-    try expect(d == a);
+    try expectEqual(d, a);
 }
 ```
 Shell$ zig test test_integer_widening.zig
@@ -225,7 +226,9 @@ Shell$ zig test test_ambiguous_coercion.zig
 test_coerce_slices_arrays_and_pointers.zig
 ```zig
 const std = @import("std");
-const expect = std.testing.expect;
+const expectEqual = std.testing.expectEqual;
+const expectEqualStrings = std.testing.expectEqualStrings;
+const expectEqualSlices = std.testing.expectEqualSlices;
 
 // You can assign constant pointers to arrays to a slice with
 // const modifier on the element type. Useful in particular for
@@ -233,48 +236,48 @@ const expect = std.testing.expect;
 test "*const [N]T to []const T" {
     const x1: []const u8 = "hello";
     const x2: []const u8 = &[5]u8{ 'h', 'e', 'l', 'l', 111 };
-    try expect(std.mem.eql(u8, x1, x2));
+    try expectEqualStrings(x1, x2);
 
     const y: []const f32 = &[2]f32{ 1.2, 3.4 };
-    try expect(y[0] == 1.2);
+    try expectEqual(1.2, y[0]);
 }
 
 // Likewise, it works when the destination type is an error union.
 test "*const [N]T to E![]const T" {
     const x1: anyerror![]const u8 = "hello";
     const x2: anyerror![]const u8 = &[5]u8{ 'h', 'e', 'l', 'l', 111 };
-    try expect(std.mem.eql(u8, try x1, try x2));
+    try expectEqualStrings(try x1, try x2);
 
     const y: anyerror![]const f32 = &[2]f32{ 1.2, 3.4 };
-    try expect((try y)[0] == 1.2);
+    try expectEqual(1.2, (try y)[0]);
 }
 
 // Likewise, it works when the destination type is an optional.
 test "*const [N]T to ?[]const T" {
     const x1: ?[]const u8 = "hello";
     const x2: ?[]const u8 = &[5]u8{ 'h', 'e', 'l', 'l', 111 };
-    try expect(std.mem.eql(u8, x1.?, x2.?));
+    try expectEqualStrings(x1.?, x2.?);
 
     const y: ?[]const f32 = &[2]f32{ 1.2, 3.4 };
-    try expect(y.?[0] == 1.2);
+    try expectEqual(1.2, y.?[0]);
 }
 
 // In this cast, the array length becomes the slice length.
 test "*[N]T to []T" {
     var buf: [5]u8 = "hello".*;
     const x: []u8 = &buf;
-    try expect(std.mem.eql(u8, x, "hello"));
+    try expectEqualStrings("hello", x);
 
     const buf2 = [2]f32{ 1.2, 3.4 };
     const x2: []const f32 = &buf2;
-    try expect(std.mem.eql(f32, x2, &[2]f32{ 1.2, 3.4 }));
+    try expectEqualSlices(f32, &[2]f32{ 1.2, 3.4 }, x2);
 }
 
 // Single-item pointers to arrays can be coerced to many-item pointers.
 test "*[N]T to [*]T" {
     var buf: [5]u8 = "hello".*;
     const x: [*]u8 = &buf;
-    try expect(x[4] == 'o');
+    try expectEqual('o', x[4]);
     // x[5] would be an uncaught out of bounds pointer dereference!
 }
 
@@ -282,7 +285,7 @@ test "*[N]T to [*]T" {
 test "*[N]T to ?[*]T" {
     var buf: [5]u8 = "hello".*;
     const x: ?[*]u8 = &buf;
-    try expect(x.?[4] == 'o');
+    try expectEqual('o', x.?[4]);
 }
 
 // Single-item pointers can be cast to len-1 single-item arrays.
@@ -290,14 +293,14 @@ test "*T to *[1]T" {
     var x: i32 = 1234;
     const y: *[1]i32 = &x;
     const z: [*]i32 = y;
-    try expect(z[0] == 1234);
+    try expectEqual(1234, z[0]);
 }
 
 // Sentinel-terminated slices can be coerced into sentinel-terminated pointers
 test "[:x]T to [*:x]T" {
     const buf: [:0]const u8 = "hello";
     const buf2: [*:0]const u8 = buf;
-    try expect(buf2[4] == 'o');
+    try expectEqual('o', buf2[4]);
 }
 ```
 Shell$ zig test test_coerce_slices_arrays_and_pointers.zig
@@ -322,14 +325,14 @@ The payload type of [Optionals](#Optionals), as well as [null](#null), coerce to
 test_coerce_optionals.zig
 ```zig
 const std = @import("std");
-const expect = std.testing.expect;
+const expectEqual = std.testing.expectEqual;
 
 test "coerce to optionals" {
     const x: ?i32 = 1234;
     const y: ?i32 = null;
 
-    try expect(x.? == 1234);
-    try expect(y == null);
+    try expectEqual(1234, x.?);
+    try expectEqual(null, y);
 }
 ```
 Shell$ zig test test_coerce_optionals.zig
@@ -341,14 +344,14 @@ Optionals work nested inside the [Error Union Type](#Error-Union-Type), too:
 test_coerce_optional_wrapped_error_union.zig
 ```zig
 const std = @import("std");
-const expect = std.testing.expect;
+const expectEqual = std.testing.expectEqual;
 
 test "coerce to optionals wrapped in error union" {
     const x: anyerror!?i32 = 1234;
     const y: anyerror!?i32 = null;
 
-    try expect((try x).? == 1234);
-    try expect((try y) == null);
+    try expectEqual(1234, (try x).?);
+    try expectEqual(null, (try y));
 }
 ```
 Shell$ zig test test_coerce_optional_wrapped_error_union.zig
@@ -363,13 +366,13 @@ coerce to the error union type:
 test_coerce_to_error_union.zig
 ```zig
 const std = @import("std");
-const expect = std.testing.expect;
+const expectEqual = std.testing.expectEqual;
 
 test "coercion to error unions" {
     const x: anyerror!i32 = 1234;
     const y: anyerror!i32 = error.Failure;
 
-    try expect((try x) == 1234);
+    try expectEqual(1234, (try x));
     try std.testing.expectError(error.Failure, y);
 }
 ```
@@ -385,12 +388,12 @@ it may be coerced:
 test_coerce_large_to_small.zig
 ```zig
 const std = @import("std");
-const expect = std.testing.expect;
+const expectEqual = std.testing.expectEqual;
 
 test "coercing large integer type to smaller one when value is comptime-known to fit" {
     const x: u64 = 255;
     const y: u8 = x;
-    try expect(y == 255);
+    try expectEqual(255, y);
 }
 ```
 Shell$ zig test test_coerce_large_to_small.zig
@@ -406,7 +409,7 @@ when they are [comptime](#comptime)-known to be a field of the union that has on
 test_coerce_unions_enums.zig
 ```zig
 const std = @import("std");
-const expect = std.testing.expect;
+const expectEqual = std.testing.expectEqual;
 
 const E = enum {
     one,
@@ -425,32 +428,32 @@ const U2 = union(enum) {
     b: f32,
 
     fn tag(self: U2) usize {
-  switch (self) {
-      .a => return 1,
-      .b => return 2,
-  }
+        switch (self) {
+            .a => return 1,
+            .b => return 2,
+        }
     }
 };
 
 test "coercion between unions and enums" {
     const u = U{ .two = 12.34 };
     const e: E = u; // coerce union to enum
-    try expect(e == E.two);
+    try expectEqual(E.two, e);
 
     const three = E.three;
     const u_2: U = three; // coerce enum to union
-    try expect(u_2 == E.three);
+    try expectEqual(E.three, u_2);
 
     const u_3: U = .three; // coerce enum literal to union
-    try expect(u_3 == E.three);
+    try expectEqual(E.three, u_3);
 
     const u_4: U2 = .a; // coerce enum literal to union with inferred enum tag type.
-    try expect(u_4.tag() == 1);
+    try expectEqual(1, u_4.tag());
 
     // The following example is invalid.
     // error: coercion from enum '@EnumLiteral()' to union 'test_coerce_unions_enum.U2' must initialize 'f32' field 'b'
     //var u_5: U2 = .b;
-    //try expect(u_5.tag() == 2);
+    //try expectEqual(2, u_5.tag());
 }
 ```
 Shell$ zig test test_coerce_unions_enums.zig
@@ -474,7 +477,7 @@ See also:
 test_coerce_tuples_arrays.zig
 ```zig
 const std = @import("std");
-const expect = std.testing.expect;
+const expectEqual = std.testing.expectEqual;
 
 const Tuple = struct { u8, u8 };
 test "coercion from homogeneous tuple to array" {
@@ -548,22 +551,33 @@ some examples:
 test_peer_type_resolution.zig
 ```zig
 const std = @import("std");
-const expect = std.testing.expect;
-const mem = std.mem;
+const expectEqual = std.testing.expectEqual;
+const expectEqualStrings = std.testing.expectEqualStrings;
 
 test "peer resolve int widening" {
     const a: i8 = 12;
     const b: i16 = 34;
     const c = a + b;
-    try expect(c == 46);
-    try expect(@TypeOf(c) == i16);
+    try expectEqual(46, c);
+    try expectEqual(i16, @TypeOf(c));
+}
+
+test "peer resolve small int and float" {
+    // This only works for integer types that can coerce to the float type.
+    // Larger integer types will cause a compiler error; no float widening occurs.
+    var i: u8 = 12;
+    var f: f32 = 34;
+    _ = .{ &i, &f };
+    const x = i + f;
+    try expectEqual(x, 46.0);
+    try expectEqual(@TypeOf(x), f32);
 }
 
 test "peer resolve arrays of different size to const slice" {
-    try expect(mem.eql(u8, boolToStr(true), "true"));
-    try expect(mem.eql(u8, boolToStr(false), "false"));
-    try comptime expect(mem.eql(u8, boolToStr(true), "true"));
-    try comptime expect(mem.eql(u8, boolToStr(false), "false"));
+    try expectEqualStrings("true", boolToStr(true));
+    try expectEqualStrings("false", boolToStr(false));
+    try comptime expectEqualStrings("true", boolToStr(true));
+    try comptime expectEqualStrings("false", boolToStr(false));
 }
 fn boolToStr(b: bool) []const u8 {
     return if (b) "true" else "false";
@@ -576,58 +590,58 @@ test "peer resolve array and const slice" {
 fn testPeerResolveArrayConstSlice(b: bool) !void {
     const value1 = if (b) "aoeu" else @as([]const u8, "zz");
     const value2 = if (b) @as([]const u8, "zz") else "aoeu";
-    try expect(mem.eql(u8, value1, "aoeu"));
-    try expect(mem.eql(u8, value2, "zz"));
+    try expectEqualStrings("aoeu", value1);
+    try expectEqualStrings("zz", value2);
 }
 
 test "peer type resolution: ?T and T" {
-    try expect(peerTypeTAndOptionalT(true, false).? == 0);
-    try expect(peerTypeTAndOptionalT(false, false).? == 3);
+    try expectEqual(0, peerTypeTAndOptionalT(true, false).?);
+    try expectEqual(3, peerTypeTAndOptionalT(false, false).?);
     comptime {
-  try expect(peerTypeTAndOptionalT(true, false).? == 0);
-  try expect(peerTypeTAndOptionalT(false, false).? == 3);
+        try expectEqual(0, peerTypeTAndOptionalT(true, false).?);
+        try expectEqual(3, peerTypeTAndOptionalT(false, false).?);
     }
 }
 fn peerTypeTAndOptionalT(c: bool, b: bool) ?usize {
     if (c) {
-  return if (b) null else @as(usize, 0);
+        return if (b) null else @as(usize, 0);
     }
 
     return @as(usize, 3);
 }
 
 test "peer type resolution: *[0]u8 and []const u8" {
-    try expect(peerTypeEmptyArrayAndSlice(true, "hi").len == 0);
-    try expect(peerTypeEmptyArrayAndSlice(false, "hi").len == 1);
+    try expectEqual(0, peerTypeEmptyArrayAndSlice(true, "hi").len);
+    try expectEqual(1, peerTypeEmptyArrayAndSlice(false, "hi").len);
     comptime {
-  try expect(peerTypeEmptyArrayAndSlice(true, "hi").len == 0);
-  try expect(peerTypeEmptyArrayAndSlice(false, "hi").len == 1);
+        try expectEqual(0, peerTypeEmptyArrayAndSlice(true, "hi").len);
+        try expectEqual(1, peerTypeEmptyArrayAndSlice(false, "hi").len);
     }
 }
 fn peerTypeEmptyArrayAndSlice(a: bool, slice: []const u8) []const u8 {
     if (a) {
-  return &[_]u8{};
+        return &[_]u8{};
     }
 
     return slice[0..1];
 }
 test "peer type resolution: *[0]u8, []const u8, and anyerror![]u8" {
     {
-  var data = "hi".*;
-  const slice = data[0..];
-  try expect((try peerTypeEmptyArrayAndSliceAndError(true, slice)).len == 0);
-  try expect((try peerTypeEmptyArrayAndSliceAndError(false, slice)).len == 1);
+        var data = "hi".*;
+        const slice = data[0..];
+        try expectEqual(0, (try peerTypeEmptyArrayAndSliceAndError(true, slice)).len);
+        try expectEqual(1, (try peerTypeEmptyArrayAndSliceAndError(false, slice)).len);
     }
     comptime {
-  var data = "hi".*;
-  const slice = data[0..];
-  try expect((try peerTypeEmptyArrayAndSliceAndError(true, slice)).len == 0);
-  try expect((try peerTypeEmptyArrayAndSliceAndError(false, slice)).len == 1);
+        var data = "hi".*;
+        const slice = data[0..];
+        try expectEqual(0, (try peerTypeEmptyArrayAndSliceAndError(true, slice)).len);
+        try expectEqual(1, (try peerTypeEmptyArrayAndSliceAndError(false, slice)).len);
     }
 }
 fn peerTypeEmptyArrayAndSliceAndError(a: bool, slice: []u8) anyerror![]u8 {
     if (a) {
-  return &[_]u8{};
+        return &[_]u8{};
     }
 
     return slice[0..1];
@@ -636,8 +650,8 @@ fn peerTypeEmptyArrayAndSliceAndError(a: bool, slice: []u8) anyerror![]u8 {
 test "peer type resolution: *const T and ?*T" {
     const a: *const usize = @ptrFromInt(0x123456780);
     const b: ?*usize = @ptrFromInt(0x123456780);
-    try expect(a == b);
-    try expect(b == a);
+    try expectEqual(a, b);
+    try expectEqual(b, a);
 }
 
 test "peer type resolution: error union switch" {
@@ -647,32 +661,33 @@ test "peer type resolution: error union switch" {
     var a: error{ A, B, C }!u32 = 0;
     _ = &a;
     const b = if (a) |x|
-  x + 3
+        x + 3
     else |err| switch (err) {
-  error.A => 0,
-  error.B => 1,
-  error.C => null,
+        error.A => 0,
+        error.B => 1,
+        error.C => null,
     };
-    try expect(@TypeOf(b) == ?u32);
+    try expectEqual(?u32, @TypeOf(b));
 
     // The non-error and error cases are only peers if the error case is just a switch expression;
     // the pattern `x catch |err| blk: { switch (err) {...} }` does not consider the unwrapped `x`
     // and error case to be peers.
     const c = a catch |err| switch (err) {
-  error.A => 0,
-  error.B => 1,
-  error.C => null,
+        error.A => 0,
+        error.B => 1,
+        error.C => null,
     };
-    try expect(@TypeOf(c) == ?u32);
+    try expectEqual(?u32, @TypeOf(c));
 }
 ```
 Shell$ zig test test_peer_type_resolution.zig
-1/8 test_peer_type_resolution.test.peer resolve int widening...OK
-2/8 test_peer_type_resolution.test.peer resolve arrays of different size to const slice...OK
-3/8 test_peer_type_resolution.test.peer resolve array and const slice...OK
-4/8 test_peer_type_resolution.test.peer type resolution: ?T and T...OK
-5/8 test_peer_type_resolution.test.peer type resolution: *[0]u8 and []const u8...OK
-6/8 test_peer_type_resolution.test.peer type resolution: *[0]u8, []const u8, and anyerror![]u8...OK
-7/8 test_peer_type_resolution.test.peer type resolution: *const T and ?*T...OK
-8/8 test_peer_type_resolution.test.peer type resolution: error union switch...OK
-All 8 tests passed.
+1/9 test_peer_type_resolution.test.peer resolve int widening...OK
+2/9 test_peer_type_resolution.test.peer resolve small int and float...OK
+3/9 test_peer_type_resolution.test.peer resolve arrays of different size to const slice...OK
+4/9 test_peer_type_resolution.test.peer resolve array and const slice...OK
+5/9 test_peer_type_resolution.test.peer type resolution: ?T and T...OK
+6/9 test_peer_type_resolution.test.peer type resolution: *[0]u8 and []const u8...OK
+7/9 test_peer_type_resolution.test.peer type resolution: *[0]u8, []const u8, and anyerror![]u8...OK
+8/9 test_peer_type_resolution.test.peer type resolution: *const T and ?*T...OK
+9/9 test_peer_type_resolution.test.peer type resolution: error union switch...OK
+All 9 tests passed.
