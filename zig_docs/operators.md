@@ -260,7 +260,9 @@ a %= b
     Bit Shift Left
 
 ```zig
-a
+a << b
+a <<= b
+```
 
 - [Integers](#Integers)
 
@@ -275,13 +277,15 @@ a
 - See also [@shlWithOverflow](#shlWithOverflow).
 
 ```zig
-0b1 8 == 0b100000000
+0b1 << 8 == 0b100000000
 ```
 
     Saturating Bit Shift Left
 
 ```zig
-a
+a <<| b
+a <<|= b
+```
 
 - [Integers](#Integers)
 
@@ -290,7 +294,7 @@ a
 - See also [@shlWithOverflow](#shlWithOverflow).
 
 ```zig
-@as(u8, 1) 8 == 255
+@as(u8, 1) <<| 8 == 255
 ```
 
     Bit Shift Right
@@ -584,7 +588,8 @@ a >= b
     Less Than
 
 ```zig
-a
+a < b
+```
 
 - [Integers](#Integers)
 
@@ -594,13 +599,14 @@ a
       Invokes [Peer Type Resolution](#Peer-Type-Resolution) for the operands.
 
 ```zig
-(1 2) == true
+(1 < 2) == true
 ```
 
     Lesser or Equal
 
 ```zig
-a
+a <= b
+```
 
 - [Integers](#Integers)
 
@@ -610,7 +616,7 @@ a
       Invokes [Peer Type Resolution](#Peer-Type-Resolution) for the operands.
 
 ```zig
-(1 2) == true
+(1 <= 2) == true
 ```
 
     Array Concatenation
@@ -702,9 +708,10 @@ x{}
 !x -x -%x ~x &x ?x
 * / % ** *% *| ||
 + - ++ +% -% +| -|
-> orelse catch
-== !=  =
+<< >> <<|
+& ^ | orelse catch
+== != < > <= >=
 and
 or
-= *= *%= *|= /= %= += +%= +|= -= -%= -|= >= &= ^= |=
+= *= *%= *|= /= %= += +%= +|= -= -%= -|= <<= <<|= >>= &= ^= |=
 ```

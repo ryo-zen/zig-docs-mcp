@@ -20,6 +20,14 @@ test "while examples preserve comparison operators" {
     }
 }
 
+test "operator table examples preserve shift and comparison tokens" {
+    try testing.expect(0b1 << 8 == 0b100000000);
+    try testing.expect(@as(u8, 1) <<| 8 == 255);
+    try testing.expect(0b1010 >> 1 == 0b101);
+    try testing.expect((1 < 2) == true);
+    try testing.expect((1 <= 2) == true);
+}
+
 test "integer to float coercion example marks runtime var by address" {
     var int: u8 = 123;
     _ = &int;
