@@ -4,6 +4,8 @@ A vector is a group of booleans, [Integers](#Integers), [Floats](#Floats), or
 [Pointers](#Pointers) which are operated on in parallel, using SIMD instructions if possible.
 Vector types are created with the builtin function [@Vector](#Vector).
 
+📚 **Runnable Examples:** `zig_docs_std/Examples/vectors.tests.zig`
+
 Vectors generally support the same builtin operators as their underlying base types.
 The only exception to this is the keywords `and` and `or` on vectors of bools, since
 these operators affect control flow, which is not allowed for vectors.

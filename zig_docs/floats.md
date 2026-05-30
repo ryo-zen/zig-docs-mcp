@@ -1,6 +1,8 @@
 # Floats
 
-📚 **[See Comprehensive Float Examples](../../Examples/test_float_patterns.zig)** - Complete working examples of all patterns, operations, and pitfalls discussed in this guide
+Runnable examples: `zig_docs_std/Examples/floats.tests.zig`
+
+Additional patterns: `zig_docs_std/Examples/test_float_patterns.zig`
 
 Zig supports the following floating point types, adhering to IEEE-754 standards:
 
@@ -229,9 +231,9 @@ if (std.math.isInf(result)) {
 
 ## Floating Point Operations
 
-By default, floating point operations use **Strict** mode. In this mode, operations are strictly IEEE-754 compliant.
+By default, floating point operations use `.strict` mode. In this mode, operations are strictly IEEE-754 compliant.
 
-You can switch to **Optimized** mode on a per-block basis using `@setFloatMode(.optimized)`. This allows the compiler to re-associate operations (e.g., `(a + b) - c` might become `a + (b - c)`), which can improve performance but may result in different rounding behavior.
+You can switch to `.optimized` mode on a per-block basis using `@setFloatMode(.optimized)`. This allows the compiler to re-associate operations (e.g., `(a + b) - c` might become `a + (b - c)`), which can improve performance but may result in different rounding behavior.
 
 ### Example: Strict vs Optimized Mode
 
@@ -304,6 +306,8 @@ test "rounding operations" {
 
 ### Comparison Functions
 ```zig
+const std = @import("std");
+
 test "float comparison" {
     const a: f64 = 0.1 + 0.2;
     const b: f64 = 0.3;
@@ -324,6 +328,8 @@ test "float comparison" {
 
 ### Mathematical Functions
 ```zig
+const std = @import("std");
+
 test "math functions" {
     const x: f64 = 2.0;
 
@@ -355,6 +361,8 @@ test "math functions" {
 
 ### Classification Functions
 ```zig
+const std = @import("std");
+
 test "float classification" {
     // Check for special values
     try std.testing.expect(std.math.isNan(std.math.nan(f32)));
@@ -380,18 +388,20 @@ test "float classification" {
 
 ### Physics Simulation (f32 for performance)
 ```zig
+const std = @import("std");
+
 const Vec2 = struct {
     x: f32,
     y: f32,
 
     pub fn length(self: Vec2) f32 {
-  return std.math.sqrt(self.x * self.x + self.y * self.y);
+        return std.math.sqrt(self.x * self.x + self.y * self.y);
     }
 
     pub fn normalize(self: Vec2) Vec2 {
-  const len = self.length();
-  if (len < 0.0001) return Vec2{ .x = 0, .y = 0 };
-  return Vec2{ .x = self.x / len, .y = self.y / len };
+        const len = self.length();
+        if (len < 0.0001) return Vec2{ .x = 0, .y = 0 };
+        return Vec2{ .x = self.x / len, .y = self.y / len };
     }
 };
 
@@ -408,24 +418,26 @@ test "physics vector" {
 
 ### GPS Coordinates (f64 for precision)
 ```zig
+const std = @import("std");
+
 const Coordinate = struct {
     latitude: f64,  // -90 to +90 degrees
     longitude: f64, // -180 to +180 degrees
 
     // Haversine formula for distance between two points on Earth
     pub fn distanceTo(self: Coordinate, other: Coordinate) f64 {
-  const earth_radius_km = 6371.0;
-  const lat1 = self.latitude * std.math.pi / 180.0;
-  const lat2 = other.latitude * std.math.pi / 180.0;
-  const delta_lat = (other.latitude - self.latitude) * std.math.pi / 180.0;
-  const delta_lon = (other.longitude - self.longitude) * std.math.pi / 180.0;
+        const earth_radius_km = 6371.0;
+        const lat1 = self.latitude * std.math.pi / 180.0;
+        const lat2 = other.latitude * std.math.pi / 180.0;
+        const delta_lat = (other.latitude - self.latitude) * std.math.pi / 180.0;
+        const delta_lon = (other.longitude - self.longitude) * std.math.pi / 180.0;
 
-  const a = std.math.sin(delta_lat / 2.0) * std.math.sin(delta_lat / 2.0) +
-      std.math.cos(lat1) * std.math.cos(lat2) *
-      std.math.sin(delta_lon / 2.0) * std.math.sin(delta_lon / 2.0);
-  const c = 2.0 * std.math.atan2(std.math.sqrt(a), std.math.sqrt(1.0 - a));
+        const a = std.math.sin(delta_lat / 2.0) * std.math.sin(delta_lat / 2.0) +
+            std.math.cos(lat1) * std.math.cos(lat2) *
+            std.math.sin(delta_lon / 2.0) * std.math.sin(delta_lon / 2.0);
+        const c = 2.0 * std.math.atan2(std.math.sqrt(a), std.math.sqrt(1.0 - a));
 
-  return earth_radius_km * c;
+        return earth_radius_km * c;
     }
 };
 
@@ -443,19 +455,21 @@ test "GPS distance calculation" {
 
 ### Currency Handling (integers, NOT floats)
 ```zig
+const std = @import("std");
+
 const Money = struct {
     cents: i64, // Store as integer cents
 
     pub fn fromDollars(dollars: f64) Money {
-  return Money{ .cents = @intFromFloat(dollars * 100.0) };
+        return Money{ .cents = @intFromFloat(dollars * 100.0) };
     }
 
     pub fn toDollars(self: Money) f64 {
-  return @as(f64, @floatFromInt(self.cents)) / 100.0;
+        return @as(f64, @floatFromInt(self.cents)) / 100.0;
     }
 
     pub fn add(self: Money, other: Money) Money {
-  return Money{ .cents = self.cents + other.cents };
+        return Money{ .cents = self.cents + other.cents };
     }
 };
 
@@ -474,6 +488,8 @@ test "currency handling" {
 
 ### Scientific Computing (f64 for accuracy)
 ```zig
+const std = @import("std");
+
 // Numerical integration using Simpson's rule
 fn integrate(comptime f: fn (f64) f64, a: f64, b: f64, n: usize) f64 {
     const h = (b - a) / @as(f64, @floatFromInt(n));
@@ -481,12 +497,12 @@ fn integrate(comptime f: fn (f64) f64, a: f64, b: f64, n: usize) f64 {
 
     var i: usize = 1;
     while (i < n) : (i += 2) {
-  sum += 4.0 * f(a + @as(f64, @floatFromInt(i)) * h);
+        sum += 4.0 * f(a + @as(f64, @floatFromInt(i)) * h);
     }
 
     i = 2;
     while (i < n) : (i += 2) {
-  sum += 2.0 * f(a + @as(f64, @floatFromInt(i)) * h);
+        sum += 2.0 * f(a + @as(f64, @floatFromInt(i)) * h);
     }
 
     return sum * h / 3.0;

@@ -55,6 +55,26 @@ test "slice pointer relationship" {
     try testing.expect(@intFromPtr(slice.ptr) == @intFromPtr(&slice[0]));
 }
 
+test "array pointers can be sliced into mutable slices" {
+    var array: [10]u8 = .{0} ** 10;
+    const ptr = &array;
+    try testing.expectEqual(*[10]u8, @TypeOf(ptr));
+
+    var start: usize = 0;
+    var end: usize = 5;
+    _ = .{ &start, &end };
+    const slice = ptr[start..end];
+
+    try testing.expectEqual([]u8, @TypeOf(slice));
+    slice[2] = 3;
+    try testing.expectEqual(@as(u8, 3), array[2]);
+
+    const ptr2 = slice[2..3];
+    try testing.expectEqual(@as(usize, 1), ptr2.len);
+    try testing.expectEqual(@as(u8, 3), ptr2[0]);
+    try testing.expectEqual(*[1]u8, @TypeOf(ptr2));
+}
+
 test "empty slice construction" {
     const empty1 = &[0]u8{};
     const empty2: []u8 = &.{};
@@ -67,6 +87,11 @@ test "sentinel-terminated slices" {
     const s: [:0]const u8 = "hello";
     try testing.expectEqual(@as(usize, 5), s.len);
     try testing.expectEqual(@as(u8, 0), s[5]);
+
+    const early_sentinel: [:0]const u8 = "he\x00lo";
+    try testing.expectEqual(@as(usize, 5), early_sentinel.len);
+    try testing.expectEqual(@as(u8, 0), early_sentinel[2]);
+    try testing.expectEqual(@as(u8, 0), early_sentinel[5]);
 }
 
 test "sentinel slicing syntax" {

@@ -1,5 +1,7 @@
 # Integers
 
+Runnable examples: `zig_docs_std/Examples/integers.tests.zig`
+
 ## [Integer Literals](#toc-Integer-Literals) §
 
 integer_literals.zig
@@ -28,13 +30,15 @@ known size, and is vulnerable to safety-checked [Illegal Behavior](#Illegal-Beha
 runtime_vs_comptime.zig
 ```zig
 fn divide(a: i32, b: i32) i32 {
-    return a / b;
+    return @divTrunc(a, b);
 }
 ```
 
 In this function, values `a` and `b` are known only at runtime,
-and thus this division operation is vulnerable to both [Integer Overflow](#Integer-Overflow) and
-[Division by Zero](#Division-by-Zero).
+and thus this signed division operation is vulnerable to both [Integer Overflow](#Integer-Overflow) and
+[Division by Zero](#Division-by-Zero). Signed runtime integer division uses builtins such as `@divTrunc`,
+`@divFloor`, or `@divExact`; the `/` operator is only valid for signed integers when the operands are
+comptime-known and positive.
 
 Operators such as `+` and `-` cause [Illegal Behavior](#Illegal-Behavior) on
 integer overflow. Alternative operators are provided for wrapping and saturating arithmetic on all targets.
@@ -50,6 +54,7 @@ integer type is `65535`. For signed integer types, Zig uses a
 See also:
 
 - [Wrapping Operations](#Wrapping-Operations)
+
 ## [Integer Overflow Detection and Validation](#toc-Integer-Overflow-Detection) §
 
 Zig provides comprehensive **runtime safety checking** and **compile-time validation** for integer overflow operations. This built-in overflow checking helps prevent security vulnerabilities and logic errors.
@@ -136,7 +141,7 @@ test "explicit overflow checking" {
     // result[1] = overflow bit (1 if overflow occurred)
 
     if (result[1] != 0) {
-  std.debug.print("Overflow detected!\n", .{});
+        std.debug.print("Overflow detected!\n", .{});
     }
 }
 ```
@@ -149,21 +154,21 @@ test "explicit overflow checking" {
 
 ### Controlling Runtime Safety Checks
 
-Use `@setRuntimeSafety` to enable or disable overflow checking for specific code blocks:
+Use `@setRuntimeSafety` to enable or disable safety checks for specific code blocks.
+Disabling runtime safety does not turn normal integer overflow into defined wrapping behavior; use wrapping operators such as `+%` when wrapping is intended.
 
 runtime_safety_control.zig
 ```zig
 const std = @import("std");
 
-test "controlling overflow checks" {
-    // Overflow checking enabled (default in Debug)
-    var x: u8 = 255;
+test "controlling safety checks" {
+    var x: u8 = 1;
 
     @setRuntimeSafety(false);
-    x += 1; // No panic, wraps to 0
+    x += 1; // This is safe because it does not overflow.
     @setRuntimeSafety(true);
 
-    try std.testing.expect(x == 0);
+    try std.testing.expect(x == 2);
 }
 ```
 
