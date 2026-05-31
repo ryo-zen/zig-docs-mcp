@@ -1,5 +1,7 @@
 # if
 
+Runnable examples: `zig_docs_std/Examples/if.tests.zig`
+
 test_if.zig
 ```zig
 // If expressions have three uses, corresponding to the three types:
@@ -8,13 +10,14 @@ test_if.zig
 // * anyerror!T
 
 const expect = @import("std").testing.expect;
+const expectEqual = @import("std").testing.expectEqual;
 
 test "if expression" {
     // If expressions are used instead of a ternary expression.
     const a: u32 = 5;
     const b: u32 = 4;
     const result = if (a != b) 47 else 3089;
-    try expect(result == 47);
+    try expectEqual(result, 47);
 }
 
 test "if boolean" {
@@ -22,11 +25,11 @@ test "if boolean" {
     const a: u32 = 5;
     const b: u32 = 4;
     if (a != b) {
-  try expect(true);
+        try expect(true);
     } else if (a == 9) {
-  unreachable;
+        unreachable;
     } else {
-  unreachable;
+        unreachable;
     }
 }
 
@@ -36,42 +39,42 @@ test "if error union" {
 
     const a: anyerror!u32 = 0;
     if (a) |value| {
-  try expect(value == 0);
+        try expectEqual(value, 0);
     } else |err| {
-  _ = err;
-  unreachable;
+        _ = err;
+        unreachable;
     }
 
     const b: anyerror!u32 = error.BadValue;
     if (b) |value| {
-  _ = value;
-  unreachable;
+        _ = value;
+        unreachable;
     } else |err| {
-  try expect(err == error.BadValue);
+        try expectEqual(err, error.BadValue);
     }
 
     // The else and |err| capture is strictly required.
     if (a) |value| {
-  try expect(value == 0);
+        try expectEqual(value, 0);
     } else |_| {}
 
     // To check only the error value, use an empty block expression.
     if (b) |_| {} else |err| {
-  try expect(err == error.BadValue);
+        try expectEqual(err, error.BadValue);
     }
 
     // Access the value by reference using a pointer capture.
     var c: anyerror!u32 = 3;
     if (c) |*value| {
-  value.* = 9;
+        value.* = 9;
     } else |_| {
-  unreachable;
+        unreachable;
     }
 
     if (c) |value| {
-  try expect(value == 9);
+        try expectEqual(value, 9);
     } else |_| {
-  unreachable;
+        unreachable;
     }
 }
 ```
@@ -86,44 +89,45 @@ All 3 tests passed.
 test_if_optionals.zig
 ```zig
 const expect = @import("std").testing.expect;
+const expectEqual = @import("std").testing.expectEqual;
 
 test "if optional" {
     // If expressions test for null.
 
     const a: ?u32 = 0;
     if (a) |value| {
-  try expect(value == 0);
+        try expectEqual(0, value);
     } else {
-  unreachable;
+        unreachable;
     }
 
     const b: ?u32 = null;
     if (b) |_| {
-  unreachable;
+        unreachable;
     } else {
-  try expect(true);
+        try expect(true);
     }
 
     // The else is not required.
     if (a) |value| {
-  try expect(value == 0);
+        try expectEqual(0, value);
     }
 
     // To test against null only, use the binary equality operator.
     if (b == null) {
-  try expect(true);
+        try expect(true);
     }
 
     // Access the value by reference using a pointer capture.
     var c: ?u32 = 3;
     if (c) |*value| {
-  value.* = 2;
+        value.* = 2;
     }
 
     if (c) |value| {
-  try expect(value == 2);
+        try expectEqual(2, value);
     } else {
-  unreachable;
+        unreachable;
     }
 }
 
@@ -133,41 +137,41 @@ test "if error union with optional" {
 
     const a: anyerror!?u32 = 0;
     if (a) |optional_value| {
-  try expect(optional_value.? == 0);
+        try expectEqual(0, optional_value.?);
     } else |err| {
-  _ = err;
-  unreachable;
+        _ = err;
+        unreachable;
     }
 
     const b: anyerror!?u32 = null;
     if (b) |optional_value| {
-  try expect(optional_value == null);
+        try expectEqual(null, optional_value);
     } else |_| {
-  unreachable;
+        unreachable;
     }
 
     const c: anyerror!?u32 = error.BadValue;
     if (c) |optional_value| {
-  _ = optional_value;
-  unreachable;
+        _ = optional_value;
+        unreachable;
     } else |err| {
-  try expect(err == error.BadValue);
+        try expectEqual(error.BadValue, err);
     }
 
     // Access the value by reference by using a pointer capture each time.
     var d: anyerror!?u32 = 3;
     if (d) |*optional_value| {
-  if (optional_value.*) |*value| {
-      value.* = 9;
-  }
+        if (optional_value.*) |*value| {
+            value.* = 9;
+        }
     } else |_| {
-  unreachable;
+        unreachable;
     }
 
     if (d) |optional_value| {
-  try expect(optional_value.? == 9);
+        try expectEqual(9, optional_value.?);
     } else |_| {
-  unreachable;
+        unreachable;
     }
 }
 ```
@@ -179,5 +183,4 @@ All 2 tests passed.
 See also:
 
 - [Optionals](#Optionals)
-
 - [Errors](#Errors)
