@@ -50,10 +50,10 @@ const Timestamp = struct {
     /// Returns a `Timestamp` struct representing the Unix epoch; that is, the
     /// moment of 1970 Jan 1 00:00:00 UTC (this is a doc comment too).
     pub fn unixEpoch() Timestamp {
-  return Timestamp{
-      .seconds = 0,
-      .nanos = 0,
-  };
+        return Timestamp{
+            .seconds = 0,
+            .nanos = 0,
+        };
     }
 };
 ```
@@ -69,9 +69,9 @@ invalid_doc-comment.zig
 const std = @import("std");
 ```
 Shell$ zig build-obj invalid_doc-comment.zig
-/home/ci/zig-bootstrap/zig/doc/langref/invalid_doc-comment.zig:1:16: error: expected type expression, found 'a document comment'
+invalid_doc-comment.zig:1:16: error: expected type expression, found 'a document comment'
 /// doc-comment
-         ^
+               ^
 
 unattached_doc-comment.zig
 ```zig
@@ -80,7 +80,7 @@ pub fn main() void {}
 /// End of file
 ```
 Shell$ zig build-obj unattached_doc-comment.zig
-/home/ci/zig-bootstrap/zig/doc/langref/unattached_doc-comment.zig:3:1: error: unattached documentation comment
+unattached_doc-comment.zig:3:1: error: unattached documentation comment
 /// End of file
 ^~~~~~~~~~~~~~~
 
