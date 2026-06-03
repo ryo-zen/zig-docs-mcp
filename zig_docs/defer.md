@@ -5,24 +5,24 @@ Executes an expression unconditionally at scope exit.
 test_defer.zig
 ```zig
 const std = @import("std");
-const expect = std.testing.expect;
+const expectEqual = std.testing.expectEqual;
 const print = std.debug.print;
 
 fn deferExample() !usize {
     var a: usize = 1;
 
     {
-  defer a = 2;
-  a = 1;
+        defer a = 2;
+        a = 1;
     }
-    try expect(a == 2);
+    try expectEqual(2, a);
 
     a = 5;
     return a;
 }
 
 test "defer basics" {
-    try expect((try deferExample()) == 5);
+    try expectEqual(5, (try deferExample()));
 }
 ```
 Shell$ zig test test_defer.zig
@@ -40,16 +40,16 @@ pub fn main() void {
     print("\n", .{});
 
     defer {
-  print("1 ", .{});
+        print("1 ", .{});
     }
     defer {
-  print("2 ", .{});
+        print("2 ", .{});
     }
     if (false) {
-  // defers are not run if they are never executed.
-  defer {
-      print("3 ", .{});
-  }
+        // defers are not run if they are never executed.
+        defer {
+            print("3 ", .{});
+        }
     }
 }
 ```
@@ -64,17 +64,17 @@ test_invalid_defer.zig
 ```zig
 fn deferInvalidExample() !void {
     defer {
-  return error.DeferError;
+        return error.DeferError;
     }
 
     return error.DeferError;
 }
 ```
 Shell$ zig test test_invalid_defer.zig
-/home/ci/zig-bootstrap/zig/doc/langref/test_invalid_defer.zig:3:9: error: cannot return from defer expression
-  return error.DeferError;
-  ^~~~~~~~~~~~~~~~~~~~~~~
-/home/ci/zig-bootstrap/zig/doc/langref/test_invalid_defer.zig:2:5: note: defer expression here
+test_invalid_defer.zig:3:9: error: cannot return from defer expression
+        return error.DeferError;
+        ^~~~~~~~~~~~~~~~~~~~~~~
+test_invalid_defer.zig:2:5: note: defer expression here
     defer {
     ^~~~~
 

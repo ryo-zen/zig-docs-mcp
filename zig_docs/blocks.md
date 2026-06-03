@@ -6,14 +6,14 @@ test_blocks.zig
 ```zig
 test "access variable after block scope" {
     {
-  var x: i32 = 1;
-  _ = &x;
+        var x: i32 = 1;
+        _ = &x;
     }
     x += 1;
 }
 ```
 Shell$ zig test test_blocks.zig
-/home/ci/zig-bootstrap/zig/doc/langref/test_blocks.zig:6:5: error: use of undeclared identifier 'x'
+test_blocks.zig:6:5: error: use of undeclared identifier 'x'
     x += 1;
     ^
 
@@ -23,17 +23,17 @@ to return a value from the block:
 test_labeled_break.zig
 ```zig
 const std = @import("std");
-const expect = std.testing.expect;
+const expectEqual = std.testing.expectEqual;
 
 test "labeled break from labeled block expression" {
     var y: i32 = 123;
 
     const x = blk: {
-  y += 1;
-  break :blk y;
+        y += 1;
+        break :blk y;
     };
-    try expect(x == 124);
-    try expect(y == 124);
+    try expectEqual(124, x);
+    try expectEqual(124, y);
 }
 ```
 Shell$ zig test test_labeled_break.zig
@@ -59,15 +59,15 @@ const pi = 3.14;
 test "inside test block" {
     // Let's even go inside another block
     {
-  var pi: i32 = 1234;
+        var pi: i32 = 1234;
     }
 }
 ```
 Shell$ zig test test_shadowing.zig
-/home/ci/zig-bootstrap/zig/doc/langref/test_shadowing.zig:6:13: error: local variable shadows declaration of 'pi'
-  var pi: i32 = 1234;
-      ^~
-/home/ci/zig-bootstrap/zig/doc/langref/test_shadowing.zig:1:1: note: declared here
+test_shadowing.zig:6:13: error: local variable shadows declaration of 'pi'
+        var pi: i32 = 1234;
+            ^~
+test_shadowing.zig:1:1: note: declared here
 const pi = 3.14;
 ^~~~~~~~~~~~~~~
 
@@ -79,12 +79,12 @@ test_scopes.zig
 ```zig
 test "separate scopes" {
     {
-  const pi = 3.14;
-  _ = pi;
+        const pi = 3.14;
+        _ = pi;
     }
     {
-  var pi: bool = true;
-  _ = &pi;
+        var pi: bool = true;
+        _ = &pi;
     }
 }
 ```
@@ -99,14 +99,14 @@ An empty block is equivalent to `void{}`:
 test_empty_block.zig
 ```zig
 const std = @import("std");
-const expect = std.testing.expect;
+const expectEqual = std.testing.expectEqual;
 
 test {
     const a = {};
     const b = void{};
-    try expect(@TypeOf(a) == void);
-    try expect(@TypeOf(b) == void);
-    try expect(a == b);
+    try expectEqual(void, @TypeOf(a));
+    try expectEqual(void, @TypeOf(b));
+    try expectEqual(a, b);
 }
 ```
 Shell$ zig test test_empty_block.zig
