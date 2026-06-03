@@ -48,6 +48,79 @@ test "CancelProtection - enum values" {
     try std.testing.expect(unblocked != blocked);
 }
 
+test "Futex - wait returns immediately when value differs" {
+    var gpa = std.heap.DebugAllocator(.{}){};
+    defer _ = gpa.deinit();
+
+    var threaded = std.Io.Threaded.init(gpa.allocator(), .{ .environ = .empty });
+    defer threaded.deinit();
+    const io = threaded.io();
+
+    var value = std.atomic.Value(u32).init(1);
+
+    try io.futexWaitTimeout(u32, &value.raw, 0, .{
+        .duration = .{
+            .raw = .fromMilliseconds(10),
+            .clock = .awake,
+        },
+    });
+    io.futexWake(u32, &value.raw, 0);
+}
+
+const FutexWorkerArgs = struct {
+    io: std.Io,
+    value: *std.atomic.Value(u32),
+    ready: *std.atomic.Value(bool),
+    observed: *std.atomic.Value(bool),
+    failed: *std.atomic.Value(bool),
+};
+
+fn futexWaitWorker(args: FutexWorkerArgs) void {
+    args.ready.store(true, .release);
+
+    while (args.value.load(.acquire) == 0) {
+        args.io.futexWait(u32, &args.value.raw, 0) catch {
+            args.failed.store(true, .release);
+            return;
+        };
+    }
+
+    args.observed.store(true, .release);
+}
+
+test "Futex - wait and wake with Io.Threaded" {
+    var gpa = std.heap.DebugAllocator(.{}){};
+    defer _ = gpa.deinit();
+
+    var threaded = std.Io.Threaded.init(gpa.allocator(), .{ .environ = .empty });
+    defer threaded.deinit();
+    const io = threaded.io();
+
+    var value = std.atomic.Value(u32).init(0);
+    var ready = std.atomic.Value(bool).init(false);
+    var observed = std.atomic.Value(bool).init(false);
+    var failed = std.atomic.Value(bool).init(false);
+
+    const thread = try std.Thread.spawn(.{}, futexWaitWorker, .{FutexWorkerArgs{
+        .io = io,
+        .value = &value,
+        .ready = &ready,
+        .observed = &observed,
+        .failed = &failed,
+    }});
+
+    while (!ready.load(.acquire)) {
+        std.Thread.yield() catch {};
+    }
+
+    value.store(1, .release);
+    io.futexWake(u32, &value.raw, 1);
+    thread.join();
+
+    try std.testing.expect(!failed.load(.acquire));
+    try std.testing.expect(observed.load(.acquire));
+}
+
 test "Event with Io - basic set and wait" {
     var gpa = std.heap.DebugAllocator(.{}){};
     defer _ = gpa.deinit();

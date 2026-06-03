@@ -1434,7 +1434,7 @@ These APIs also integrate properly with [Cancelation](https://ziglang.org/downlo
 
 - `std.Thread.ResetEvent` ➡️ `std.Io.Event`
 - `std.Thread.WaitGroup` ➡️ `std.Io.Group`
-- `std.Thread.Futex` ➡️ `std.Io.Futex`
+- `std.Thread.Futex` ➡️ low-level `std.Io` futex methods: `io.futexWait`, `io.futexWaitTimeout`, `io.futexWaitUncancelable`, and `io.futexWake`. The upstream 0.16.0 release notes list `std.Io.Futex`, but the shipped Zig 0.16.0 standard library exposes these functions on `std.Io` rather than a public `std.Io.Futex` type.
 - `std.Thread.Mutex` ➡️ `std.Io.Mutex`
 - `std.Thread.Condition` ➡️ `std.Io.Condition`
 - `std.Thread.Semaphore` ➡️ `std.Io.Semaphore`
