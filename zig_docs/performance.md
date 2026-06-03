@@ -4,10 +4,10 @@ A practical, measure-first workflow for optimizing Zig systems code without regr
 
 ## Runnable Examples
 
-- `zig_docs_std/Examples/performance_methodology.tests.zig`
-- `zig_docs_std/Examples/mlkem_benchmark.zig`
-- `zig_docs_std/Examples/mldsa_benchmark.zig`
-- `zig_docs_std/Examples/test_arraylist_aligned_performance.zig`
+- `zig test zig_docs_std/Examples/performance_methodology.tests.zig`
+- `zig build-exe zig_docs_std/Examples/test_arraylist_aligned_performance.zig -O ReleaseSafe`
+- `zig run zig_docs_std/Examples/mlkem_benchmark.zig -O ReleaseFast`
+- `zig run zig_docs_std/Examples/mldsa_benchmark.zig -O ReleaseFast`
 
 ## Overview
 
@@ -42,9 +42,37 @@ test "simple timer harness" {
 
     // Guard against dead-code elimination while keeping the example tiny.
     try std.testing.expect(result != 0);
-    try std.testing.expect(elapsed_ns >= 0);
+    try std.testing.expect(elapsed_ns > 0);
 }
 ```
+
+## Zig 0.16 Performance Notes
+
+Zig 0.16.0 changes both application-level performance APIs and build-time
+performance tradeoffs:
+
+1. Prefer `std.Io.Clock` for timing and pass an explicit `std.Io` through code
+   that can block or introduce nondeterminism. Tests should normally use
+   `std.testing.io`.
+2. For independent I/O operations, `std.Io.Batch` has lower task overhead than
+   `Future`; start with the API that matches the workflow, then measure before
+   rewriting.
+3. `std.heap.ArenaAllocator` is now thread-safe and lock-free. It is comparable
+   for single-threaded access and can be faster than the old
+   `ThreadSafeAllocator` wrapper under concurrent access.
+4. Incremental compilation is much faster and can be tried with
+   `zig build -fincremental --watch`, but it is still disabled by default in
+   0.16.0 because known bugs remain.
+5. The self-hosted x86 backend remains the default in `Debug` mode and has
+   significantly faster compilation than LLVM, but lower machine-code quality.
+   Do not use `Debug` timings as evidence for optimized runtime performance.
+6. The new ELF linker is the default with `-fincremental` on ELF targets and is
+   materially faster for incremental relinking, but it is not yet feature
+   complete.
+7. LLVM 21 loop vectorization is disabled in Zig 0.16.0 to avoid
+   miscompilations. This can reduce generated-code performance for some hot
+   loops, so benchmark vector-heavy code on the actual target and compiler
+   version.
 
 ## Measure-First Workflow
 
@@ -53,6 +81,8 @@ test "simple timer harness" {
 3. Run multiple iterations and compare median and p95, not a single run.
 4. Track allocation count/bytes for memory-sensitive paths.
 5. Capture compiler mode (`Debug`, `ReleaseSafe`, `ReleaseFast`, `ReleaseSmall`) with each result.
+6. Capture the Zig version and target triple with each result, because backend
+   and linker behavior changed in Zig 0.16.0.
 
 ## Optimization Triage Order
 
@@ -94,6 +124,7 @@ Apply this order unless profiling proves otherwise:
 
 ## Related Docs
 
+- [0.16.0 Release Notes](release_notes.md)
 - [Build Mode](build_mode.md)
 - [Release Checklist](release_checklist.md)
 - [Memory Allocator Strategy](memory_allocator_strategy.md)
