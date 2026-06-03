@@ -20,6 +20,11 @@ describe('ZigDocumentationServer', () => {
       expect(filePath).toBe('zig_docs/build_mode.md');
     });
 
+    test('converts prose doc URIs with hyphens to underscore filenames', () => {
+      expect(server['uriToFilePath']('zig://doc/zig-build-system')).toBe('zig_docs/zig_build_system.md');
+      expect(server['uriToFilePath']('zig://doc/zig-standard-library')).toBe('zig_docs/zig_standard_library.md');
+    });
+
     test('converts std library type URIs', () => {
       const filePath = server['uriToFilePath']('zig://std/Types/ArrayList/ArrayList');
       expect(filePath).toBe('zig_docs_std/Types/ArrayList/ArrayList.md');
@@ -60,6 +65,14 @@ describe('ZigDocumentationServer', () => {
     test('finds documents with partial match', () => {
       const result = server['searchDocumentation']('array');
       expect(result.toLowerCase()).toContain('array');
+    });
+
+    test('finds prose language docs for build system and standard library queries', () => {
+      const buildResult = server['searchDocumentation']('zig build system');
+      expect(buildResult).toContain('zig://doc/zig_build_system');
+
+      const stdlibResult = server['searchDocumentation']('zig standard library');
+      expect(stdlibResult).toContain('zig://doc/zig_standard_library');
     });
 
     test('returns helpful message for no matches', () => {
@@ -322,6 +335,19 @@ Documentation for typeInfo
         r.uri.startsWith('zig://doc/')
       );
       expect(langDocs.length).toBeGreaterThan(0);
+    });
+
+    test('prose language docs are cached as resources', () => {
+      expect(server['resourceList']).toEqual(expect.arrayContaining([
+        expect.objectContaining({
+          uri: 'zig://doc/zig_build_system',
+          name: 'Zig_build_system',
+        }),
+        expect.objectContaining({
+          uri: 'zig://doc/zig_standard_library',
+          name: 'Zig_standard_library',
+        }),
+      ]));
     });
 
     test('stdlib docs are cached', () => {

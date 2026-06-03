@@ -12,17 +12,21 @@ Some examples of tasks the build system can help with:
 - Depending on other projects.
 
 - Providing a package for other projects to depend on.
-  Creating build artifacts by executing the Zig compiler. This includes
-    building Zig source code as well as C and C++ source code.
-  Capturing user-configured options and using those options to configure
-    the build.
-  Surfacing build configuration as [comptime](#comptime) values by providing a
-    file that can be [imported](#import) by Zig code.
+
+- Creating build artifacts by executing the Zig compiler. This includes
+  building Zig source code as well as C and C++ source code.
+
+- Capturing user-configured options and using those options to configure
+  the build.
+
+- Surfacing build configuration as [comptime](#comptime) values by providing a
+  file that can be [imported](#import) by Zig code.
 
 - Caching build artifacts to avoid unnecessarily repeating steps.
 
 - Executing build artifacts or system-installed tools.
-  Running tests and verifying the output of executing a build artifact matches
+
+- Running tests and verifying the output of executing a build artifact matches
   the expected value.
 
 - Running `zig fmt` on a codebase or a subset of it.
