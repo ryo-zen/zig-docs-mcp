@@ -4,10 +4,8 @@ Zig source code is encoded in UTF-8. An invalid UTF-8 byte sequence results in a
 
 Throughout all zig source code (including in comments), some code points are never allowed:
 
-  Ascii control characters, except for U+000a (LF), U+000d
-(CR), and U+0009 (HT): U+0000 - U+0008, U+000b - U+000c, U+000e -
-U+0001f, U+007f.
-
+- Ascii control characters, except for U+000a (LF), U+000d (CR), and U+0009 (HT):
+  U+0000 - U+0008, U+000b - U+000c, U+000e - U+0001f, U+007f.
 - Non-Ascii Unicode line endings: U+0085 (NEL), U+2028 (LS), U+2029 (PS).
 
 LF (byte value 0x0a, code point U+000a, `'\n'`) is the line terminator in Zig source code.

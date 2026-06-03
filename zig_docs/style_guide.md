@@ -10,15 +10,10 @@ coding style.
 Avoid these words in type names:
 
 - Value
-
 - Data
-
 - Context
-
 - Manager
-
 - State
-
 - utils, misc, or somebody's initials
 
 Everything is a value, all types are data, everything is context, all logic manages state.
@@ -41,9 +36,9 @@ const std = @import("std");
 
 pub const json = struct {
     pub const JsonValue = union(enum) {
-  number: f64,
-  boolean: bool,
-  // ...
+        number: f64,
+        boolean: bool,
+        // ...
     };
 };
 
@@ -93,33 +88,33 @@ Finally, keyword collisions are better avoided via
 
 ## [Whitespace](#toc-Whitespace) §
 
-    4 space indentation
+- 4 space indentation
 
-    Open braces on same line, unless you need to wrap.
+- Open braces on same line, unless you need to wrap.
 
-  If a list of things is longer than 2, put each item on its own line and
-    exercise the ability to put an extra comma at the end.
+- If a list of things is longer than 2, put each item on its own line and
+  exercise the ability to put an extra comma at the end.
 
-    Line length: aim for 100; use common sense.
+- Line length: aim for 100; use common sense.
 
 ## [Names](#toc-Names) §
 
 Roughly speaking: `camelCaseFunctionName`, `TitleCaseTypeName`,
-        `snake_case_variable_name`. More precisely:
+`snake_case_variable_name`. More precisely:
 
-      If `x` is a `struct` with 0 fields and is never meant to be instantiated
-      then `x` is considered to be a "namespace" and should be `snake_case`.
+- If `x` is a `struct` with 0 fields and is never meant to be instantiated
+  then `x` is considered to be a "namespace" and should be `snake_case`.
 
-      If `x` is a `type` or `type` alias
-      then `x` should be `TitleCase`.
+- If `x` is a `type` or `type` alias
+  then `x` should be `TitleCase`.
 
-      If `x` is callable, and `x`'s return type is
-      `type`, then `x` should be `TitleCase`.
+- If `x` is callable, and `x`'s return type is
+  `type`, then `x` should be `TitleCase`.
 
-      If `x` is otherwise callable, then `x` should
-      be `camelCase`.
+- If `x` is otherwise callable, then `x` should
+  be `camelCase`.
 
-      Otherwise, `x` should be `snake_case`.
+- Otherwise, `x` should be `snake_case`.
 
 Acronyms, initialisms, proper nouns, or any other word that has capitalization
 rules in written English are subject to naming conventions just like any other
@@ -165,16 +160,16 @@ fn ListTemplateFunction(comptime ChildType: type, comptime fixed_size: usize) ty
 
 fn ShortList(comptime T: type, comptime n: usize) type {
     return struct {
-  field_name: [n]T,
-  fn methodName() void {}
+        field_name: [n]T,
+        fn methodName() void {}
     };
 }
 
 // The word XML loses its casing when used in Zig identifiers.
 const xml_document =
-    \\
-    \\
-    \\
+    \\<?xml version="1.0" encoding="UTF-8"?>
+    \\<document>
+    \\</document>
 ;
 const XmlParser = struct {
     field: i32,
@@ -190,8 +185,8 @@ See the [Zig Standard Library](#Zig-Standard-Library) for more examples.
 
 - Omit any information that is redundant based on the name of the thing being documented.
   Duplicating information onto multiple similar functions is
-encouraged because it helps IDEs and other tools provide better help
-text.
+  encouraged because it helps IDEs and other tools provide better help
+  text.
 
 - Use the word **assume** to indicate invariants that cause *unchecked* [Illegal Behavior](#Illegal-Behavior) when violated.
 
