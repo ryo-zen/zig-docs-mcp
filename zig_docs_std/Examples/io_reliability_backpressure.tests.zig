@@ -135,3 +135,29 @@ test "framing success path" {
 
     try std.testing.expectEqualStrings("abc", frame);
 }
+
+test "std.Io.Queue provides bounded backpressure and closed drain semantics" {
+    var gpa = std.heap.DebugAllocator(.{}){};
+    defer _ = gpa.deinit();
+
+    var threaded = std.Io.Threaded.init(gpa.allocator(), .{ .environ = .empty });
+    defer threaded.deinit();
+    const io = threaded.io();
+
+    var backing: [2]u8 = undefined;
+    var queue = std.Io.Queue(u8).init(&backing);
+    defer queue.close(io);
+
+    try std.testing.expectEqual(@as(usize, 2), try queue.put(io, &.{ 1, 2 }, 2));
+
+    // With min = 0, a full queue reports no progress instead of blocking.
+    try std.testing.expectEqual(@as(usize, 0), try queue.put(io, &.{3}, 0));
+
+    queue.close(io);
+    try std.testing.expectError(error.Closed, queue.put(io, &.{3}, 1));
+
+    var out: [2]u8 = undefined;
+    try std.testing.expectEqual(@as(usize, 2), try queue.get(io, &out, 1));
+    try std.testing.expectEqualSlices(u8, &.{ 1, 2 }, &out);
+    try std.testing.expectError(error.Closed, queue.get(io, &out, 1));
+}

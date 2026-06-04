@@ -16,6 +16,7 @@ import {
   CallToolRequestSchema,
   ErrorCode,
   McpError,
+  type Tool,
 } from '@modelcontextprotocol/sdk/types.js';
 import fs from 'fs';
 import path from 'path';
@@ -618,145 +619,149 @@ ${this.versionContract.upgradePolicy}`;
     throw new Error(`Cannot convert file path to URI: ${relativePath}`);
   }
 
+  getToolDefinitions(): Tool[] {
+    return [
+      {
+        name: 'search_zig_docs',
+        description: 'Search for specific topics across all Zig documentation',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            query: {
+              type: 'string',
+              description: 'Search query for Zig documentation topics',
+            },
+          },
+          required: ['query'],
+        },
+      },
+      {
+        name: 'get_builtin_info',
+        description: 'Get detailed information about a specific Zig builtin function',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            builtin_name: {
+              type: 'string',
+              description: 'Name of the builtin function (with or without @ prefix)',
+            },
+          },
+          required: ['builtin_name'],
+        },
+      },
+      {
+        name: 'explain_concept',
+        description: 'Get a detailed explanation of a Zig language concept',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            concept: {
+              type: 'string',
+              description: 'Zig concept to explain (e.g., "comptime", "defer", "optionals")',
+            },
+          },
+          required: ['concept'],
+        },
+      },
+      {
+        name: 'get_syntax_examples',
+        description: 'Get syntax examples for Zig language constructs',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            construct: {
+              type: 'string',
+              description: 'Language construct to get examples for (e.g., "for loops", "if statements", "struct")',
+            },
+          },
+          required: ['construct'],
+        },
+      },
+      {
+        name: 'get_example',
+        description: 'Get a working Zig code example by topic or name',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            topic: {
+              type: 'string',
+              description: 'Topic or example name (e.g., "arraylist", "reader", "json_parser")',
+            },
+          },
+          required: ['topic'],
+        },
+      },
+      {
+        name: 'server_diagnostics',
+        description: 'Get server health, cache stats, and diagnostic information',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            include_samples: {
+              type: 'boolean',
+              description: 'Include sample resource URIs (default: false)',
+            },
+          },
+        },
+      },
+      {
+        name: 'introspect_type',
+        description: 'Introspect a Zig type to see its methods, fields, and structure',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            type_expression: {
+              type: 'string',
+              description: 'Zig type expression to introspect (e.g., "std.ArrayList(i32)", "std.heap.DebugAllocator(.{})")',
+            },
+          },
+          required: ['type_expression'],
+        },
+      },
+      {
+        name: 'validate_code',
+        description: 'Validate a Zig code snippet and get compilation errors if any',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            code: {
+              type: 'string',
+              description: 'Zig code snippet to validate',
+            },
+            code_type: {
+              type: 'string',
+              description: 'Type of code: "test" (default), "main", or "function"',
+              enum: ['test', 'main', 'function'],
+            },
+          },
+          required: ['code'],
+        },
+      },
+      {
+        name: 'query_stdlib_source',
+        description: 'Query the Zig standard library source code for a specific file/module',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            module_path: {
+              type: 'string',
+              description: 'Path to stdlib module (e.g., "std/array_list.zig", "std/heap.zig")',
+            },
+            search_term: {
+              type: 'string',
+              description: 'Optional: search for specific function or type within the module',
+            },
+          },
+          required: ['module_path'],
+        },
+      },
+    ];
+  }
+
   setupToolHandlers() {
     this.server.setRequestHandler(ListToolsRequestSchema, async () => {
       return {
-        tools: [
-          {
-            name: 'search_zig_docs',
-            description: 'Search for specific topics across all Zig documentation',
-            inputSchema: {
-              type: 'object',
-              properties: {
-                query: {
-                  type: 'string',
-                  description: 'Search query for Zig documentation topics',
-                },
-              },
-              required: ['query'],
-            },
-          },
-          {
-            name: 'get_builtin_info',
-            description: 'Get detailed information about a specific Zig builtin function',
-            inputSchema: {
-              type: 'object',
-              properties: {
-                builtin_name: {
-                  type: 'string',
-                  description: 'Name of the builtin function (with or without @ prefix)',
-                },
-              },
-              required: ['builtin_name'],
-            },
-          },
-          {
-            name: 'explain_concept',
-            description: 'Get a detailed explanation of a Zig language concept',
-            inputSchema: {
-              type: 'object',
-              properties: {
-                concept: {
-                  type: 'string',
-                  description: 'Zig concept to explain (e.g., "comptime", "defer", "optionals")',
-                },
-              },
-              required: ['concept'],
-            },
-          },
-          {
-            name: 'get_syntax_examples',
-            description: 'Get syntax examples for Zig language constructs',
-            inputSchema: {
-              type: 'object',
-              properties: {
-                construct: {
-                  type: 'string',
-                  description: 'Language construct to get examples for (e.g., "for loops", "if statements", "struct")',
-                },
-              },
-              required: ['construct'],
-            },
-          },
-          {
-            name: 'get_example',
-            description: 'Get a working Zig code example by topic or name',
-            inputSchema: {
-              type: 'object',
-              properties: {
-                topic: {
-                  type: 'string',
-                  description: 'Topic or example name (e.g., "arraylist", "reader", "json_parser")',
-                },
-              },
-              required: ['topic'],
-            },
-          },
-          {
-            name: 'server_diagnostics',
-            description: 'Get server health, cache stats, and diagnostic information',
-            inputSchema: {
-              type: 'object',
-              properties: {
-                include_samples: {
-                  type: 'boolean',
-                  description: 'Include sample resource URIs (default: false)',
-                },
-              },
-            },
-          },
-          {
-            name: 'introspect_type',
-            description: 'Introspect a Zig type to see its methods, fields, and structure',
-            inputSchema: {
-              type: 'object',
-              properties: {
-                type_expression: {
-                  type: 'string',
-                  description: 'Zig type expression to introspect (e.g., "std.ArrayList(i32)", "std.heap.GeneralPurposeAllocator({})")',
-                },
-              },
-              required: ['type_expression'],
-            },
-          },
-          {
-            name: 'validate_code',
-            description: 'Validate a Zig code snippet and get compilation errors if any',
-            inputSchema: {
-              type: 'object',
-              properties: {
-                code: {
-                  type: 'string',
-                  description: 'Zig code snippet to validate',
-                },
-                code_type: {
-                  type: 'string',
-                  description: 'Type of code: "test" (default), "main", or "function"',
-                  enum: ['test', 'main', 'function'],
-                },
-              },
-              required: ['code'],
-            },
-          },
-          {
-            name: 'query_stdlib_source',
-            description: 'Query the Zig standard library source code for a specific file/module',
-            inputSchema: {
-              type: 'object',
-              properties: {
-                module_path: {
-                  type: 'string',
-                  description: 'Path to stdlib module (e.g., "std/array_list.zig", "std/heap.zig")',
-                },
-                search_term: {
-                  type: 'string',
-                  description: 'Optional: search for specific function or type within the module',
-                },
-              },
-              required: ['module_path'],
-            },
-          },
-        ],
+        tools: this.getToolDefinitions(),
       };
     });
 

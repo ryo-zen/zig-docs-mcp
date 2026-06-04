@@ -1,14 +1,31 @@
 # Time/Timestamp Migration Guide (0.16)
 
+## Runnable Examples
+
+```bash
+zig test zig_docs_std/Examples/test_unix_time.zig
+zig test zig_docs_std/Examples/test_clock_comprehensive.zig
+zig test zig_docs_std/Examples/test_timeout_comprehensive.zig
+```
+
 ## Core Change: Through Io.Clock
 
 Time operations now go through `std.Io.Clock`, requiring an `io: Io` parameter.
 
 ## Unix Timestamp
 
-### Getting Current Timestamp (Simple Pattern)
+### Getting Current Timestamp
 
-For the simplest drop-in replacement, use `global_single_threaded`:
+Prefer passing an existing `io: std.Io` when the caller already has one:
+
+```zig
+pub fn getTime(io: std.Io) i64 {
+    const ts = std.Io.Clock.real.now(io);
+    return ts.toSeconds();
+}
+```
+
+For small command-line tools or legacy utility functions that do not already have an `io` value, `std.Io.Threaded.global_single_threaded` is a pragmatic drop-in bridge:
 
 **Before (0.13-0.14):**
 ```zig
@@ -46,11 +63,25 @@ std.debug.print("Unix time: {}\n", .{seconds});
 
 **Changes:**
 - `std.time.timestamp()` → `std.Io.Clock.real.now(io).toSeconds()`
-- Use `global_single_threaded.io()` for simple cases
+- Pass `io: std.Io` through application/server code that already participates in `std.Io`
+- Use `std.Io.Threaded.global_single_threaded.io()` only for simple single-threaded utilities or migration bridges
 - `Clock.now` returns a `Timestamp` directly; call `.toSeconds()` for Unix time
 - Sleep operations are fallible and still require `try`
 
-See [Simple Timestamp Pattern](simple_timestamp_016.md) for details.
+### `global_single_threaded` Guidance
+
+`std.Io.Threaded.global_single_threaded` is a pre-initialized global Io instance for single-threaded environments.
+
+Use it for:
+- Small CLI tools
+- Leaf utility functions that need a temporary bridge from `std.time.timestamp()`
+- Examples where setting up `Io.Threaded.init` would obscure the point
+
+Avoid it for:
+- Libraries and reusable APIs
+- Servers and async/concurrent code
+- Code that already has an `io: std.Io` parameter
+- Hot paths with many I/O operations
 
 ## Clock Types
 

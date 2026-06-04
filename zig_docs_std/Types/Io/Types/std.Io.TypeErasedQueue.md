@@ -55,7 +55,7 @@ fn consumer(io: std.Io) !void {
     var buffer: [16]u8 = undefined;
     while (true) {
   const count = queue.get(io, &buffer, 1) catch |err| {
-      if (err == error.QueueClosed) break;
+      if (err == error.Closed) break;
       return err;
   };
   // Process buffer[0..count]
@@ -98,7 +98,7 @@ Synchronization primitive protecting all queue state. All operations acquire thi
 
 `closed: bool`
 
-Flag indicating the queue is permanently closed. Once `true`, all `put` and `get` operations return `error.QueueClosed`.
+Flag indicating the queue is permanently closed. Once `true`, puts return `error.Closed`; gets first drain buffered data, then return `error.Closed`.
 
 ------
 
@@ -163,7 +163,7 @@ Appends bytes to the queue, blocking if insufficient space is available. Returns
 **Returns:** Number of bytes actually written (`min <= returned <= elements.len`)
 
 **Errors:**
-- `error.QueueClosed`: The queue has been closed
+- `error.Closed`: The queue has been closed
 - `error.Canceled`: The operation was canceled (if supported by the Io backend)
 
 **Behavior:**
@@ -188,7 +188,7 @@ Same as `put()`, but does not introduce a cancellation point. Use when you need 
 ```zig
 const critical_data = "CRITICAL";
 _ = try queue.putUncancelable(io, critical_data, critical_data.len);
-// Guaranteed to write all bytes or return QueueClosed
+// Guaranteed to write all bytes or return error.Closed
 ```
 
 ------
@@ -204,7 +204,7 @@ Receives bytes from the queue, blocking if insufficient data is available. Retur
 **Returns:** Number of bytes actually read (`min <= returned <= buffer.len`)
 
 **Errors:**
-- `error.QueueClosed`: The queue is closed and empty
+- `error.Closed`: The queue is closed and empty
 - `error.Canceled`: The operation was canceled
 
 **Behavior:**
@@ -235,13 +235,14 @@ const count = try queue.getUncancelable(io, &buf, 16); // Must read at least 16 
 
 ### `pub fn close(q: *TypeErasedQueue, io: Io) void`
 
-Permanently closes the queue. All current and future `put` and `get` operations will return `error.QueueClosed`. Wakes all blocked tasks.
+Permanently closes the queue. Future `put` operations return `error.Closed`; `get` operations drain buffered data before returning `error.Closed`. Wakes all blocked tasks.
 
 **Behavior:**
 - Sets `closed` flag to `true`
 - Wakes all waiting producers (putters)
 - Wakes all waiting consumers (getters)
-- Subsequent operations immediately return `error.QueueClosed`
+- Subsequent puts immediately return `error.Closed`
+- Subsequent gets return `error.Closed` after buffered data is drained
 
 **Example:**
 ```zig
@@ -260,7 +261,7 @@ pub fn gracefulShutdown(queue: *std.Io.TypeErasedQueue, io: std.Io) void {
     // Close queue to signal all waiters
     queue.close(io);
 
-    // All blocked producers and consumers will wake with QueueClosed error
+    // All blocked producers and consumers will wake with error.Closed
 }
 ```
 
@@ -292,7 +293,7 @@ pub fn consumer(queue: *std.Io.TypeErasedQueue, io: std.Io) !void {
 
     while (true) {
   const count = queue.get(io, &buffer, 1) catch |err| {
-      if (err == error.QueueClosed) {
+      if (err == error.Closed) {
           std.debug.print("Queue closed, exiting consumer\n", .{});
           return;
       }
@@ -309,14 +310,14 @@ pub fn consumer(queue: *std.Io.TypeErasedQueue, io: std.Io) !void {
 
 `QueueClosedError`
 
-Contains `error.QueueClosed`, returned when attempting operations on a closed queue.
+Contains `error.Closed`, returned by puts on a closed queue and by gets after buffered data has been drained.
 
 ## Debug Checklist
 
 - ✅ **Close Called**: Did you call `close()` during cleanup?
 - ✅ **Buffer Lifetime**: Is the backing buffer alive for the queue's entire lifetime?
 - ✅ **Min Parameter**: Is `min` always `<= buffer.len` for get/put?
-- ✅ **Closed Handling**: Do you handle `error.QueueClosed` in consumers/producers?
+- ✅ **Closed Handling**: Do you handle `error.Closed` in consumers/producers?
 - ✅ **Deadlock Risk**: Are you avoiding circular waits between queues?
 
 ## Performance Tips

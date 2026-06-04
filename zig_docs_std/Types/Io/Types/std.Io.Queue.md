@@ -2,6 +2,8 @@
 
 Many producer, many consumer, thread-safe, runtime configurable buffer size. When buffer is empty, consumers suspend and are resumed by producers. When buffer is full, producers suspend and are resumed by consumers.
 
+`QueueClosedError` is `error{Closed}`. Puts on a closed queue return `error.Closed`; gets drain buffered elements before returning `error.Closed`.
+
 ## Parameters
 
     Elem: type
@@ -17,7 +19,7 @@ Returns buffer length in `Elem` units.
 
 `pub fn close(q: *@This(), io: Io) void`
 
-`pub fn get(q: *@This(), io: Io, buffer: []Elem, target: usize) (QueueClosedError || Cancelable)!usize`
+`pub fn get(q: *@This(), io: Io, buffer: []Elem, min: usize) (QueueClosedError || Cancelable)!usize`
 Receives elements from the beginning of the queue, potentially blocking if there are insufficient elements currently in the queue. Returns when any one of the following conditions is satisfied:
 
 `pub fn getOne(q: *@This(), io: Io) (QueueClosedError || Cancelable)!Elem`
@@ -31,7 +33,7 @@ Same as `get`, except does not introduce a cancelation point.
 
 `pub fn init(buffer: []Elem) @This()`
 
-`pub fn put(q: *@This(), io: Io, elements: []const Elem, target: usize) (QueueClosedError || Cancelable)!usize`
+`pub fn put(q: *@This(), io: Io, elements: []const Elem, min: usize) (QueueClosedError || Cancelable)!usize`
 Appends elements to the end of the queue, potentially blocking if there is insufficient capacity. Returns when any one of the following conditions is satisfied:
 
 `pub fn putAll(q: *@This(), io: Io, elements: []const Elem) (QueueClosedError || Cancelable)!void`

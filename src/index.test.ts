@@ -319,6 +319,18 @@ Documentation for typeInfo
     });
   });
 
+  describe('Tool Definitions', () => {
+    test('introspect_type example uses Zig 0.16 allocator name', () => {
+      const tools = server['getToolDefinitions']();
+      const introspectTool = tools.find(tool => tool.name === 'introspect_type');
+      const properties = introspectTool?.inputSchema.properties as Record<string, { description?: string }> | undefined;
+      const description = properties?.type_expression?.description;
+
+      expect(description).toContain('std.heap.DebugAllocator(.{})');
+      expect(description).not.toContain('std.heap.GeneralPurposeAllocator');
+    });
+  });
+
   describe('Cache Behavior', () => {
     test('documentation is loaded into cache', () => {
       const cacheSize = server['docCache'].size;
